@@ -1,4 +1,4 @@
-import UseBOCR from '../../sdk/ocr.js';
+import UseBOCR from 'https://ocr.useb.co.kr/ocr.js';
 
 const ocr = new UseBOCR();
 
