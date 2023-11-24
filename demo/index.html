@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>OCR/SSA WebAssembly Sample</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" type="text/css" href="./css/demo.css" />
+
+    <script type="text/javascript" src="./js/util.js"></script>
+    <script type="text/javascript" src="./lib/lodash.min.js"></script>
+    <script type="module" src="./js/ui_simulator.js" async></script>
+    <script src="https://kit.fontawesome.com/71d7c8cd6e.js" crossorigin="anonymous"></script>
+  </head>
+
+  <body>
+    <div id="debug_win" class="debug_win" style="display: none"></div>
+    <div
+      id="loading-ui"
+      class="fullscreen"
+      style="
+        display: none;
+        background: rgba(0, 0, 0, 0.4);
+        justify-content: center;
+        align-items: center;
+        font-size: 2rem;
+        color: white;
+      "
+    >
+      LOADING ....
+    </div>
+
+    <section id="onboarding-section" class="onboarding-section">
+      <div class="onboarding--title">
+        <span class="top-ui-logo">
+          useB.<b><span style="color: #fff">wasmOCR</span></b>
+        </span>
+      </div>
+      <div class="onboarding--content">
+        <div class="option--wrapper">
+          <input id="onboarding-use-preloading" type="checkbox" />
+          <label for="onboarding-use-preloading">preloading 사용</label>
+        </div>
+        <button id="onboarding-start" type="button">시작</button>
+      </div>
+    </section>
+
+    <section id="card-select-section" class="card-select-section" style="display: none">
+      <div class="card-select--title">
+        <h3>OCR 종류를 선택해주세요</h3>
+      </div>
+      <div class="card-select--content">
+        <div class="type-button">
+          <button id="idcard">주민등록증/운전면허증</button>
+          <button id="passport">국내/해외 여권</button>
+          <button id="alien">외국인등록증</button>
+          <button id="alien-back">외국인등록증 뒷면</button>
+          <button id="credit">신용카드</button>
+
+          <button id="idcard-ssa">주민등록증/운전면허증 + 사본판별</button>
+          <button id="passport-ssa">국내/해외 여권 + 사본판별</button>
+          <button id="alien-ssa">외국인등록증 + 사본판별</button>
+        </div>
+        <div class="prev-button">
+          <button type="button" id="prev" class="prev">이전</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="button-section">
+      <!-- <button id="btnPreloadingStart">
+        <i class="fa-solid fa-check" style="display: none"></i>
+        <span>Preloading Start</span>
+      </button> -->
+
+      <fieldset>
+        <legend>Preloading Status</legend>
+        <div>
+          <input type="text" id="preloading-status-text" readonly />
+        </div>
+      </fieldset>
+    </section>
+
+    <section id="simulator-section" class="simulator-section customer--section" style="display: none">
+      <div class="prev-button">
+        <button type="button" class="prev">이전</button>
+        <span></span>
+      </div>
+
+      <!-- 이미지 스캔 카메라 섹션 -->
+      <section class="scan-section">
+        <div id="resolution-simulation-frame" class="resolution-simulation-frame">
+          <div data-useb-ocr="ocr" style="display: none">
+            <div data-useb-ocr="topUI">
+              <!-- TOP UI는 flex-direction: column-reverse 인점 고려하여 순서 배치 -->
+              <div id="top-ui-bg" style="width: 100%">
+                <span id="top-ui-loading"></span>
+                <span id="top-ui-text-msg" class="text-info"></span>
+              </div>
+              <span class="top-ui-logo">
+                useB.<b><span style="color: #fff">wasmOCR</span></b>
+              </span>
+            </div>
+
+            <div data-useb-ocr="middleUI">
+              <div id="middle-ui-bg" style="width: 100%; background-color: #00000044">
+                <span id="middle-ui-loading"></span>
+                <span id="middle-ui-text-msg" class="text-info"></span>
+              </div>
+            </div>
+
+            <div data-useb-ocr="bottomUI">
+              <div id="bottom-ui-bg" style="width: 100%">
+                <span id="bottom-ui-loading"></span>
+                <span id="bottom-ui-text-msg" class="text-info"></span>
+              </div>
+              <span class="bottom-ui-copyright">Powered by <b>useB.</b></span>
+            </div>
+
+            <div data-useb-ocr="previewUI" class="preview-ui">
+              <span class="text-info text-color-black text-weight-bold">신분증 인식</span>
+              <img data-useb-ocr="previewImage" id="preview-ui-image" class="preview-img" />
+              <span id="preview-ui-loading"></span>
+              <span id="preview-ui-text-msg" class="text-info text-color-black"></span>
+            </div>
+
+            <!-- <div data-useb-ocr="preloadingUI" class="preloading-ui">
+              <span>Preloading UI</span>
+              <span id="preloading-ui-text-msg" class="text-info">Preloading UI 커스텀 메시지</span>
+            </div> -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 옵션 세팅 섹션 -->
+      <section class="settings-section collapsed">
+        <div id="settings-toggle">
+          <b>UI Simulator</b>
+          <span>[펼치기]</span>
+          <i class="chevron fa-solid fa-chevron-up"></i>
+        </div>
+        <fieldset>
+          <legend>사본판별 RETRY 설정</legend>
+
+          <div id="ssa-type">
+            <label for="real">
+              <input type="radio" name="type" id="real" value="REAL" />
+              본인(REAL)거부율
+            </label>
+            <label for="fake">
+              <input type="radio" name="type" id="fake" value="FAKE" />
+              타인(FAKE)수락율
+            </label>
+            <label for="ensemble">
+              <input type="radio" name="type" id="ensemble" value="ENSEMBLE" checked />
+              평균 절대값
+            </label>
+          </div>
+
+          <div>
+            <label for="ssa-max-retry-count">Max Retry</label>
+            <select id="ssa-max-retry-count" style="max-width: 100px">
+              <option value="0">미사용</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>UI 설정</legend>
+          <div>
+            <label for="use-top-ui">상단 UI</label><br />
+            ┌ UI:
+            <input type="checkbox" id="use-top-ui" name="use-top-ui" checked /><br />
+            └─ TEXT:
+            <input type="checkbox" id="use-top-ui-text-msg" name="use-top-ui-text-msg" /><br />
+            <label for="use-middle-ui">중단 UI</label><br />
+            ┌ UI:
+            <input type="checkbox" id="use-middle-ui" name="use-middle-ui" checked /><br />
+            └─ TEXT:
+            <input type="checkbox" id="use-middle-ui-text-msg" name="use-middle-ui-text-msg" checked /><br />
+            <label for="use-bottom-ui">하단 UI 사용</label><br />
+            ┌ UI:
+            <input type="checkbox" id="use-bottom-ui" name="use-bottom-ui" checked /><br />
+            └─ TEXT:
+            <input type="checkbox" id="use-bottom-ui-text-msg" name="use-bottom-ui-text-msg" /><br />
+            <label for="use-bottom-ui">Preview UI 사용</label><br />
+            └ UI:
+            <input type="checkbox" id="use-preview-ui" name="use-preview-ui" checked /><br />
+            <span style="font-size: 8px">※ 사본판별시 OCR 결과 미리보기 UI</span>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>촬영 옵션</legend>
+          <div>
+            <fieldset>
+              <legend>SERVER</legend>
+              <div>
+                <label for="use-auto-switch">자동 전환 사용</label>
+                <input type="checkbox" id="use-auto-switch" name="use-auto-switch" />
+              </div>
+              <div>
+                <label for="use-manual-switch">수동 전환 사용</label>
+                <input type="checkbox" id="use-manual-switch" name="use-auto-switch" />
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>WASM</legend>
+              <div>
+                <label for="use-force-complete-ui">강제 완료 UI 사용</label>
+                <input type="checkbox" id="use-force-complete-ui" name="use-force-complete-ui" />
+              </div>
+            </fieldset>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>출력 옵션</legend>
+          <div id="use-encrypt-mode-div">
+            <label for="use-encrypt-mode">암호화 적용</label>
+            <input type="checkbox" id="use-encrypt-mode" name="use-encrypt-mode" />
+          </div>
+          <div id="use-encrypt-all-mode-div">
+            <label for="use-encrypt-all-mode">암호화 적용 (all)</label>
+            <input type="checkbox" id="use-encrypt-all-mode" name="use-encrypt-all-mode" />
+          </div>
+          <!-- // 추후 위에 주석 풀어야함 - START
+          <div>
+            <label for="use-pii-encrypt-mode">암호화 적용 (pii)</label>
+            <input
+              type="checkbox"
+              id="use-pii-encrypt-mode"
+              name="use-pii-encrypt-mode"
+            />
+          </div>
+          <div>
+            <label for="use-pii-encrypt-face"
+              >신분증 얼굴사진 암호화 적용</label
+            >
+            <input
+              type="checkbox"
+              id="use-pii-encrypt-face"
+              name="use-pii-encrypt-face"
+            />
+          </div>
+          -->
+          <div>
+            <label for="use-legacy-format">legacy format 지원</label>
+            <input type="checkbox" id="use-legacy-format" name="use-legacy-format" />
+          </div>
+          <div>
+            <label for="use-image-warping">왜곡 보정(Warping)</label>
+            <input type="checkbox" id="use-image-warping" name="use-image-warping" />
+          </div>
+          <div>
+            <label for="use-compress-image">이미지 압축 사용</label>
+            <input type="checkbox" id="use-compress-image" name="use-compress-image" />
+            <br />
+
+            <label for="use-compress-image-max-width">- max width(가로해상도)</label>
+            <select id="use-compress-image-max-width">
+              <option value="1080">1080</option>
+              <option value="960">960</option>
+              <option value="640">640</option>
+            </select>
+            <br />
+
+            <label for="use-compress-image-max-volume">- max volume(용량)</label>
+            <select id="use-compress-image-max-volume">
+              <option value="51200">50kb</option>
+              <option value="102400">100kb</option>
+              <option value="204800">200kb</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>카메라 설정</legend>
+          <div>
+            <label for="mirror-mode">mirror-mode</label>
+            <input type="checkbox" id="mirror-mode" name="mirror-mode" />
+          </div>
+          <div>
+            <label for="rotation-degree">rotation-degree</label>
+            <select id="rotation-degree" style="max-width: 50px">
+              <option value="0">0도</option>
+              <option value="90">90도</option>
+              <option value="180">180도</option>
+              <option value="270">270도</option>
+            </select>
+
+            <label for="camera-resolution-criteria">camera-resolution-criteria</label>
+            <select id="camera-resolution-criteria">
+              <option value="highQuality">화질 우선(권장)</option>
+              <option value="compatibility">호환성 우선</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>가이드박스 설정</legend>
+          <div>
+            <label for="guide-box-criteria">guide-box-criteria</label>
+            <select id="guide-box-criteria">
+              <option value="cameraResolution">카메라 해상도에 맞춤(권장)</option>
+              <option value="ocrViewSize">화면 크기에 맞춤</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>UI 해상도 시뮬레이션</legend>
+          <div>
+            <label for="resolution-template">해상도</label>
+
+            <select id="resolution-template">
+              <option value="responsive">반응형(Responsive)</option>
+              <option value="412x915">(세로) S20 Ultra</option>
+              <option value="915x412">(가로) S20 Ultra</option>
+              <option value="390x844">(세로) iPhone 12 pro</option>
+              <option value="844x390">(가로) iPhone 12 pro</option>
+              <option value="768x1024">(세로) iPad Mini</option>
+              <option value="1024x768">(가로) iPad Mini</option>
+              <option value="custom">직접입력</option>
+              "resolution-template"
+            </select>
+            <div id="resolution-custom" style="display: none">
+              width x height<br />
+              <input
+                type="number"
+                id="resolution-width"
+                name="resolution-width"
+                value="420"
+                min="100"
+                max="1920"
+                style="width: 50px"
+              />
+              x
+              <input
+                type="number"
+                id="resolution-height"
+                name="resolution-height"
+                value="915"
+                min="100"
+                max="1920"
+                style="width: 50px"
+              />
+              <button id="resolution-reverse-button" style="vertical-align: middle">반전</button>
+              <br />
+            </div>
+            <div>
+              배율(확대/축소)<br />
+              <input
+                type="number"
+                id="resolution-expend-ratio"
+                name="resolution-expend-ratio"
+                value="1.0"
+                style="width: 50px"
+              />
+            </div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>인식 프레임 옵션</legend>
+          <div>
+            <label for="border-width">border-width</label>
+            <input type="number" id="border-width" name="border-width" value="5" min="0" />
+          </div>
+          <div>
+            <label for="border-radius">border-radius</label>
+            <input type="number" id="border-radius" name="border-radius" value="20" min="0" />
+          </div>
+          <div>
+            <label for="border-style">border-style (ex: none, solid)</label>
+            <input type="text" id="border-style" name="border-style" value="solid" />
+          </div>
+          <div>
+            <label for="color-not-ready">스캔준비</label>
+            <input type="color" id="color-not-ready" name="color-not-ready" value="#000000" />
+          </div>
+          <div>
+            <label for="color-ready">스캔대기</label>
+            <input type="color" id="color-ready" name="color-ready" value="#b8b8b8" />
+          </div>
+          <div>
+            <label for="color-detect-success">카드검출성공</label>
+            <input type="color" id="color-detect-success" name="color-detect-success" value="#5e8fff" />
+          </div>
+          <div>
+            <label for="color-detect-failed">카드검출실패</label>
+            <input type="color" id="color-detect-failed" name="color-detect-failed" value="#725b67" />
+          </div>
+          <div>
+            <label for="color-ocr-recognized">사본판별중</label>
+            <input type="color" id="color-ocr-recognized" name="color-ocr-recognized" value="#003ac2" />
+          </div>
+          <div>
+            <label for="color-success">OCR완료</label>
+            <input type="color" id="color-success" name="color-success" value="#14b00e" />
+          </div>
+          <div>
+            <label for="color-failed">OCR실패</label>
+            <input type="color" id="color-failed" name="color-failed" value="#FA113D" />
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>마스킹 프레임 옵션</legend>
+          <div>
+            <label for="use-mask-frame-color-change">색상변경여부</label>
+            <input type="checkbox" id="use-mask-frame-color-change" name="use-mask-frame-color-change" checked />
+          </div>
+          <div id="mask-frame-color-default">
+            <div>
+              <label for="mask-frame-color-base-color">기본색상</label>
+              <input type="color" id="mask-frame-color-base-color" name="mask-frame-color-base-color" value="#333333" />
+            </div>
+          </div>
+          <div id="mask-frame-color-custom">
+            <div>
+              <label for="mask-frame-color-not-ready">스캔준비</label>
+              <input type="color" id="mask-frame-color-not-ready" name="mask-frame-color-not-ready" value="#333333" />
+            </div>
+            <div>
+              <label for="mask-frame-color-ready">스캔대기</label>
+              <input type="color" id="mask-frame-color-ready" name="mask-frame-color-ready" value="#333333" />
+            </div>
+            <div>
+              <label for="mask-frame-color-detect-success">카드검출성공</label>
+              <input
+                type="color"
+                id="mask-frame-color-detect-success"
+                name="mask-frame-color-detect-success"
+                value="#222222"
+              />
+            </div>
+            <div>
+              <label for="mask-frame-color-detect-failed">카드검출실패</label>
+              <input
+                type="color"
+                id="mask-frame-color-detect-failed"
+                name="mask-frame-color-detect-failed"
+                value="#333333"
+              />
+            </div>
+            <div>
+              <label for="mask-frame-color-ocr-recognized">사본판별중</label>
+              <input
+                type="color"
+                id="mask-frame-color-ocr-recognized"
+                name="mask-frame-color-ocr-recognized"
+                value="#222222"
+              />
+            </div>
+            <div>
+              <label for="mask-frame-color-success">OCR완료</label>
+              <input type="color" id="mask-frame-color-success" name="mask-frame-color-success" value="#111111" />
+            </div>
+            <div>
+              <label for="mask-frame-color-failed">OCR실패</label>
+              <input type="color" id="mask-frame-color-failed" name="mask-frame-color-failed" value="#111111" />
+            </div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>디버깅 옵션</legend>
+          <div>
+            <label for="show-clipboard">clip-frame 보기</label>
+            <input type="checkbox" id="show-clipboard" name="show-clipboard" />
+          </div>
+          <div>
+            <label for="show-canvas-preview">canvas preview 보기</label>
+            <input type="checkbox" id="show-canvas-preview" name="show-canvas-preview" />
+          </div>
+          <div>
+            <label for="use-debug-alert">debug alert 사용</label>
+            <input type="checkbox" id="use-debug-alert" name="use-debug-alert" />
+          </div>
+        </fieldset>
+        <fieldset>
+          <div>
+            <button id="save-settings">
+              <i class="fa-solid fa-check" style="display: none"></i>
+              <span>설정적용</span>
+            </button>
+          </div>
+        </fieldset>
+      </section>
+    </section>
+
+    <section id="result-section" class="fullscreen result-section" style="display: none">
+      <div class="custom--header">useB.OCR WebAssembly SDK Test Result</div>
+
+      <div class="custom--section">
+        <div id="ocr_status" class="custom--headline"></div>
+      </div>
+
+      <div class="custom--section">
+        <button class="custom--btn" id="restart_btn">처음부터 다시하기</button>
+      </div>
+
+      <div class="custom--division"></div>
+
+      <div id="ocr_result" class="custom--section"></div>
+    </section>
+
+    <script type="module" src="./demo.js" async></script>
+  </body>
+</html>

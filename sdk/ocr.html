@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" type="text/css" href="./css/sdk.css" />
+    <script type="text/javascript" src="./lib/lodash.min.js"></script>
+    <script type="text/javascript" src="./lib/compressor.min.js"></script>
+  </head>
+
+  <body>
+    <div data-useb-ocr="ocr" style="width: 100%; height: 100%">
+      <div data-useb-ocr="topUI">
+        <!-- TOP UI는 flex-direction: column-reverse 인점 고려하여 순서 배치 -->
+        <div id="top-ui-bg" style="width: 100%">
+          <span id="top-ui-loading"></span>
+          <span id="top-ui-text-msg" class="text-info"></span>
+        </div>
+        <span class="top-ui-logo"
+          >useB.<b><span style="color: white">wasmOCR</span></b></span
+        >
+      </div>
+
+      <div data-useb-ocr="middleUI">
+        <div id="middle-ui-bg" style="width: 100%; background-color: #00000044">
+          <span id="middle-ui-loading"></span>
+          <span id="middle-ui-text-msg" class="text-info"></span>
+        </div>
+      </div>
+
+      <div data-useb-ocr="bottomUI">
+        <div id="bottom-ui-bg" style="width: 100%">
+          <span id="bottom-ui-loading"></span>
+          <span id="bottom-ui-text-msg" class="text-info"></span>
+        </div>
+        <span class="bottom-ui-copyright">Powered by <b>useB.</b></span>
+      </div>
+
+      <div data-useb-ocr="previewUI" class="preview-ui">
+        <span class="text-info text-color-black text-weight-bold">신분증 인식</span>
+        <img data-useb-ocr="previewImage" id="preview-ui-image" class="preview-img" />
+        <span id="preview-ui-loading"></span>
+        <span id="preview-ui-text-msg" class="text-info text-color-black"></span>
+      </div>
+
+      <!-- <div data-useb-ocr="preloadingUI" class="preloading-ui">
+        <span>Preloading UI</span>
+        <span id="preloading-ui-text-msg" class="text-info">Preloading UI 커스텀 메시지</span>
+      </div> -->
+    </div>
+
+    <script type="module" src="./useb-ocr-wasm-sdk.js" async></script>
+  </body>
+</html>
