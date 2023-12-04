@@ -296,6 +296,13 @@
               <option value="compatibility">호환성 우선</option>
             </select>
           </div>
+          <div>
+            <label for="camera-resource-request-retry-limit">카메라 리소스요청 재시도 횟수</label>
+            <input type="number" id="camera-resource-request-retry-limit" value="100" step="1" min="-1" />
+            <br />
+            <label for="camera-resource-request-retry-interval">카메라 리소스요청 재시도 간격(ms)</label>
+            <input type="number" id="camera-resource-request-retry-interval" value="1000" />
+          </div>
         </fieldset>
 
         <fieldset>

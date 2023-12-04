@@ -92,27 +92,96 @@ function sendErrorResult(result, errorMessage) {
   });
 }
 
-function sendResult(result) {
-  console.debug('sendResult', result);
-  const returnMessage = btoa(encodeURIComponent(JSON.stringify(result)));
-  if (window.parent) {
-    // Browser iframe
-    window.parent.postMessage(returnMessage, targetOrigin);
+function getPlatformInfomation() {
+  window.platform.isWebViewIOSReactNative = false;
+  window.platform.isWebViewAndroidReactNative = false;
+  window.platform.isWebviewIOS = false;
+  window.platform.isWebviewAndroid = false;
+  window.platform.isWebBrowser = false;
+
+  const agentInfo = window.navigator.userAgent.toLowerCase();
+  window.platform.iOS = /iphone|ipod|ipad/.test(agentInfo);
+  window.platform.android = /android/i.test(agentInfo);
+
+  window.platform.chromeVer = 0;
+  try {
+    const chromeVer = parseInt(agentInfo.match(/chrome\/([0-9]*)./)[1]);
+    if (!isNaN(chromeVer)) {
+      window.platform.chromeVer = chromeVer;
+    }
+  } catch (e) {
+    console.error('getPlatformInfomation() in error : ', e);
   }
 
   if (window.ReactNativeWebView) {
-    // react-native webview
-    window.ReactNativeWebView.postMessage(returnMessage);
-  }
-
-  if (window.webkit && window.webkit.messageHandlers) {
-    // iOS: WKScriptMessageHandler WKScriptMessage name(usebwasmocr)
-    window.webkit.messageHandlers.usebwasmocr && window.webkit.messageHandlers.usebwasmocr.postMessage(returnMessage);
+    // android + react-native cli + webview
+    // android + react-native expo + webview
+    // iOS + react-native cli + webview
+    // iOS + react-native expo + webview
+    if (window.platform.iOS) {
+      window.platform.isWebViewIOSReactNative = true;
+      window.platform.isWebViewAndroidReactNative = false;
+    } else {
+      window.platform.isWebViewIOSReactNative = false;
+      window.platform.isWebViewAndroidReactNative = true;
+    }
+  } else if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.usebwasmocr) {
+    // iOS + swift + WebView
+    window.platform.isWebviewIOS = true;
   } else if (window['usebwasmocr']) {
-    // Android: WebView JavascriptInterface name(usebwasmocr) and JS function(result)
-    window['usebwasmocr'] && window['usebwasmocr']['receive'] && window['usebwasmocr']['receive'](returnMessage);
+    // android + webview
+    window.platform.isWebviewAndroid = true;
+  } else if (window.parent) {
+    // web browser + iframe
+    window.platform.isWebBrowser = true;
   }
 }
+
+window.platform = {};
+getPlatformInfomation();
+
+function sendResult(result) {
+  console.debug('sendResult', result);
+  const returnMessage = btoa(encodeURIComponent(JSON.stringify(result)));
+  if (window.platform.isWebViewIOSReactNative || window.platform.isWebViewAndroidReactNative) {
+    // android + react-native cli + webview
+    // android + react-native expo + webview
+    // iOS + react-native cli + webview
+    // iOS + react-native expo + webview
+    window.ReactNativeWebView.postMessage(returnMessage);
+  } else if (window.platform.isWebviewIOS) {
+    // iOS + swift + WebView
+    window.webkit.messageHandlers.usebwasmocr && window.webkit.messageHandlers.usebwasmocr.postMessage(returnMessage);
+  } else if (window.platform.isWebviewAndroid) {
+    // android + webview
+    window['usebwasmocr'] && window['usebwasmocr']['receive'] && window['usebwasmocr']['receive'](returnMessage);
+  } else if (window.platform.isWebBrowser) {
+    // web browser + iframe
+    window.parent.postMessage(returnMessage, targetOrigin);
+  }
+}
+
+// function sendResult(result) {
+//   console.debug('sendResult', result);
+//   const returnMessage = btoa(encodeURIComponent(JSON.stringify(result)));
+//   if (window.parent) {
+//     // Browser iframe
+//     window.parent.postMessage(returnMessage, targetOrigin);
+//   }
+//
+//   if (window.ReactNativeWebView) {
+//     // react-native webview
+//     window.ReactNativeWebView.postMessage(returnMessage);
+//   }
+//
+//   if (window.webkit && window.webkit.messageHandlers) {
+//     // iOS: WKScriptMessageHandler WKScriptMessage name(usebwasmocr)
+//     window.webkit.messageHandlers.usebwasmocr && window.webkit.messageHandlers.usebwasmocr.postMessage(returnMessage);
+//   } else if (window['usebwasmocr']) {
+//     // Android: WebView JavascriptInterface name(usebwasmocr) and JS function(result)
+//     window['usebwasmocr'] && window['usebwasmocr']['receive'] && window['usebwasmocr']['receive'](returnMessage);
+//   }
+// }
 
 function onPreloaded() {
   console.log('ocr-wasm-sdk onPreloaded');
