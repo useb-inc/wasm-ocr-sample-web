@@ -200,6 +200,21 @@
               <div>
                 <label for="use-auto-switch">자동 전환 사용</label>
                 <input type="checkbox" id="use-auto-switch" name="use-auto-switch" />
+                <fieldset>
+                  <legend>전환 기준</legend>
+                  <div>
+                    <label for="switch-to-server-threshold">latency threshold</label>
+                    <select id="switch-to-server-threshold">
+                      <option value="20.0">디폴트(20.0) ms</option>
+                      <option value="0.0">0.0 ms (server)</option>
+                      <option value="10.0">10.0 ms</option>
+                      <option value="20.0">20.0 ms</option>
+                      <option value="30.0">30.0ms</option>
+                      <option value="40.0">30.0ms</option>
+                      <option value="9999.0">9999.0 ms (wasm)</option>
+                    </select>
+                  </div>
+                </fieldset>
               </div>
               <div>
                 <label for="use-manual-switch">수동 전환 사용</label>
