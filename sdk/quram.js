@@ -161,147 +161,151 @@ Module.expectedDataFileDownloads++;
  };
  loadPackage({
   "files": [ {
-   "filename": "/face_detection/haarcascade_frontalface_alt.xml",
+   "filename": "/face_detection/haarcascade_eye.xml",
    "start": 0,
-   "end": 701059
+   "end": 353617
   }, {
-   "filename": "/model/qr_fd_720x448_DXYDCUV_WASM_0829.model",
-   "start": 701059,
-   "end": 13509162
+   "filename": "/face_detection/haarcascade_frontalface_alt.xml",
+   "start": 353617,
+   "end": 1054676
+  }, {
+   "filename": "/model/qr_fd_720x448_DXYDCUV_1214.model",
+   "start": 1054676,
+   "end": 13862779
   }, {
    "filename": "/model/quramsoft",
-   "start": 13509162,
-   "end": 13509162
+   "start": 13862779,
+   "end": 13862779
   }, {
    "filename": "/tessdata/alien.traineddata",
-   "start": 13509162,
-   "end": 15476749
+   "start": 13862779,
+   "end": 15830366
   }, {
    "filename": "/tessdata/ar_num.traineddata",
-   "start": 15476749,
-   "end": 15506699
+   "start": 15830366,
+   "end": 15860316
   }, {
    "filename": "/tessdata/card.traineddata",
-   "start": 15506699,
-   "end": 15536081
+   "start": 15860316,
+   "end": 15889698
   }, {
    "filename": "/tessdata/driver_num.traineddata",
-   "start": 15536081,
-   "end": 15558403
+   "start": 15889698,
+   "end": 15912020
   }, {
    "filename": "/tessdata/eng.traineddata",
-   "start": 15558403,
-   "end": 15638460
+   "start": 15912020,
+   "end": 15992077
   }, {
    "filename": "/tessdata/giro.traineddata",
-   "start": 15638460,
-   "end": 15665408
+   "start": 15992077,
+   "end": 16019025
   }, {
    "filename": "/tessdata/income_alpha.traineddata",
-   "start": 15665408,
-   "end": 15722130
+   "start": 16019025,
+   "end": 16075747
   }, {
    "filename": "/tessdata/income_num.traineddata",
-   "start": 15722130,
-   "end": 15751208
+   "start": 16075747,
+   "end": 16104825
   }, {
    "filename": "/tessdata/juminnum.traineddata",
-   "start": 15751208,
-   "end": 15773131
+   "start": 16104825,
+   "end": 16126748
   }, {
    "filename": "/tessdata/kor.traineddata",
-   "start": 15773131,
-   "end": 16880040
+   "start": 16126748,
+   "end": 17233657
   }, {
    "filename": "/tessdata/name.traineddata",
-   "start": 16880040,
-   "end": 16926610
+   "start": 17233657,
+   "end": 17280227
   }, {
    "filename": "/tessdata/number.traineddata",
-   "start": 16926610,
-   "end": 16950722
+   "start": 17280227,
+   "end": 17304339
   }, {
    "filename": "/tessdata/ocr.traineddata",
-   "start": 16950722,
-   "end": 16968932
+   "start": 17304339,
+   "end": 17322549
   }, {
    "filename": "/tessdata/pass2.traineddata",
-   "start": 16968932,
-   "end": 16990576
+   "start": 17322549,
+   "end": 17344193
   }, {
    "filename": "/tessdata/passport.traineddata",
-   "start": 16990576,
-   "end": 17057485
+   "start": 17344193,
+   "end": 17411102
   }, {
    "filename": "/weights/apo_0",
-   "start": 17057485,
-   "end": 17238421
+   "start": 17411102,
+   "end": 17592038
   }, {
    "filename": "/weights/dash_0",
-   "start": 17238421,
-   "end": 17419357
+   "start": 17592038,
+   "end": 17772974
   }, {
    "filename": "/weights/expr_0",
-   "start": 17419357,
-   "end": 17601349
+   "start": 17772974,
+   "end": 17954966
   }, {
    "filename": "/weights/expr_1",
-   "start": 17601349,
-   "end": 17783341
+   "start": 17954966,
+   "end": 18136958
   }, {
    "filename": "/weights/name_dxdy_0",
-   "start": 17783341,
-   "end": 17978305
+   "start": 18136958,
+   "end": 18331922
   }, {
    "filename": "/weights/name_dxdy_1",
-   "start": 17978305,
-   "end": 18173269
+   "start": 18331922,
+   "end": 18526886
   }, {
    "filename": "/weights/name_org_0",
-   "start": 18173269,
-   "end": 18306793
+   "start": 18526886,
+   "end": 18660410
   }, {
    "filename": "/weights/name_org_1",
-   "start": 18306793,
-   "end": 18440317
+   "start": 18660410,
+   "end": 18793934
   }, {
    "filename": "/weights/number_0",
-   "start": 18440317,
-   "end": 18540389
+   "start": 18793934,
+   "end": 18894006
   }, {
    "filename": "/weights/number_1",
-   "start": 18540389,
-   "end": 18640461
+   "start": 18894006,
+   "end": 18994078
   }, {
    "filename": "/weights/number_2",
-   "start": 18640461,
-   "end": 18740533
+   "start": 18994078,
+   "end": 19094150
   }, {
    "filename": "/weights/number_3",
-   "start": 18740533,
-   "end": 18840605
+   "start": 19094150,
+   "end": 19194222
   }, {
    "filename": "/weights/slash_0",
-   "start": 18840605,
-   "end": 19021541
+   "start": 19194222,
+   "end": 19375158
   }, {
    "filename": "/weights/slash_1",
-   "start": 19021541,
-   "end": 19202477
+   "start": 19375158,
+   "end": 19556094
   }, {
    "filename": "/weights/slash_2",
-   "start": 19202477,
-   "end": 19383413
+   "start": 19556094,
+   "end": 19737030
   }, {
    "filename": "/weights/vseg_0",
-   "start": 19383413,
-   "end": 19425025
+   "start": 19737030,
+   "end": 19778642
   }, {
    "filename": "/weights/vseg_1",
-   "start": 19425025,
-   "end": 19466637
+   "start": 19778642,
+   "end": 19820254
   } ],
-  "remote_package_size": 19466637
+  "remote_package_size": 19820254
  });
 })();
 
@@ -4872,57 +4876,57 @@ var asmLibraryArg = {
  "h": ___cxa_find_matching_catch_3,
  "B": ___cxa_free_exception,
  "fa": ___cxa_increment_exception_refcount,
- "O": ___cxa_rethrow,
+ "P": ___cxa_rethrow,
  "ea": ___cxa_rethrow_primary_exception,
  "k": ___cxa_throw,
  "ha": ___cxa_uncaught_exceptions,
  "f": ___resumeException,
- "T": ___syscall_fcntl64,
+ "U": ___syscall_fcntl64,
  "ma": ___syscall_ioctl,
- "S": ___syscall_openat,
+ "T": ___syscall_openat,
  "$": __embind_register_bigint,
  "ta": __embind_register_bool,
  "sa": __embind_register_emval,
- "W": __embind_register_float,
+ "X": __embind_register_float,
  "u": __embind_register_integer,
  "o": __embind_register_memory_view,
- "V": __embind_register_std_string,
+ "W": __embind_register_std_string,
  "H": __embind_register_std_wstring,
  "ua": __embind_register_void,
- "U": __emscripten_date_now,
+ "V": __emscripten_date_now,
  "na": __emscripten_get_now_is_monotonic,
- "L": __emval_as,
+ "M": __emval_as,
  "A": __emval_decref,
  "ra": __emval_get_global,
- "P": __emval_get_property,
- "R": __emval_new_cstring,
- "I": __emval_run_destructors,
+ "Q": __emval_get_property,
+ "S": __emval_new_cstring,
+ "J": __emval_run_destructors,
  "oa": __localtime_js,
  "pa": __tzset_js,
  "x": _abort,
  "ja": _emscripten_get_heap_max,
- "X": _emscripten_get_now,
+ "I": _emscripten_get_now,
  "qa": _emscripten_memcpy_big,
  "ia": _emscripten_resize_heap,
  "ka": _environ_get,
  "la": _environ_sizes_get,
  "y": _exit,
  "G": _fd_close,
- "Q": _fd_read,
+ "R": _fd_read,
  "_": _fd_seek,
  "F": _fd_write,
  "b": _getTempRet0,
- "J": invoke_diii,
- "K": invoke_fiii,
+ "K": invoke_diii,
+ "L": invoke_fiii,
  "m": invoke_i,
  "d": invoke_ii,
  "g": invoke_iii,
  "p": invoke_iiii,
  "j": invoke_iiiii,
- "N": invoke_iiiiid,
+ "O": invoke_iiiiid,
  "z": invoke_iiiiii,
  "v": invoke_iiiiiii,
- "M": invoke_iiiiiiii,
+ "N": invoke_iiiiiiii,
  "D": invoke_iiiiiiiiiiii,
  "Z": invoke_iiiiij,
  "Y": invoke_jiiii,
