@@ -161,151 +161,163 @@ Module.expectedDataFileDownloads++;
  };
  loadPackage({
   "files": [ {
-   "filename": "/face_detection/haarcascade_eye.xml",
+   "filename": "/face_detection/face_detection.zip",
    "start": 0,
-   "end": 353617
+   "end": 151816
+  }, {
+   "filename": "/face_detection/haarcascade_eye.xml",
+   "start": 151816,
+   "end": 505433
+  }, {
+   "filename": "/face_detection/haarcascade_eye.zip",
+   "start": 505433,
+   "end": 557929
   }, {
    "filename": "/face_detection/haarcascade_frontalface_alt.xml",
-   "start": 353617,
-   "end": 1054676
+   "start": 557929,
+   "end": 1258988
+  }, {
+   "filename": "/face_detection/haarcascade_frontalface_alt.zip",
+   "start": 1258988,
+   "end": 1358330
   }, {
    "filename": "/model/qr_fd_720x448_DXYDCUV_1214.model",
-   "start": 1054676,
-   "end": 13862779
+   "start": 1358330,
+   "end": 14166433
   }, {
    "filename": "/model/quramsoft",
-   "start": 13862779,
-   "end": 13862779
+   "start": 14166433,
+   "end": 14166433
   }, {
    "filename": "/tessdata/alien.traineddata",
-   "start": 13862779,
-   "end": 15830366
+   "start": 14166433,
+   "end": 16134020
   }, {
    "filename": "/tessdata/ar_num.traineddata",
-   "start": 15830366,
-   "end": 15860316
+   "start": 16134020,
+   "end": 16163970
   }, {
    "filename": "/tessdata/card.traineddata",
-   "start": 15860316,
-   "end": 15889698
+   "start": 16163970,
+   "end": 16193352
   }, {
    "filename": "/tessdata/driver_num.traineddata",
-   "start": 15889698,
-   "end": 15912020
+   "start": 16193352,
+   "end": 16215674
   }, {
    "filename": "/tessdata/eng.traineddata",
-   "start": 15912020,
-   "end": 15992077
+   "start": 16215674,
+   "end": 16295731
   }, {
    "filename": "/tessdata/giro.traineddata",
-   "start": 15992077,
-   "end": 16019025
+   "start": 16295731,
+   "end": 16322679
   }, {
    "filename": "/tessdata/income_alpha.traineddata",
-   "start": 16019025,
-   "end": 16075747
+   "start": 16322679,
+   "end": 16379401
   }, {
    "filename": "/tessdata/income_num.traineddata",
-   "start": 16075747,
-   "end": 16104825
+   "start": 16379401,
+   "end": 16408479
   }, {
    "filename": "/tessdata/juminnum.traineddata",
-   "start": 16104825,
-   "end": 16126748
+   "start": 16408479,
+   "end": 16430402
   }, {
    "filename": "/tessdata/kor.traineddata",
-   "start": 16126748,
-   "end": 17233657
+   "start": 16430402,
+   "end": 17537311
   }, {
    "filename": "/tessdata/name.traineddata",
-   "start": 17233657,
-   "end": 17280227
+   "start": 17537311,
+   "end": 17583881
   }, {
    "filename": "/tessdata/number.traineddata",
-   "start": 17280227,
-   "end": 17304339
+   "start": 17583881,
+   "end": 17607993
   }, {
    "filename": "/tessdata/ocr.traineddata",
-   "start": 17304339,
-   "end": 17322549
+   "start": 17607993,
+   "end": 17626203
   }, {
    "filename": "/tessdata/pass2.traineddata",
-   "start": 17322549,
-   "end": 17344193
+   "start": 17626203,
+   "end": 17647847
   }, {
    "filename": "/tessdata/passport.traineddata",
-   "start": 17344193,
-   "end": 17411102
+   "start": 17647847,
+   "end": 17714756
   }, {
    "filename": "/weights/apo_0",
-   "start": 17411102,
-   "end": 17592038
+   "start": 17714756,
+   "end": 17895692
   }, {
    "filename": "/weights/dash_0",
-   "start": 17592038,
-   "end": 17772974
+   "start": 17895692,
+   "end": 18076628
   }, {
    "filename": "/weights/expr_0",
-   "start": 17772974,
-   "end": 17954966
+   "start": 18076628,
+   "end": 18258620
   }, {
    "filename": "/weights/expr_1",
-   "start": 17954966,
-   "end": 18136958
+   "start": 18258620,
+   "end": 18440612
   }, {
    "filename": "/weights/name_dxdy_0",
-   "start": 18136958,
-   "end": 18331922
+   "start": 18440612,
+   "end": 18635576
   }, {
    "filename": "/weights/name_dxdy_1",
-   "start": 18331922,
-   "end": 18526886
+   "start": 18635576,
+   "end": 18830540
   }, {
    "filename": "/weights/name_org_0",
-   "start": 18526886,
-   "end": 18660410
+   "start": 18830540,
+   "end": 18964064
   }, {
    "filename": "/weights/name_org_1",
-   "start": 18660410,
-   "end": 18793934
+   "start": 18964064,
+   "end": 19097588
   }, {
    "filename": "/weights/number_0",
-   "start": 18793934,
-   "end": 18894006
+   "start": 19097588,
+   "end": 19197660
   }, {
    "filename": "/weights/number_1",
-   "start": 18894006,
-   "end": 18994078
+   "start": 19197660,
+   "end": 19297732
   }, {
    "filename": "/weights/number_2",
-   "start": 18994078,
-   "end": 19094150
+   "start": 19297732,
+   "end": 19397804
   }, {
    "filename": "/weights/number_3",
-   "start": 19094150,
-   "end": 19194222
+   "start": 19397804,
+   "end": 19497876
   }, {
    "filename": "/weights/slash_0",
-   "start": 19194222,
-   "end": 19375158
+   "start": 19497876,
+   "end": 19678812
   }, {
    "filename": "/weights/slash_1",
-   "start": 19375158,
-   "end": 19556094
+   "start": 19678812,
+   "end": 19859748
   }, {
    "filename": "/weights/slash_2",
-   "start": 19556094,
-   "end": 19737030
+   "start": 19859748,
+   "end": 20040684
   }, {
    "filename": "/weights/vseg_0",
-   "start": 19737030,
-   "end": 19778642
+   "start": 20040684,
+   "end": 20082296
   }, {
    "filename": "/weights/vseg_1",
-   "start": 19778642,
-   "end": 19820254
+   "start": 20082296,
+   "end": 20123908
   } ],
-  "remote_package_size": 19820254
+  "remote_package_size": 20123908
  });
 })();
 
