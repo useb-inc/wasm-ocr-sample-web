@@ -181,143 +181,143 @@ Module.expectedDataFileDownloads++;
    "start": 1258988,
    "end": 1358330
   }, {
-   "filename": "/model/qr_fd_720x448_DXYDCUV_1214.model",
+   "filename": "/model/qr_ssa_v2_r7_401_15.model",
    "start": 1358330,
-   "end": 14166433
+   "end": 14165281
   }, {
    "filename": "/model/quramsoft",
-   "start": 14166433,
-   "end": 14166433
+   "start": 14165281,
+   "end": 14165281
   }, {
    "filename": "/tessdata/alien.traineddata",
-   "start": 14166433,
-   "end": 16134020
+   "start": 14165281,
+   "end": 16132868
   }, {
    "filename": "/tessdata/ar_num.traineddata",
-   "start": 16134020,
-   "end": 16163970
+   "start": 16132868,
+   "end": 16162818
   }, {
    "filename": "/tessdata/card.traineddata",
-   "start": 16163970,
-   "end": 16193352
+   "start": 16162818,
+   "end": 16192200
   }, {
    "filename": "/tessdata/driver_num.traineddata",
-   "start": 16193352,
-   "end": 16215674
+   "start": 16192200,
+   "end": 16214522
   }, {
    "filename": "/tessdata/eng.traineddata",
-   "start": 16215674,
-   "end": 16295731
+   "start": 16214522,
+   "end": 16294579
   }, {
    "filename": "/tessdata/giro.traineddata",
-   "start": 16295731,
-   "end": 16322679
+   "start": 16294579,
+   "end": 16321527
   }, {
    "filename": "/tessdata/income_alpha.traineddata",
-   "start": 16322679,
-   "end": 16379401
+   "start": 16321527,
+   "end": 16378249
   }, {
    "filename": "/tessdata/income_num.traineddata",
-   "start": 16379401,
-   "end": 16408479
+   "start": 16378249,
+   "end": 16407327
   }, {
    "filename": "/tessdata/juminnum.traineddata",
-   "start": 16408479,
-   "end": 16430402
+   "start": 16407327,
+   "end": 16429250
   }, {
    "filename": "/tessdata/kor.traineddata",
-   "start": 16430402,
-   "end": 17537311
+   "start": 16429250,
+   "end": 17536159
   }, {
    "filename": "/tessdata/name.traineddata",
-   "start": 17537311,
-   "end": 17583881
+   "start": 17536159,
+   "end": 17582729
   }, {
    "filename": "/tessdata/number.traineddata",
-   "start": 17583881,
-   "end": 17607993
+   "start": 17582729,
+   "end": 17606841
   }, {
    "filename": "/tessdata/ocr.traineddata",
-   "start": 17607993,
-   "end": 17626203
+   "start": 17606841,
+   "end": 17625051
   }, {
    "filename": "/tessdata/pass2.traineddata",
-   "start": 17626203,
-   "end": 17647847
+   "start": 17625051,
+   "end": 17646695
   }, {
    "filename": "/tessdata/passport.traineddata",
-   "start": 17647847,
-   "end": 17714756
+   "start": 17646695,
+   "end": 17713604
   }, {
    "filename": "/weights/apo_0",
-   "start": 17714756,
-   "end": 17895692
+   "start": 17713604,
+   "end": 17894540
   }, {
    "filename": "/weights/dash_0",
-   "start": 17895692,
-   "end": 18076628
+   "start": 17894540,
+   "end": 18075476
   }, {
    "filename": "/weights/expr_0",
-   "start": 18076628,
-   "end": 18258620
+   "start": 18075476,
+   "end": 18257468
   }, {
    "filename": "/weights/expr_1",
-   "start": 18258620,
-   "end": 18440612
+   "start": 18257468,
+   "end": 18439460
   }, {
    "filename": "/weights/name_dxdy_0",
-   "start": 18440612,
-   "end": 18635576
+   "start": 18439460,
+   "end": 18634424
   }, {
    "filename": "/weights/name_dxdy_1",
-   "start": 18635576,
-   "end": 18830540
+   "start": 18634424,
+   "end": 18829388
   }, {
    "filename": "/weights/name_org_0",
-   "start": 18830540,
-   "end": 18964064
+   "start": 18829388,
+   "end": 18962912
   }, {
    "filename": "/weights/name_org_1",
-   "start": 18964064,
-   "end": 19097588
+   "start": 18962912,
+   "end": 19096436
   }, {
    "filename": "/weights/number_0",
-   "start": 19097588,
-   "end": 19197660
+   "start": 19096436,
+   "end": 19196508
   }, {
    "filename": "/weights/number_1",
-   "start": 19197660,
-   "end": 19297732
+   "start": 19196508,
+   "end": 19296580
   }, {
    "filename": "/weights/number_2",
-   "start": 19297732,
-   "end": 19397804
+   "start": 19296580,
+   "end": 19396652
   }, {
    "filename": "/weights/number_3",
-   "start": 19397804,
-   "end": 19497876
+   "start": 19396652,
+   "end": 19496724
   }, {
    "filename": "/weights/slash_0",
-   "start": 19497876,
-   "end": 19678812
+   "start": 19496724,
+   "end": 19677660
   }, {
    "filename": "/weights/slash_1",
-   "start": 19678812,
-   "end": 19859748
+   "start": 19677660,
+   "end": 19858596
   }, {
    "filename": "/weights/slash_2",
-   "start": 19859748,
-   "end": 20040684
+   "start": 19858596,
+   "end": 20039532
   }, {
    "filename": "/weights/vseg_0",
-   "start": 20040684,
-   "end": 20082296
+   "start": 20039532,
+   "end": 20081144
   }, {
    "filename": "/weights/vseg_1",
-   "start": 20082296,
-   "end": 20123908
+   "start": 20081144,
+   "end": 20122756
   } ],
-  "remote_package_size": 20123908
+  "remote_package_size": 20122756
  });
 })();
 
