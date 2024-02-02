@@ -648,6 +648,24 @@ input:checked + .slider:before {
 
 /* wasm simulation - end */
 
+#ocr-result-exclude-keylist-div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#ocr-result-exclude-keylist-div ul {
+  margin: 0;
+  max-height: 200px;
+  overflow: auto;
+  background-color: #d9d9d9;
+}
+
+#ocr-result-exclude-keylist-div ul li {
+  font-size: 16px;
+  font-weight: normal;
+}
+
 .custom--header {
   background: no-repeat url('../img/bg_graphic.svg');
   background-size: cover;
