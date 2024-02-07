@@ -6,7 +6,7 @@ const ocr = new UseBOCR();
 // const OCR_TARGET_ORIGIN = "*";     // 보안적으로 취약하니 *을 사용하는것은 권장하지 않습니다. (refer : https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage#:~:text=serialize%20them%20yourself.-,targetOrigin,-Specifies%20what%20the)
 const OCR_TARGET_ORIGIN = 'https://ocr.useb.co.kr';
 const OCR_URL = 'https://ocr.useb.co.kr/ocr.html';
-const OCR_LICENSE_KEY = 'FPkTBLFIa/Tn/mCZ5WKPlcuDxyb2bJVPSURXacnhj2d82wm39/tFIjCPpMsiXoPxGbN6G6l5gSLMBfwB6nwgIJZFWX0WlS1Jl49321wADP7yEhxE=';
+const OCR_LICENSE_KEY = 'FPkTB86ym/u+5Gr2Ffvg5BnN8Jh2J64u8l920gwXmvv5/dxlwtGKhNiw9/aeBXRRSYE+5ylxEWRzk4sD8wAbS5xHeZXBw7o9H2fsoxx0FicsaNh0=';
 const OCR_RESOURCE_BASE_URL = 'https://ocr.useb.co.kr/';
 
 /** localhost에서 'npm run start'로 실행 시 사용 참고 */
