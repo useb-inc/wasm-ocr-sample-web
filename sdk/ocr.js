@@ -725,7 +725,7 @@ class UseBOCR {
   __encryptScanResult(ocrResult) {
     var stringOnWasmHeap = null;
     try {
-      if (typeof ocrResult === 'number') ocrResult = ocrResult.toString();
+      if (typeof ocrResult === 'number' || typeof ocrResult === 'boolean') ocrResult = ocrResult.toString();
       if (ocrResult === '') return '';
       if (typeof ocrResult !== 'string' && !!!ocrResult) {
         throw new Error('ocrResult is empty');

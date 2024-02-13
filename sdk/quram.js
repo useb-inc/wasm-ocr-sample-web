@@ -5130,56 +5130,72 @@ var _setPiiEncrypt = Module["_setPiiEncrypt"] = function() {
  return (_setPiiEncrypt = Module["_setPiiEncrypt"] = Module["asm"]["ob"]).apply(null, arguments);
 };
 
+var _setOverallEncrypt = Module["_setOverallEncrypt"] = function() {
+ return (_setOverallEncrypt = Module["_setOverallEncrypt"] = Module["asm"]["pb"]).apply(null, arguments);
+};
+
 var _setPassportResultType = Module["_setPassportResultType"] = function() {
- return (_setPassportResultType = Module["_setPassportResultType"] = Module["asm"]["pb"]).apply(null, arguments);
+ return (_setPassportResultType = Module["_setPassportResultType"] = Module["asm"]["qb"]).apply(null, arguments);
+};
+
+var _setIdcardEncrypt = Module["_setIdcardEncrypt"] = function() {
+ return (_setIdcardEncrypt = Module["_setIdcardEncrypt"] = Module["asm"]["rb"]).apply(null, arguments);
+};
+
+var _setPassportEncrypt = Module["_setPassportEncrypt"] = function() {
+ return (_setPassportEncrypt = Module["_setPassportEncrypt"] = Module["asm"]["sb"]).apply(null, arguments);
+};
+
+var _setAlienEncrypt = Module["_setAlienEncrypt"] = function() {
+ return (_setAlienEncrypt = Module["_setAlienEncrypt"] = Module["asm"]["tb"]).apply(null, arguments);
 };
 
 var ___errno_location = Module["___errno_location"] = function() {
- return (___errno_location = Module["___errno_location"] = Module["asm"]["qb"]).apply(null, arguments);
+ return (___errno_location = Module["___errno_location"] = Module["asm"]["ub"]).apply(null, arguments);
 };
 
 var _performanceChecker = Module["_performanceChecker"] = function() {
- return (_performanceChecker = Module["_performanceChecker"] = Module["asm"]["rb"]).apply(null, arguments);
+ return (_performanceChecker = Module["_performanceChecker"] = Module["asm"]["vb"]).apply(null, arguments);
 };
 
 var ___getTypeName = Module["___getTypeName"] = function() {
- return (___getTypeName = Module["___getTypeName"] = Module["asm"]["sb"]).apply(null, arguments);
+ return (___getTypeName = Module["___getTypeName"] = Module["asm"]["wb"]).apply(null, arguments);
 };
 
 var __embind_initialize_bindings = Module["__embind_initialize_bindings"] = function() {
- return (__embind_initialize_bindings = Module["__embind_initialize_bindings"] = Module["asm"]["tb"]).apply(null, arguments);
+ return (__embind_initialize_bindings = Module["__embind_initialize_bindings"] = Module["asm"]["xb"]).apply(null, arguments);
 };
 
 var _setThrew = Module["_setThrew"] = function() {
- return (_setThrew = Module["_setThrew"] = Module["asm"]["ub"]).apply(null, arguments);
+ return (_setThrew = Module["_setThrew"] = Module["asm"]["yb"]).apply(null, arguments);
 };
 
 var stackSave = Module["stackSave"] = function() {
- return (stackSave = Module["stackSave"] = Module["asm"]["vb"]).apply(null, arguments);
+ return (stackSave = Module["stackSave"] = Module["asm"]["zb"]).apply(null, arguments);
 };
 
 var stackRestore = Module["stackRestore"] = function() {
- return (stackRestore = Module["stackRestore"] = Module["asm"]["wb"]).apply(null, arguments);
+ return (stackRestore = Module["stackRestore"] = Module["asm"]["Ab"]).apply(null, arguments);
 };
 
 var stackAlloc = Module["stackAlloc"] = function() {
- return (stackAlloc = Module["stackAlloc"] = Module["asm"]["xb"]).apply(null, arguments);
+ return (stackAlloc = Module["stackAlloc"] = Module["asm"]["Bb"]).apply(null, arguments);
 };
 
 var ___cxa_can_catch = Module["___cxa_can_catch"] = function() {
- return (___cxa_can_catch = Module["___cxa_can_catch"] = Module["asm"]["yb"]).apply(null, arguments);
+ return (___cxa_can_catch = Module["___cxa_can_catch"] = Module["asm"]["Cb"]).apply(null, arguments);
 };
 
 var ___cxa_is_pointer_type = Module["___cxa_is_pointer_type"] = function() {
- return (___cxa_is_pointer_type = Module["___cxa_is_pointer_type"] = Module["asm"]["zb"]).apply(null, arguments);
+ return (___cxa_is_pointer_type = Module["___cxa_is_pointer_type"] = Module["asm"]["Db"]).apply(null, arguments);
 };
 
 var dynCall_iiiiij = Module["dynCall_iiiiij"] = function() {
- return (dynCall_iiiiij = Module["dynCall_iiiiij"] = Module["asm"]["Ab"]).apply(null, arguments);
+ return (dynCall_iiiiij = Module["dynCall_iiiiij"] = Module["asm"]["Eb"]).apply(null, arguments);
 };
 
 var dynCall_jiiii = Module["dynCall_jiiii"] = function() {
- return (dynCall_jiiii = Module["dynCall_jiiii"] = Module["asm"]["Bb"]).apply(null, arguments);
+ return (dynCall_jiiii = Module["dynCall_jiiii"] = Module["asm"]["Fb"]).apply(null, arguments);
 };
 
 function invoke_vi(index, a1) {
@@ -5600,3 +5616,11 @@ setPiiEncrypt = Module.cwrap("setPiiEncrypt", "", [ "bool" ]);
 performanceChecker = Module.cwrap("performanceChecker", "number", [ "" ]);
 
 setPassportResultType = Module.cwrap("setPassportResultType", "", [ "number" ]);
+
+setIdcardEncrypt = Module.cwrap("setIdcardEncrypt", "", [ "string" ]);
+
+setPassportEncrypt = Module.cwrap("setPassportEncrypt", "", [ "string" ]);
+
+setAlienEncrypt = Module.cwrap("setAlienEncrypt", "", [ "string" ]);
+
+setOverallEncrypt = Module.cwrap("setOverallEncrypt", "", [ "bool" ]);
