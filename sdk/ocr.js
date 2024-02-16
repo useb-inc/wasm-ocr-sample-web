@@ -1161,7 +1161,9 @@ class UseBOCR {
         }
         var ocrResult = null;
         if (!_this12.__ocrTypeList.includes(ocrType)) throw new Error('Unsupported OCR type');
-        var [, resultBuffer] = _this12.__getBuffer();
+
+        // const [, resultBuffer] = this.__getBuffer();
+
         var recognition = /*#__PURE__*/function () {
           var _ref7 = _asyncToGenerator(function* (isSetIgnoreComplete) {
             var _ocrResult, _ocrResult2;
@@ -1173,23 +1175,23 @@ class UseBOCR {
               case 'driver':
               case 'idcard-ssa':
               case 'driver-ssa':
-                ocrResult = _this12.__OCREngine.scanIDCard(address, resultBuffer);
+                ocrResult = _this12.__OCREngine.scanIDCard(address, 0);
                 break;
               case 'passport':
               case 'foreign-passport':
               case 'passport-ssa':
               case 'foreign-passport-ssa':
-                ocrResult = _this12.__OCREngine.scanPassport(address, resultBuffer);
+                ocrResult = _this12.__OCREngine.scanPassport(address, 0);
                 break;
               case 'alien':
               case 'alien-ssa':
-                ocrResult = _this12.__OCREngine.scanAlien(address, resultBuffer);
+                ocrResult = _this12.__OCREngine.scanAlien(address, 0);
                 break;
               case 'alien-back':
-                ocrResult = _this12.__OCREngine.scanAlienBack(address, resultBuffer);
+                ocrResult = _this12.__OCREngine.scanAlienBack(address, 0);
                 break;
               case 'credit':
-                ocrResult = _this12.__OCREngine.scanCredit(address, resultBuffer);
+                ocrResult = _this12.__OCREngine.scanCredit(address, 0);
                 break;
               default:
                 throw new Error('Scanner does not exists');
