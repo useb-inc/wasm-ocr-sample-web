@@ -618,6 +618,10 @@ class UseBOCR {
     this.__options.useCompressImageMaxVolume = convertTypeToNumber(this.__options.useCompressImageMaxVolume);
     this.__options.useCompressImageMaxWidth = convertTypeToNumber(this.__options.useCompressImageMaxWidth);
     this.__options.switchToServerThreshold = convertTypeToFloat(this.__options.switchToServerThreshold);
+    if (this.isEncryptMode() && this.__options.ssaMaxRetryCount > 0) {
+      this.__options.ssaMaxRetryCount = 0;
+      void 0;
+    }
   }
   __windowEventBind() {
     var _this_ = this;
@@ -930,6 +934,10 @@ class UseBOCR {
     })();
   }
   __getRotationDegree() {
+    if (this.isEncryptMode()) {
+      this.__options.rotationDegree = 0;
+      void 0;
+    }
     return (this.__options.rotationDegree % 360 + 360) % 360;
   }
   __getMirrorMode() {
@@ -1022,7 +1030,17 @@ class UseBOCR {
       calcContext.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, calcResolution_w, calcResolution_h);
       var imgData, imgDataUrl;
       imgData = calcContext.getImageData(0, 0, calcResolution_w, calcResolution_h);
-      imgDataUrl = calcCanvas.toDataURL('image/jpeg');
+      var useDataURL = false;
+      if (isAlienBack) {
+        useDataURL = true;
+      } else {
+        if (_this10.isEncryptMode()) {
+          void 0;
+        } else {
+          useDataURL = true;
+        }
+      }
+      imgDataUrl = useDataURL ? calcCanvas.toDataURL('image/jpeg') : '';
       if (isAlienBack) {
         [imgData, imgDataUrl] = yield _this10.__rotate(imgData, imgDataUrl, 270);
       }
@@ -2592,6 +2610,7 @@ class UseBOCR {
               isDetectedCard = null,
               imgData = null,
               imgDataUrl = null,
+              originImage = null,
               maskImage = null,
               faceImage = null,
               ssaResult = null,
@@ -2648,7 +2667,7 @@ class UseBOCR {
                 _this23.setIgnoreComplete(true);
                 yield _this23.__changeStage(_this23.IN_PROGRESS.MANUAL_CAPTURE_SUCCESS, false, imgDataUrl);
               }
-              [ocrResult, imgDataUrl, maskImage, faceImage] = yield _this23.__startRecognition(_this23.__address, _this23.__ocrType, _this23.__ssaMode, _this23.__isClickedCaptureButton(), imgData, imgDataUrl);
+              [ocrResult, originImage, maskImage, faceImage] = yield _this23.__startRecognition(_this23.__address, _this23.__ocrType, _this23.__ssaMode, _this23.__isClickedCaptureButton(), imgData, imgDataUrl);
 
               // if (this.__isClickedCaptureButton()) {
               //   this.__blurCaptureButton();
@@ -2744,13 +2763,13 @@ class UseBOCR {
               var review_result = {
                 ocr_type: _this23.__ocrType,
                 ocr_result: newFormat,
-                ocr_origin_image: imgDataUrl,
+                ocr_origin_image: originImage,
                 ocr_masking_image: maskImage,
                 ocr_face_image: faceImage,
                 maskInfo: maskInfo,
                 ssa_mode: _this23.__ssaMode
               };
-              yield _this23.__compressImages(review_result, imgDataUrl, maskImage, faceImage);
+              yield _this23.__compressImages(review_result, originImage, maskImage, faceImage);
               _this23.encryptResult(review_result);
               review_result.ocr_result = _this23.__options.ocrResultExcludeKeylist.includes('all') ? _this23.excludeOcrResult(review_result.ocr_result, [..._this23.__ocrResultKeySet]) : _this23.excludeOcrResult(review_result.ocr_result, _this23.__options.ocrResultExcludeKeylist);
               review_result = _this23.__options.ocrImageExcludeKeylist.includes('all') ? _this23.excludeOcrImage(review_result, [..._this23.__ocrImageKeySet]) : _this23.excludeOcrImage(review_result, _this23.__options.ocrImageExcludeKeylist);
@@ -2796,9 +2815,13 @@ class UseBOCR {
     });
   }
 
-  __compressImages(review_result, imgDataUrl, maskImage, faceImage, constantNumber) {
+  __compressImages(review_result, originImage, maskImage, faceImage, constantNumber) {
     var _this24 = this;
     return _asyncToGenerator(function* () {
+      if (_this24.isEncryptMode()) {
+        void 0;
+        return;
+      }
       if (_this24.__options.useCompressImage) {
         var resizeRatio = _this24.__cropImageSizeHeight / _this24.__cropImageSizeWidth;
         var defaultOptions = {
@@ -2809,7 +2832,7 @@ class UseBOCR {
         };
 
         if (!_this24.__options.ocrImageExcludeKeylist.includes('ocr_origin_image')) {
-          review_result.ocr_origin_image = yield _this24.__compreseBase64Image(imgDataUrl, defaultOptions, constantNumber);
+          review_result.ocr_origin_image = yield _this24.__compreseBase64Image(originImage, defaultOptions, constantNumber);
         }
         if (!_this24.__options.ocrImageExcludeKeylist.includes('ocr_masking_image')) {
           // masking 이미지는 resize 하면, mask 좌표가 어긋나므로 리사이즈 안하고 압축만 진행
