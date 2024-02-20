@@ -16,12 +16,22 @@ class ObjectUtil {
       return target;
     });
   }
-  csvToObject(str) {
-    var pairs = str.split(';');
+  stringToJson(str) {
     var obj = {};
-    for (var i = 0; i < pairs.length; i++) {
-      var pair = pairs[i].split(':');
-      if (pair.length === 2) obj[pair[0]] = pair[1];
+    var keyValuePairs = str.match(/\w+:(?:\([^)]*\)|[^;]+)/g);
+    if (keyValuePairs) {
+      for (var i = 0; i < keyValuePairs.length; i++) {
+        var pair = keyValuePairs[i].split(':');
+        var key = pair[0].trim();
+        var value = pair.slice(1).join(':').trim();
+        if (value.startsWith('(') && value.endsWith(')')) {
+          var subStr = value.substring(1, value.length - 1); // 서브 문자열 추출
+          var subObj = this.stringToJson(subStr); // 재귀적으로 서브 오브젝트 변환
+          obj[key] = subObj;
+        } else {
+          obj[key] = value;
+        }
+      }
     }
     return obj;
   }
