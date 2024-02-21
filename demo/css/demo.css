@@ -648,21 +648,22 @@ input:checked + .slider:before {
 
 /* wasm simulation - end */
 
-#ocr-result-exclude-keylist-div {
+#ocr-result-keylist-div {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  font-size: 14px;
 }
 
-#ocr-result-exclude-keylist-div ul {
+#ocr-result-keylist-div ul {
   margin: 0;
   max-height: 200px;
   overflow: auto;
   background-color: #d9d9d9;
 }
 
-#ocr-result-exclude-keylist-div ul li {
-  font-size: 16px;
+#ocr-result-keylist-div div ul li {
+  font-size: 12px;
   font-weight: normal;
 }
 
