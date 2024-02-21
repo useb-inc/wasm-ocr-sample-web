@@ -5,11 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>OCR/SSA WebAssembly Sample</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" type="text/css" href="./css/demo.css?ver=v1.18.0-qa-r1" />
+    <link rel="stylesheet" type="text/css" href="./css/demo.css?ver=v1.17.3-hotfix-Hana-capital" />
 
-    <script type="text/javascript" src="./js/util.js?ver=v1.18.0-qa-r1"></script>
-    <script type="text/javascript" src="./lib/lodash.min.js?ver=v1.18.0-qa-r1"></script>
-    <script type="module" src="./js/ui_simulator.js?ver=v1.18.0-qa-r1" async></script>
+    <script type="text/javascript" src="./js/util.js?ver=v1.17.3-hotfix-Hana-capital"></script>
+    <script type="text/javascript" src="./lib/lodash.min.js?ver=v1.17.3-hotfix-Hana-capital"></script>
+    <script type="module" src="./js/ui_simulator.js?ver=v1.17.3-hotfix-Hana-capital" async></script>
     <script src="https://kit.fontawesome.com/71d7c8cd6e.js" crossorigin="anonymous"></script>
   </head>
 
@@ -232,40 +232,54 @@
         </fieldset>
         <fieldset>
           <legend>출력 옵션</legend>
-          <div id="encrypt-option">
-            <label for="encrypt-type">암호화 방식</label>
-
-            <select id="encrypt-type">
-              <option value="disableEncrypt">사용안함</option>
-              <option value="piiEncrypt">개인식별정보 (PII)</option>
-              <option value="valueEncrypt">value (value 암호화)</option>
-              <option value="overallEncrypt">overall (object 포괄 암호화)</option>
-            </select>
+          <div id="use-encrypt-mode-div">
+            <label for="use-encrypt-mode">암호화 적용</label>
+            <input type="checkbox" id="use-encrypt-mode" name="use-encrypt-mode" />
           </div>
-          <div id="ocr-result-keylist-div" style="display: none">
+          <div id="use-encrypt-overall-mode-div">
+            <label for="use-encrypt-overall-mode">암호화 적용 (Overall)</label>
+            <input type="checkbox" id="use-encrypt-overall-mode" name="use-encrypt-overall-mode" />
+          </div>
+          <div id="use-encrypt-all-mode-div">
+            <label for="use-encrypt-all-mode">암호화 적용 (all)</label>
+            <input type="checkbox" id="use-encrypt-all-mode" name="use-encrypt-all-mode" />
+          </div>
+          <!-- // 추후 위에 주석 풀어야함 - START
+          <div>
+            <label for="use-pii-encrypt-mode">암호화 적용 (pii)</label>
+            <input
+              type="checkbox"
+              id="use-pii-encrypt-mode"
+              name="use-pii-encrypt-mode"
+            />
+          </div>
+          <div>
+            <label for="use-pii-encrypt-face"
+              >신분증 얼굴사진 암호화 적용</label
+            >
+            <input
+              type="checkbox"
+              id="use-pii-encrypt-face"
+              name="use-pii-encrypt-face"
+            />
+          </div>
+          -->
+          <div id="ocr-result-exclude-keylist-div" style="display: none">
             <div>
-              <label>주민증/면허증 평문 설정</label>
-              <ul id="ocr-result-idcard-keylist-wrapper"></ul>
+              <label>OCR 결과에서 제외할 값(선택)</label>
+              <ul id="ocr-result-exclude-keylist-wrapper"></ul>
             </div>
             <div>
-              <label>주민증/면허증 암호화 설정</label>
-              <ul id="encrypt-ocr-result-idcard-keylist-wrapper"></ul>
+              <label>OCR 결과에서 제외할 이미지(선택)</label>
+              <ul id="ocr-image-exclude-keylist-wrapper"></ul>
             </div>
             <div>
-              <label>여권 평문 설정</label>
-              <ul id="ocr-result-passport-keylist-wrapper"></ul>
+              <label>암호화 결과에서 제외할 값(선택)</label>
+              <ul id="encrypt-ocr-result-exclude-keylist-wrapper"></ul>
             </div>
             <div>
-              <label>여권 암호화 설정</label>
-              <ul id="encrypt-ocr-result-passport-keylist-wrapper"></ul>
-            </div>
-            <div>
-              <label>외국인등록증 평문 설정</label>
-              <ul id="ocr-result-alien-keylist-wrapper"></ul>
-            </div>
-            <div>
-              <label>외국인등록증 암호화 설정</label>
-              <ul id="encrypt-ocr-result-alien-keylist-wrapper"></ul>
+              <label>암호화 결과에서 제외할 이미지(선택)</label>
+              <ul id="encrypt-ocr-image-exclude-keylist-wrapper"></ul>
             </div>
           </div>
           <div>
@@ -550,6 +564,6 @@
       <div id="ocr_result" class="custom--section"></div>
     </section>
 
-    <script type="module" src="./demo.js?ver=v1.18.0-qa-r1" async></script>
+    <script type="module" src="./demo.js?ver=v1.17.3-hotfix-Hana-capital" async></script>
   </body>
 </html>

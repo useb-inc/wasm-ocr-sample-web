@@ -16,221 +16,6 @@ class UISimulator {
     _defineProperty(this, "__settings", {
       ssaRetryType: 'ENSEMBLE'
     });
-    _defineProperty(this, "__ocrResultIdcardKeys", [{
-      title: '전체',
-      value: 'all'
-    }, {
-      title: '신분증 종류',
-      value: 'result_scan_type'
-    }, {
-      title: '이름',
-      value: 'name'
-    }, {
-      title: '주민등록번호',
-      value: 'jumin'
-    }, {
-      title: '발급일자',
-      value: 'issued_date'
-    }, {
-      title: '발행처',
-      value: 'region'
-    }, {
-      title: '재외국민 주민등록증',
-      value: 'overseas_resident'
-    }, {
-      title: '운전면허번호',
-      value: 'driver_number'
-    }, {
-      title: '운전면허번호',
-      value: 'driver_serial'
-    }, {
-      title: '운전면허번호',
-      value: 'driver_type'
-    }, {
-      title: '적성검사 갱신기간 시작일',
-      value: 'aptitude_test_date_start'
-    }, {
-      title: '적성검사 갱신기간 종료일',
-      value: 'aptitude_test_date_end'
-    },
-    // { title: '생년월일', value: 'birth' },                     // js 레벨에서 생성하는 값
-    // { title: '운전면허증인경우 면허번호 형식이 구형(제주-XXXX-XX)인지 여부', value: 'is_old_format_driver_number' },    // js 레벨에서 생성하는 값
-
-    {
-      title: '컬러 검출 점수',
-      value: 'color_point'
-    }, {
-      title: '얼굴 검출 점수',
-      value: 'found_face'
-    }, {
-      title: '눈 검출 점수',
-      value: 'found_eye'
-    }, {
-      title: '빛 반사율',
-      value: 'specular_ratio'
-    }, {
-      title: '스캔 시작 시간',
-      value: 'start_time'
-    }, {
-      title: '스캔 완료 시간',
-      value: 'end_time'
-    }, {
-      title: '원본 신분증 이미지',
-      value: 'ocr_origin_image'
-    }, {
-      title: '마스킹된 신분증 이미지',
-      value: 'ocr_masking_image'
-    }, {
-      title: '신분증 상의 얼굴 크롭 이미지',
-      value: 'ocr_face_image'
-    }
-
-    // { title: '사본판별 활성화 여부', value: 'ssa_mode' },
-    // { title: '신분증 사본탐지 신뢰도', value: 'fd_confidence' },
-    // { title: '신분증 사본탐지 결과 (REAL : 실물, FAKE : 가짜)', value: 'id_truth' },
-    ]);
-    _defineProperty(this, "__ocrResultPassportKeys", [{
-      title: '전체',
-      value: 'all'
-    }, {
-      title: '신분증 종류',
-      value: 'result_scan_type'
-    }, {
-      title: '이름',
-      value: 'name'
-    }, {
-      title: '성',
-      value: 'sur_name'
-    }, {
-      title: '이름',
-      value: 'given_name'
-    }, {
-      title: '여권 종류',
-      value: 'passport_type'
-    }, {
-      title: '발행국',
-      value: 'issuing_country'
-    }, {
-      title: '여권번호',
-      value: 'passport_number'
-    }, {
-      title: '소속국',
-      value: 'nationality'
-    }, {
-      title: '발행일자',
-      value: 'issued_date'
-    }, {
-      title: '성별',
-      value: 'sex'
-    }, {
-      title: '만료일',
-      value: 'expiry_date'
-    }, {
-      title: '여권개인번호',
-      value: 'personal_number'
-    }, {
-      title: '주민등록번호',
-      value: 'jumin'
-    }, {
-      title: '생년월일',
-      value: 'birthday'
-    }, {
-      title: '한글 이름',
-      value: 'name_kor'
-    }, {
-      title: 'mrz1',
-      value: 'mrz1'
-    }, {
-      title: 'mrz2',
-      value: 'mrz2'
-    }, {
-      title: '컬러 검출 점수',
-      value: 'color_point'
-    }, {
-      title: '얼굴 검출 점수',
-      value: 'found_face'
-    }, {
-      title: '눈 검출 점수',
-      value: 'found_eye'
-    }, {
-      title: '빛 반사율',
-      value: 'specular_ratio'
-    }, {
-      title: '스캔 시작 시간',
-      value: 'start_time'
-    }, {
-      title: '스캔 완료 시간',
-      value: 'end_time'
-    }, {
-      title: '원본 신분증 이미지',
-      value: 'ocr_origin_image'
-    }, {
-      title: '마스킹된 신분증 이미지',
-      value: 'ocr_masking_image'
-    }, {
-      title: '신분증 상의 얼굴 크롭 이미지',
-      value: 'ocr_face_image'
-    }
-
-    // { title: '사본판별 활성화 여부', value: 'ssa_mode' },
-    // { title: '신분증 사본탐지 신뢰도', value: 'fd_confidence' },
-    // { title: '신분증 사본탐지 결과 (REAL : 실물, FAKE : 가짜)', value: 'id_truth' },
-    ]);
-    _defineProperty(this, "__ocrResultAlienKeys", [{
-      title: '전체',
-      value: 'all'
-    }, {
-      title: '이름',
-      value: 'name'
-    }, {
-      title: '외국인등록번호',
-      value: 'jumin'
-    }, {
-      title: '발행일자',
-      value: 'issued_date'
-    }, {
-      title: '국가지역',
-      value: 'nationality'
-    }, {
-      title: '체류자격',
-      value: 'visa_type'
-    }, {
-      title: '한글 이름',
-      value: 'name_kor'
-    }, {
-      title: '컬러 검출 점수',
-      value: 'color_point'
-    }, {
-      title: '얼굴 검출 점수',
-      value: 'found_face'
-    }, {
-      title: '눈 검출 점수',
-      value: 'found_eye'
-    }, {
-      title: '빛 반사율',
-      value: 'specular_ratio'
-    }, {
-      title: '스캔 시작 시간',
-      value: 'start_time'
-    }, {
-      title: '스캔 완료 시간',
-      value: 'end_time'
-    }, {
-      title: '원본 신분증 이미지',
-      value: 'ocr_origin_image'
-    }, {
-      title: '마스킹된 신분증 이미지',
-      value: 'ocr_masking_image'
-    }, {
-      title: '신분증 상의 얼굴 크롭 이미지',
-      value: 'ocr_face_image'
-    }
-
-    // { title: '사본판별 활성화 여부', value: 'ssa_mode' },
-    // { title: '신분증 사본탐지 신뢰도', value: 'fd_confidence' },
-    // { title: '신분증 사본탐지 결과 (REAL : 실물, FAKE : 가짜)', value: 'id_truth' },
-    ]);
-
     if (!!!onClickStartCallback || !!!onClickRestartCallback) {
       throw new Error('onClick callback function parameter is not exist');
     }
@@ -374,52 +159,69 @@ class UISimulator {
         this.__settings.useManualSwitchToServerMode = e.target.checked;
         this.__saveSettingsHandler();
       });
-      var setEncryptOptionUI = (showKeylistUI, setKeylist) => {
-        if (showKeylistUI) {
-          // document.getElementById('use-encrypt-mode-div').style.display = 'none';
-          // document.getElementById('use-encrypt-all-mode-div').style.display = 'none';
-          document.getElementById('ocr-result-keylist-div').style.display = 'flex';
-          this.__settings.ocrResultIdcardKeylist = setKeylist ? this.__ocrResultIdcardKeys.map(k => k.value).join(',') : ''; // prettier-ignore
-          this.__settings.encryptedOcrResultIdcardKeylist = setKeylist ? this.__ocrResultIdcardKeys.map(k => k.value).join(',') : ''; // prettier-ignore
-          this.__settings.ocrResultPassportKeylist = setKeylist ? this.__ocrResultPassportKeys.map(k => k.value).join(',') : ''; // prettier-ignore
-          this.__settings.encryptedOcrResultPassportKeylist = setKeylist ? this.__ocrResultPassportKeys.map(k => k.value).join(',') : ''; // prettier-ignore
-          this.__settings.ocrResultAlienKeylist = setKeylist ? this.__ocrResultAlienKeys.map(k => k.value).join(',') : ''; // prettier-ignore
-          this.__settings.encryptedOcrResultAlienKeylist = setKeylist ? this.__ocrResultAlienKeys.map(k => k.value).join(',') : ''; // prettier-ignore
+      document.getElementById('use-encrypt-mode').addEventListener('change', e => {
+        if (e.target.checked) {
+          this.__settings.useEncryptAllMode = !e.target.checked;
+          document.getElementById('use-encrypt-all-mode-div').style.display = 'none';
+          document.getElementById('use-encrypt-overall-mode-div').style.display = 'none';
         } else {
-          // document.getElementById('use-encrypt-mode-div').style.display = 'block';
-          // document.getElementById('use-encrypt-all-mode-div').style.display = 'block';
-          document.getElementById('ocr-result-keylist-div').style.display = 'none';
-          delete this.__settings.ocrResultIdcardKeylist;
-          delete this.__settings.encryptedOcrResultIdcardKeylist;
-          delete this.__settings.ocrResultPassportKeylist;
-          delete this.__settings.encryptedOcrResultPassportKeylist;
-          delete this.__settings.ocrResultAlienKeylist;
-          delete this.__settings.encryptedOcrResultAlienKeylist;
+          document.getElementById('use-encrypt-all-mode-div').style.display = 'block';
+          document.getElementById('use-encrypt-overall-mode-div').style.display = 'block';
         }
-      };
-      document.getElementById('encrypt-type').addEventListener('change', e => {
-        delete this.__settings.useEncryptMode;
-        delete this.__settings.useEncryptValueMode;
-        delete this.__settings.useEncryptOverallMode;
-        void 0;
-        var showKeylistUI = false,
-          setKeylist = false;
-        if (e.target.value === 'disableEncrypt') {} else if (e.target.value === 'piiEncrypt') {
-          this.__settings.useEncryptMode = true;
-        } else if (e.target.value === 'valueEncrypt') {
-          this.__settings.useEncryptValueMode = true;
-          showKeylistUI = true;
-          setKeylist = true;
-        } else if (e.target.value === 'overallEncrypt') {
-          this.__settings.useEncryptOverallMode = true;
-          showKeylistUI = true;
-          setKeylist = true;
-        } else {
-          throw new Error('invalid encrypt type');
-        }
-        setEncryptOptionUI(showKeylistUI, setKeylist);
+        this.__settings.useEncryptMode = e.target.checked;
         this.__saveSettingsHandler();
       });
+      document.getElementById('use-encrypt-all-mode').addEventListener('change', e => {
+        if (e.target.checked) {
+          this.__settings.useEncryptMode = !e.target.checked;
+          document.getElementById('use-encrypt-mode-div').style.display = 'none';
+          document.getElementById('use-encrypt-overall-mode-div').style.display = 'none';
+        } else {
+          document.getElementById('use-encrypt-mode-div').style.display = 'block';
+          document.getElementById('use-encrypt-overall-mode-div').style.display = 'block';
+        }
+        this.__settings.useEncryptAllMode = e.target.checked;
+        this.__saveSettingsHandler();
+      });
+      document.getElementById('use-encrypt-overall-mode').addEventListener('change', e => {
+        if (e.target.checked) {
+          this.__settings.useEncryptOverallMode = !e.target.checked;
+          document.getElementById('use-encrypt-mode-div').style.display = 'none';
+          document.getElementById('use-encrypt-all-mode-div').style.display = 'none';
+          document.getElementById('ocr-result-exclude-keylist-div').style.display = 'flex';
+          this.__settings.ocrResultExcludeKeylist = '';
+          this.__settings.ocrImageExcludeKeylist = '';
+          this.__settings.encryptOcrResultExcludeKeylist = '';
+          this.__settings.encryptOcrImageExcludeKeylist = '';
+        } else {
+          document.getElementById('use-encrypt-mode-div').style.display = 'block';
+          document.getElementById('use-encrypt-all-mode-div').style.display = 'block';
+          document.getElementById('ocr-result-exclude-keylist-div').style.display = 'none';
+          delete this.__settings.ocrResultExcludeKeylist;
+          delete this.__settings.ocrImageExcludeKeylist;
+          delete this.__settings.encryptOcrResultExcludeKeylist;
+          delete this.__settings.encryptOcrImageExcludeKeylist;
+        }
+        this.__settings.useEncryptOverallMode = e.target.checked;
+        this.__saveSettingsHandler();
+      });
+
+      // 추후 위에 주석 풀어야함 - START
+      // document
+      //   .getElementById('use-pii-encrypt-mode')
+      //   .addEventListener('change', (e) => {
+      //     this.__settings.usePiiEncryptMode = e.target.checked;
+      //     this.__saveSettingsHandler();
+      //   });
+      //
+      // document
+      //   .getElementById('use-pii-encrypt-face')
+      //   .addEventListener('change', (e) => {
+      //     this.__settings.usePiiEncryptFace = e.target.checked;
+      //     this.__saveSettingsHandler();
+      //   });
+      // 추후 위에 주석 풀어야함 - END
+
       document.getElementById('use-legacy-format').addEventListener('change', e => {
         this.__settings.useLegacyFormat = e.target.checked;
         this.__saveSettingsHandler();
@@ -493,7 +295,7 @@ class UISimulator {
         this.__saveSettingsHandler();
       });
       document.getElementById('force_wasm_reload_flag').addEventListener('change', e => {
-        var checked = document.querySelector('#force_wasm_reload').value;
+        var checked = document.querySelector('#foce_wasm_reload').value;
         this.__settings.force_wasm_reload_flag = checked ? e.target.value : '';
         this.__saveSettingsHandler();
       });
@@ -610,30 +412,145 @@ class UISimulator {
       document.getElementById('restart_btn').addEventListener('click', () => {
         this.__onClickRestart();
       });
-      this.__ocrResultOptionsSetting();
+      this.__ocrExcludeOptionsSetting();
     };
   }
   __onClickStart() {
+    // this.__setActiveButton(this.__type);
     this.__onClickStartCallback(this.__type, this.__settings);
   }
   __onClickRestart() {
     this.__onClickRestartCallback();
   }
-  __ocrResultOptionsSetting() {
-    var insertOcrResultKeyOptions = (target, keys) => {
+  __ocrExcludeOptionsSetting() {
+    var ocrResultKeys = [{
+      title: '전체',
+      value: 'all'
+    }, {
+      title: '신분증 종류',
+      value: 'result_scan_type'
+    }, {
+      title: '이름',
+      value: 'name'
+    }, {
+      title: '주민등록번호',
+      value: 'jumin'
+    }, {
+      title: '발급일자',
+      value: 'issued_date'
+    }, {
+      title: '발급 행정구역',
+      value: 'region'
+    }, {
+      title: 'color_point',
+      value: 'color_point'
+    }, {
+      title: '신분증 상 얼굴 좌표',
+      value: 'found_face'
+    }, {
+      title: '신분증 상 눈 좌표',
+      value: 'found_eye'
+    }, {
+      title: 'OCR 시작시간',
+      value: 'start_time'
+    }, {
+      title: 'OCR 종료시간',
+      value: 'end_time'
+    }, {
+      title: '생년월일',
+      value: 'birth'
+    }, {
+      title: '해외거주 여부',
+      value: 'overseas_resident'
+    }, {
+      title: '운전면허 번호',
+      value: 'driver_number'
+    }, {
+      title: '운전면허증 시리얼번호',
+      value: 'driver_serial'
+    }, {
+      title: '면허 종류',
+      value: 'driver_type'
+    }, {
+      title: '적성검사 갱신기간 시작일',
+      value: 'aptitude_test_date_start'
+    }, {
+      title: '적성검사 갱신기간 종료일',
+      value: 'aptitude_test_date_end'
+    }, {
+      title: '성',
+      value: 'sur_name'
+    }, {
+      title: '이름 (name과 별도)',
+      value: 'given_name'
+    }, {
+      title: '여권 종류',
+      value: 'passport_type'
+    }, {
+      title: '발급 국가',
+      value: 'issuing_country'
+    }, {
+      title: '여권 번호',
+      value: 'passport_number'
+    }, {
+      title: '국적',
+      value: 'nationality'
+    }, {
+      title: '성별',
+      value: 'sex'
+    }, {
+      title: '여권 만료일',
+      value: 'expiry_date'
+    }, {
+      title: 'personal_number',
+      value: 'personal_number'
+    }, {
+      title: '한글성명',
+      value: 'name_kor'
+    }, {
+      title: '여권 하단 MRZ1',
+      value: 'mrz1'
+    }, {
+      title: '여권 하단 MRZ2',
+      value: 'mrz2'
+    }, {
+      title: '체류자격',
+      value: 'visa_type'
+    }, {
+      title: '사본판별 결과',
+      value: 'id_truth'
+    }, {
+      title: '사본판별 confidence',
+      value: 'fd_confidence'
+    }, {
+      title: '사본판별 재시도 횟수',
+      value: 'id_truth_retry_count'
+    }];
+    var ocrImageKeys = [{
+      title: '전체',
+      value: 'all'
+    }, {
+      title: '원본 이미지',
+      value: 'ocr_origin_image'
+    }, {
+      title: '마스킹 이미지',
+      value: 'ocr_masking_image'
+    }, {
+      title: '얼굴 이미지',
+      value: 'ocr_face_image'
+    }];
+    var insertExcludeKeyOptions = (target, keys) => {
       var html = keys.map(key => {
-        return "<li>\n                    <input type=\"checkbox\" id=\"".concat(target, "-").concat(key.value, "\" name=\"").concat(target, "-keylist\" value=\"").concat(key.value, "\" checked />\n                    <label for=\"").concat(target, "-").concat(key.value, "\">").concat(key.value, "</label>\n                  </li>");
+        return "<li>\n                    <input type=\"checkbox\" id=\"".concat(target, "-").concat(key.value, "\" name=\"").concat(target, "-keylist\" value=\"").concat(key.value, "\" />\n                    <label for=\"").concat(target, "-").concat(key.value, "\">").concat(key.value, "</label>\n                  </li>");
       }).join('');
       document.querySelector("ul#".concat(target, "-keylist-wrapper")).insertAdjacentHTML('afterbegin', html);
     };
 
     // DOM 세팅
-    insertOcrResultKeyOptions('ocr-result-idcard', this.__ocrResultIdcardKeys);
-    insertOcrResultKeyOptions('encrypt-ocr-result-idcard', this.__ocrResultIdcardKeys);
-    insertOcrResultKeyOptions('ocr-result-passport', this.__ocrResultPassportKeys);
-    insertOcrResultKeyOptions('encrypt-ocr-result-passport', this.__ocrResultPassportKeys);
-    insertOcrResultKeyOptions('ocr-result-alien', this.__ocrResultAlienKeys);
-    insertOcrResultKeyOptions('encrypt-ocr-result-alien', this.__ocrResultAlienKeys);
+    insertExcludeKeyOptions('ocr-result-exclude', ocrResultKeys);
+    insertExcludeKeyOptions('ocr-image-exclude', ocrImageKeys);
+    insertExcludeKeyOptions('encrypt-ocr-result-exclude', ocrResultKeys);
+    insertExcludeKeyOptions('encrypt-ocr-image-exclude', ocrImageKeys);
     var addKeyList = (target, key) => {
       return [...target.split(','), key].filter(v => !!v).join(',');
     };
@@ -642,27 +559,21 @@ class UISimulator {
     };
 
     // 이벤트 핸들러 등록
-    var ocrResultKeylistHandler = e => {
+    var excludeKeylistHandler = e => {
       var settingTarget = '';
       // prettier-ignore
       switch (e.target.name) {
-        case 'ocr-result-idcard-keylist':
-          settingTarget = 'ocrResultIdcardKeylist';
+        case 'ocr-result-exclude-keylist':
+          settingTarget = 'ocrResultExcludeKeylist';
           break;
-        case 'encrypt-ocr-result-idcard-keylist':
-          settingTarget = 'encryptedOcrResultIdcardKeylist';
+        case 'ocr-image-exclude-keylist':
+          settingTarget = 'ocrImageExcludeKeylist';
           break;
-        case 'ocr-result-passport-keylist':
-          settingTarget = 'ocrResultPassportKeylist';
+        case 'encrypt-ocr-result-exclude-keylist':
+          settingTarget = 'encryptOcrResultExcludeKeylist';
           break;
-        case 'encrypt-ocr-result-passport-keylist':
-          settingTarget = 'encryptedOcrResultPassportKeylist';
-          break;
-        case 'ocr-result-alien-keylist':
-          settingTarget = 'ocrResultAlienKeylist';
-          break;
-        case 'encrypt-ocr-result-alien-keylist':
-          settingTarget = 'encryptedOcrResultAlienKeylist';
+        case 'encrypt-ocr-image-exclude-keylist':
+          settingTarget = 'encryptOcrImageExcludeKeylist';
           break;
       }
       if (e.target.checked) {
@@ -672,9 +583,11 @@ class UISimulator {
       }
       this.__saveSettingsHandler();
     };
-    document.querySelectorAll('#ocr-result-keylist-div input').forEach(input => {
-      input.addEventListener('change', ocrResultKeylistHandler);
-    });
+    document.querySelectorAll('#ocr-result-exclude-keylist-div input').forEach(input => input.addEventListener('change', excludeKeylistHandler));
+  }
+  __setActiveButton(type) {
+    this.resetButton();
+    document.getElementById(type).classList.add('active');
   }
   resetButton() {
     var buttons = document.querySelectorAll('button');

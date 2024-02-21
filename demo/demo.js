@@ -564,31 +564,47 @@ function updateOCRResult(data, json) {
         content +=
           "<br/> - 신용카드 원본 사진<br/>&nbsp;&nbsp;&nbsp;<img style='max-height:200px;' src='" +
           detail.ocr_origin_image +
-          "' /><br/>";
+          "' /></b>";
       }
     } else {
-      const piiEncryptMode = document.querySelector('#encrypt-type').value === 'piiEncrypt';
-
       if (detail.ocr_masking_image) {
-        content += piiEncryptMode
-          ? '<br/> - 신분증 마스킹 사진<br/>Encrypted'
-          : "<br/> - 신분증 마스킹 사진<br/>&nbsp;&nbsp;&nbsp;<img style='max-height:200px;' src='" +
-            detail.ocr_masking_image +
-            "' /><br/>";
+        content +=
+          "<br/> - 신분증 마스킹 사진<br/>&nbsp;&nbsp;&nbsp;<img style='max-height:200px;' src='" +
+          detail.ocr_masking_image +
+          "' /></b>";
       }
+
+      // const encryptMode =
+      //   document.querySelector('#use-encrypt-mode').checked ||
+      //   document.querySelector('#use-pii-encrypt-mode').checked;
+      //  const encryptFace = document.querySelector(
+      //    '#use-pii-encrypt-face'
+      //  ).checked;
+
+      // 추후 위에 주석 풀고 아래는 삭제 - START
+      const encryptMode = document.querySelector('#use-encrypt-mode').checked;
+      // 추후 위에 주석 풀고 아래는 삭제 - END
+
       if (detail.ocr_origin_image) {
-        content += piiEncryptMode
+        content += encryptMode
           ? '<br/> - 신분증 원본 사진<br/>Encrypted'
           : "<br/> - 신분증 원본 사진<br/>&nbsp;&nbsp;&nbsp;<img style='max-height:200px;' src='" +
             detail.ocr_origin_image +
-            "' /><br/>";
+            "' /></b>";
       }
       if (detail.ocr_face_image) {
-        content += piiEncryptMode
-          ? '<br/> - 신분증 얼굴 사진<br/>Encrypted'
-          : "<br/> - 신분증의 얼굴 사진<br/>&nbsp;&nbsp;&nbsp;<img style='max-height:200px;' src='" +
-            detail.ocr_face_image +
-            "' /><br/>";
+        // content += encryptFace
+        //   ? '<br/> - 신분증 얼굴 사진<br/>Encrypted'
+        //   : "<br/> - 신분증의 얼굴 사진<br/>&nbsp;&nbsp;&nbsp;<img style='max-height:200px;' src='" +
+        //     detail.ocr_face_image +
+        //     "' /></b>";
+
+        // 추후 위에 주석 풀고 아래는 삭제 - START
+        content +=
+          "<br/> - 신분증의 얼굴 사진<br/>&nbsp;&nbsp;&nbsp;<img style='max-height:200px;' src='" +
+          detail.ocr_face_image +
+          "' /></b>";
+        // 추후 위에 주석 풀고 아래는 삭제 - END
       }
     }
   }
