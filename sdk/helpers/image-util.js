@@ -38,7 +38,6 @@ class ImageUtil {
         void 0;
         return blobFile;
       }
-      var stopped = false;
       var count = 0;
       var compressedImage;
       var targetCompressionRatio = Math.round(options.targetCompressVolume / blobFile.size * 100) / 100;
@@ -47,17 +46,14 @@ class ImageUtil {
       options.quality = startQuality;
       void 0;
       void 0;
-      while (!stopped) {
+      while (!(((_compressedImage = compressedImage) === null || _compressedImage === void 0 ? void 0 : _compressedImage.size) < options.targetCompressVolume)) {
+        var _compressedImage;
         count++;
         compressedImage = yield _this.__imageCompressor(blobFile, options);
         void 0;
         var compressionRatio = Math.round((1 - compressedImage.size / blobFile.size) * 10000) / 100;
         void 0;
-        if (compressedImage.size < options.targetCompressVolume) {
-          stopped = true;
-        } else {
-          options.quality = Math.round((options.quality - 0.1) * 100) / 100;
-        }
+        options.quality = Math.round((options.quality - 0.1) * 100) / 100;
       }
       return compressedImage;
     })();

@@ -166,17 +166,35 @@ class OcrResultParser {
     }
     return legacyFormat;
   }
-  __parseIdDriver(ocrResult, legacyFormat) {
+  __reformatJumin(ocrResult) {
     // 주민번호 형식 리턴값 형식 변경
-    // birth 추가
     if (ocrResult.masked_jumin) {
       // 암호화 된 경우 대응
-      ocrResult.birth = ocrResult.masked_jumin.slice(0, 6);
       if (ocrResult.masked_jumin !== undefined && ocrResult.masked_jumin.length === 13) {
         ocrResult.masked_jumin = ocrResult.masked_jumin.slice(0, 6) + '-' + ocrResult.masked_jumin.slice(6, 13);
       } else {
         ocrResult.masked_jumin = '';
       }
+    } else {
+      if (ocrResult.jumin !== undefined && ocrResult.jumin.length === 13) {
+        ocrResult.jumin = ocrResult.jumin.slice(0, 6) + '-' + ocrResult.jumin.slice(6, 13);
+      } else {
+        ocrResult.jumin = '';
+      }
+    }
+  }
+  __addBirth(ocrResult) {
+    if (ocrResult.masked_jumin) {
+      // 암호화 된 경우 대응
+      ocrResult.birth = ocrResult.masked_jumin.slice(0, 6);
+    } else {
+      // 일반(평문) 시나리오
+      ocrResult.birth = ocrResult.jumin.slice(0, 6);
+    }
+  }
+  __addIsOldFormatDriverNumber(ocrResult) {
+    if (ocrResult.masked_jumin) {
+      // 암호화 된 경우 대응
       if (ocrResult.result_scan_type === '2') {
         // 구형 면허증 포멧 판정 (ex: 제주 13-001234-12 -> true)
         var regex = /[가-힣]/g;
@@ -190,12 +208,6 @@ class OcrResultParser {
       }
     } else {
       // 일반(평문) 시나리오
-      ocrResult.birth = ocrResult.jumin.slice(0, 6);
-      if (ocrResult.jumin !== undefined && ocrResult.jumin.length === 13) {
-        ocrResult.jumin = ocrResult.jumin.slice(0, 6) + '-' + ocrResult.jumin.slice(6, 13);
-      } else {
-        ocrResult.jumin = '';
-      }
       if (ocrResult.result_scan_type === '2') {
         // 구형 면허증 포멧 판정 (ex: 제주 13-001234-12 -> true)
         var _regex = /[가-힣]/g;
@@ -206,6 +218,12 @@ class OcrResultParser {
         }
       }
     }
+  }
+  __parseIdDriver(ocrResult, legacyFormat) {
+    // 주민번호 형식 리턴값 형식 변경
+    this.__reformatJumin(ocrResult);
+    this.__addBirth(ocrResult);
+    this.__addIsOldFormatDriverNumber(ocrResult);
     var keyMapIdDriver = {
       Completed: 'complete',
       type: 'result_scan_type',
@@ -227,12 +245,7 @@ class OcrResultParser {
     this.__convertLegacyFormat(ocrResult, legacyFormat, keyMapIdDriver);
   }
   __parsePassport(ocrResult, legacyFormat) {
-    // 주민번호 형식 리턴값 형식 변경
-    if (ocrResult.jumin !== undefined && ocrResult.jumin.length === 13) {
-      ocrResult.jumin = ocrResult.jumin.slice(0, 6) + '-' + ocrResult.jumin.slice(6, 13);
-    } else {
-      ocrResult.jumin = '';
-    }
+    this.__reformatJumin(ocrResult);
     var keyMapPassport = {
       Completed: 'complete',
       name: 'name',
@@ -261,12 +274,7 @@ class OcrResultParser {
     this.__convertLegacyFormat(ocrResult, legacyFormat, keyMapPassport);
   }
   __parseAlien(ocrResult, legacyFormat) {
-    // 주민번호 형식 리턴값 형식 변경
-    if (ocrResult.jumin !== undefined && ocrResult.jumin.length === 13) {
-      ocrResult.jumin = ocrResult.jumin.slice(0, 6) + '-' + ocrResult.jumin.slice(6, 13);
-    } else {
-      ocrResult.jumin = '';
-    }
+    this.__reformatJumin(ocrResult);
     var keyMapAlien = {
       Completed: 'complete',
       name: 'name',

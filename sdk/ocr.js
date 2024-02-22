@@ -733,7 +733,7 @@ class UseBOCR {
       type: mimeString
     });
   }
-  __compreseBase64Image(base64, options, constantNumber) {
+  __compressBase64Image(base64, options, constantNumber) {
     var _this6 = this;
     return _asyncToGenerator(function* () {
       if (base64 === null) return null;
@@ -2929,7 +2929,7 @@ class UseBOCR {
         };
 
         if (review_result.ocr_origin_image) {
-          review_result.ocr_origin_image = yield _this24.__compreseBase64Image(review_result.ocr_origin_image, defaultOptions, constantNumber);
+          review_result.ocr_origin_image = yield _this24.__compressBase64Image(review_result.ocr_origin_image, defaultOptions, constantNumber);
         }
         if (review_result.ocr_masking_image) {
           // masking 이미지는 resize 하면, mask 좌표가 어긋나므로 리사이즈 안하고 압축만 진행
@@ -2937,10 +2937,10 @@ class UseBOCR {
             quality: defaultOptions.quality,
             targetCompressVolume: defaultOptions.targetCompressVolume
           };
-          review_result.ocr_masking_image = yield _this24.__compreseBase64Image(review_result.ocr_masking_image, maskingImageOptions, constantNumber);
+          review_result.ocr_masking_image = yield _this24.__compressBase64Image(review_result.ocr_masking_image, maskingImageOptions, constantNumber);
         }
         if (review_result.ocr_face_image) {
-          review_result.ocr_face_image = yield _this24.__compreseBase64Image(review_result.ocr_face_image, defaultOptions, constantNumber);
+          review_result.ocr_face_image = yield _this24.__compressBase64Image(review_result.ocr_face_image, defaultOptions, constantNumber);
         }
       }
     })();
