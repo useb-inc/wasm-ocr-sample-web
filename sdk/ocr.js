@@ -1,7 +1,7 @@
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typeof key === "symbol" ? key : String(key); }
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
@@ -13,6 +13,194 @@ import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js';
 import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js';
 import ImageUtil from './helpers/image-util.js';
 var instance;
+var OPTION_TEMPLATE = new Object({
+  // 디버깅 옵션
+  showClipFrame: false,
+  // cilp-frame 보기
+  showCanvasPreview: false,
+  // canvas preview 보기
+
+  // 출력 옵션
+  // 암호화
+  // useEncryptModeJSLevel: false, // 암호화 적용 (개인고유식별부호 관련 항목 암호화)
+  // useEncryptAllMode: false, // 암호화 적용 (전체 암호화, encrypt object 별도 제공)
+  useEncryptValueMode: false,
+  useEncryptOverallMode: false,
+  // 암호화 적용 (ocr 이미지, 마스킹 이미지, 얼굴이미지 포함)
+  useEncryptMode: false,
+  // 암호화 적용 (pii)
+  useLegacyFormat: false,
+  // Legacy format 지원
+  useMaskInfo: true,
+  // 마스킹 좌표 지원
+  useFaceImage: true,
+  // 신분증 내 얼굴 사진
+  useImageCropping: false,
+  // 신분증 이미지를 Cropping(크롭 보정 할지 여부)
+  useImageWarping: false,
+  // 신분증 이미지를 Warping(왜곡 보정 할지 여부)
+  useCompressImage: false,
+  // 신분증 이미지를 압축할지 여부
+  useCompressImageMaxWidth: 1080,
+  // 이미지 리사이징 가로 해상도
+  useCompressImageMaxVolume: 1024 * 50,
+  // 이미지 압축 목표 용량
+  ocrResultIdcardKeylist: [],
+  // 주민증/면허증 평문 결과 출력 키 목록
+  encryptedOcrResultIdcardKeylist: [],
+  // 주민증/면허증 암호화 결과 출력 키 목록
+  ocrResultPassportKeylist: [],
+  // 여권 평문 결과 출력 키 목록
+  encryptedOcrResultPassportKeylist: [],
+  // 여권 암호화 결과 출력 키 목록
+  ocrResultAlienKeylist: [],
+  // 외국인등록증 평문 결과 출력 키 목록
+  encryptedOcrResultAlienKeylist: [],
+  // 외국인등록증 암호화 결과 출력 키 목록
+
+  // UI 설정
+  useTopUI: true,
+  // 상단 UI
+  useTopUITextMsg: false,
+  //상단 UI > TEXT
+  useMiddleUI: true,
+  //중단 UI
+  useMiddleUITextMsg: true,
+  // 중단 UI > TEXT
+  useBottomUI: true,
+  // 하단 UI
+  useBottomUITextMsg: false,
+  // 하단 UI > TEXT
+  usePreviewUI: true,
+  // Preview UI
+  useCaptureUI: true,
+  // 캡처버튼 UI
+  preloadingUITextMsg: '신분증인증 모듈을 불러오는 중 입니다<br />잠시만 기다려주세요',
+  // 인식 프레임 옵션
+  frameBorderStyle: {
+    width: 5,
+    // border-width
+    radius: 20,
+    // border-radius
+    style: 'solid',
+    // border-style
+
+    // 단계별 인식 프레임 border 색상
+    not_ready: '#000000',
+    // 스캔준비 : 검정
+    ready: '#b8b8b8',
+    // 스캔대기 : 회색
+    detect_success: '#5e8fff',
+    // 카드검출 성공 : 하늘
+    detect_failed: '#725b67',
+    // 카드검출 실패 : 보라
+    manual_capture_success: '#5e8fff',
+    // 수동촬영 성공 : 하늘
+    manual_capture_failed: '#725b67',
+    // 수동촬영 실패 : 보라
+    recognized: '#003ac2',
+    // OCR완료 : 파랑
+    recognized_with_ssa: '#003ac2',
+    // 사본판별중(사본판별 ON) : 파랑
+    ocr_success: '#14b00e',
+    // OCR완료 : 초록
+    ocr_success_with_ssa: '#14b00e',
+    // OCR완료(사본판별 ON) : 초록
+    ocr_failed: '#FA113D' // OCR실패 : 빨강
+  },
+
+  // 마스크 프레임 fill 컬러 변경 사용 여부
+  useMaskFrameColorChange: true,
+  // 마스크 프레임 옵션 (카메라 비디오 영역에서 인식 프레임만 보이게 하고 나머지를 덮어쓰는 프레임 영역)
+  maskFrameStyle: {
+    clip_frame: '#ff00bf',
+    // clip-frame 색상 : 딥퍼플 (수정불가)
+    base_color: '#333333',
+    // mask-frame 색상 : 다크그레이 (투명도는 수정불가 ff로 고정)
+
+    // 단계별 마스크 프레임 fill 색상
+    not_ready: '#333333',
+    // 스캔준비
+    ready: '#333333',
+    // 스캔대기
+    detect_success: '#222222',
+    // 카드검출 성공
+    detect_failed: '#333333',
+    // 카드검출 실패
+    manual_capture_success: '#222222',
+    // 수동촬영 성공
+    manual_capture_failed: '#333333',
+    // 수동촬영 실패
+    recognized: '#222222',
+    // OCR완료
+    recognized_with_ssa: '#222222',
+    // 사본판별중(사본판별 ON)
+    ocr_success: '#111111',
+    //OCR완료
+    ocr_success_with_ssa: '#111111',
+    // OCR완료(사본판별 ON)
+    ocr_failed: '#111111' // OCR실패
+  },
+
+  // 촬영옵션
+  useAutoSwitchToServerMode: false,
+  // 저사양 단말에서 서버OCR로 자동 전환 기능
+  useManualSwitchToServerMode: false,
+  // 수동으로 서버OCR 전환 기능 (수동이 true이면 자동은 무시됨)
+  switchToServerThreshold: 20,
+  // 자동전환 기준값 (성능 측정치 ms)
+  useForceCompleteUI: false,
+  // WASM 모드일때 버튼 누를시 해당 시점에 강제로 완료 사용여부
+
+  // 수동촬영 버튼 옵션
+  captureButtonStyle: {
+    stroke_color: '#ffffff',
+    // 버튼 테두리(stroke) 색상
+    base_color: '#5e8fff' // 버튼 색상
+  },
+
+  resourceBaseUrl: window.location.origin,
+  // wasm, data 파일 리소스 base 경로 (CDN 사용시 변경)
+  deviceLabel: '',
+  videoTargetId: '',
+  // 카메라 설정
+  rotationDegree: 0,
+  // rotation-degree 카메라가 회전된 각도 (90, 190, 270)
+  mirrorMode: false,
+  // mirror-mode 셀피 카메라(키오스크 등) 사용시 좌우 반전
+  cameraResourceRequestRetryInterval: 1000,
+  // 카메라 리소스 재요청 간격(ms)
+  cameraResourceRequestRetryLimit: -1,
+  // 카메라 리소스 재요청 최대 횟수, -1이면 무한 재요청.
+
+  // 카메라 해상도 설정  : 'compatibility' (호환성 우선) || 'highQuality' (고화질 우선)
+  // cameraResolutionCriteria: 'compatibility', // 호환성 우선(권장, 디폴트) : 720으로 고정, 저사양 단말기 호환성 좋음
+  cameraResolutionCriteria: 'highQuality',
+  // 고화질 우선 : 1080이 가능하면 1080 불가능하면 720
+
+  // 가이드 박스 설정 : 'cameraResolution' (카메라 해상도) || 'ocrViewSize' (ocr div 크기)
+  calcGuideBoxCriteria: 'cameraResolution',
+  // 카메라 해상도 기준(권장, 디폴트) : 720x1280 해상도(세로모드) 일때 ocr view width size가 720보다 큰 경우, 가이드 박스를 720에 맞춤 (preview 화면 깨짐 없음)
+  // calcGuideBoxCriteria: 'ocrViewSize', // 화면 사이즈 기준 : 720x1280 해상도(세로모드) 일때 ocr view width size가 720보다 큰경우, 가이드 박스를 ocr view width 사에즈에 맞춤 (preview 화면 강제로 늘리기 때문에 다소 깨짐)
+
+  // 사본판별 RETRY 설정
+  // ssaRetryType
+  //   - REAL     : 본인(REAL) 거부율 -> False Negative(실제값은 REAL인데 예측값은 FAKE라서 틀린경우)를 낮추기 위해,
+  //   - FAKE     : 타인(FAKE) 수락율 -> False Positive(실제값은 FAKE인데 예측값은 REAL이라서 틀린경우)를 낮추기 위해
+  //   - ENSEMBLE : 평균 절대값 -> ssaMaxRetryCount 만큼 반복 수행하고 fd_confidence 절대값 값의 평균으로 판정
+  // ssaMaxRetryCount 설정 값만큼 재시도하여 한번이라도 기준값(REAL 또는 FAKE)이 뜨면 기준값(REAL 또는 FAKE)로 판정
+  ssaRetryType: 'ENSEMBLE',
+  ssaRetryPivot: 0.5,
+  // REAL/FAKE를 판정하는 fd_confidence 기준값 (wasm 배포 버전에 따라 다름) ※ 수정불가
+  ssaMaxRetryCount: 0,
+  // 최대 RETRY 회수설정 0이면 미사용
+
+  // this.__debug()를 통해 찍은 메시지를 alert으로 띄울지 여부
+  useDebugAlert: false,
+  // WASM 리소스 갱신 여부
+  force_wasm_reload: false,
+  force_wasm_reload_flag: ''
+});
 class UseBOCR {
   /** public properties */
 
@@ -153,194 +341,7 @@ class UseBOCR {
     _defineProperty(this, "__cropImageSizeWidth", 0);
     _defineProperty(this, "__cropImageSizeHeight", 0);
     _defineProperty(this, "__isSwitchToServerMode", false);
-    _defineProperty(this, "__options", new Object({
-      // 디버깅 옵션
-      showClipFrame: false,
-      // cilp-frame 보기
-      showCanvasPreview: false,
-      // canvas preview 보기
-
-      // 출력 옵션
-      // 암호화
-      // useEncryptModeJSLevel: false, // 암호화 적용 (개인고유식별부호 관련 항목 암호화)
-      // useEncryptAllMode: false, // 암호화 적용 (전체 암호화, encrypt object 별도 제공)
-      useEncryptValueMode: false,
-      useEncryptOverallMode: false,
-      // 암호화 적용 (ocr 이미지, 마스킹 이미지, 얼굴이미지 포함)
-      useEncryptMode: false,
-      // 암호화 적용 (pii)
-      useLegacyFormat: false,
-      // Legacy format 지원
-      useMaskInfo: true,
-      // 마스킹 좌표 지원
-      useFaceImage: true,
-      // 신분증 내 얼굴 사진
-      useImageCropping: false,
-      // 신분증 이미지를 Cropping(크롭 보정 할지 여부)
-      useImageWarping: false,
-      // 신분증 이미지를 Warping(왜곡 보정 할지 여부)
-      useCompressImage: false,
-      // 신분증 이미지를 압축할지 여부
-      useCompressImageMaxWidth: 1080,
-      // 이미지 리사이징 가로 해상도
-      useCompressImageMaxVolume: 1024 * 50,
-      // 이미지 압축 목표 용량
-      ocrResultIdcardKeylist: [],
-      // 주민증/면허증 평문 결과 출력 키 목록
-      encryptedOcrResultIdcardKeylist: [],
-      // 주민증/면허증 암호화 결과 출력 키 목록
-      ocrResultPassportKeylist: [],
-      // 여권 평문 결과 출력 키 목록
-      encryptedOcrResultPassportKeylist: [],
-      // 여권 암호화 결과 출력 키 목록
-      ocrResultAlienKeylist: [],
-      // 외국인등록증 평문 결과 출력 키 목록
-      encryptedOcrResultAlienKeylist: [],
-      // 외국인등록증 암호화 결과 출력 키 목록
-
-      // UI 설정
-      useTopUI: true,
-      // 상단 UI
-      useTopUITextMsg: false,
-      //상단 UI > TEXT
-      useMiddleUI: true,
-      //중단 UI
-      useMiddleUITextMsg: true,
-      // 중단 UI > TEXT
-      useBottomUI: true,
-      // 하단 UI
-      useBottomUITextMsg: false,
-      // 하단 UI > TEXT
-      usePreviewUI: true,
-      // Preview UI
-      useCaptureUI: true,
-      // 캡처버튼 UI
-      preloadingUITextMsg: '신분증인증 모듈을 불러오는 중 입니다<br />잠시만 기다려주세요',
-      // 인식 프레임 옵션
-      frameBorderStyle: {
-        width: 5,
-        // border-width
-        radius: 20,
-        // border-radius
-        style: 'solid',
-        // border-style
-
-        // 단계별 인식 프레임 border 색상
-        not_ready: '#000000',
-        // 스캔준비 : 검정
-        ready: '#b8b8b8',
-        // 스캔대기 : 회색
-        detect_success: '#5e8fff',
-        // 카드검출 성공 : 하늘
-        detect_failed: '#725b67',
-        // 카드검출 실패 : 보라
-        manual_capture_success: '#5e8fff',
-        // 수동촬영 성공 : 하늘
-        manual_capture_failed: '#725b67',
-        // 수동촬영 실패 : 보라
-        recognized: '#003ac2',
-        // OCR완료 : 파랑
-        recognized_with_ssa: '#003ac2',
-        // 사본판별중(사본판별 ON) : 파랑
-        ocr_success: '#14b00e',
-        // OCR완료 : 초록
-        ocr_success_with_ssa: '#14b00e',
-        // OCR완료(사본판별 ON) : 초록
-        ocr_failed: '#FA113D' // OCR실패 : 빨강
-      },
-
-      // 마스크 프레임 fill 컬러 변경 사용 여부
-      useMaskFrameColorChange: true,
-      // 마스크 프레임 옵션 (카메라 비디오 영역에서 인식 프레임만 보이게 하고 나머지를 덮어쓰는 프레임 영역)
-      maskFrameStyle: {
-        clip_frame: '#ff00bf',
-        // clip-frame 색상 : 딥퍼플 (수정불가)
-        base_color: '#333333',
-        // mask-frame 색상 : 다크그레이 (투명도는 수정불가 ff로 고정)
-
-        // 단계별 마스크 프레임 fill 색상
-        not_ready: '#333333',
-        // 스캔준비
-        ready: '#333333',
-        // 스캔대기
-        detect_success: '#222222',
-        // 카드검출 성공
-        detect_failed: '#333333',
-        // 카드검출 실패
-        manual_capture_success: '#222222',
-        // 수동촬영 성공
-        manual_capture_failed: '#333333',
-        // 수동촬영 실패
-        recognized: '#222222',
-        // OCR완료
-        recognized_with_ssa: '#222222',
-        // 사본판별중(사본판별 ON)
-        ocr_success: '#111111',
-        //OCR완료
-        ocr_success_with_ssa: '#111111',
-        // OCR완료(사본판별 ON)
-        ocr_failed: '#111111' // OCR실패
-      },
-
-      // 촬영옵션
-      useAutoSwitchToServerMode: false,
-      // 저사양 단말에서 서버OCR로 자동 전환 기능
-      useManualSwitchToServerMode: false,
-      // 수동으로 서버OCR 전환 기능 (수동이 true이면 자동은 무시됨)
-      switchToServerThreshold: 20.0,
-      // 자동전환 기준값 (성능 측정치 ms)
-      useForceCompleteUI: false,
-      // WASM 모드일때 버튼 누를시 해당 시점에 강제로 완료 사용여부
-
-      // 수동촬영 버튼 옵션
-      captureButtonStyle: {
-        stroke_color: '#ffffff',
-        // 버튼 테두리(stroke) 색상
-        base_color: '#5e8fff' // 버튼 색상
-      },
-
-      resourceBaseUrl: window.location.origin,
-      // wasm, data 파일 리소스 base 경로 (CDN 사용시 변경)
-      deviceLabel: '',
-      videoTargetId: '',
-      // 카메라 설정
-      rotationDegree: 0,
-      // rotation-degree 카메라가 회전된 각도 (90, 190, 270)
-      mirrorMode: false,
-      // mirror-mode 셀피 카메라(키오스크 등) 사용시 좌우 반전
-      cameraResourceRequestRetryInterval: 1000,
-      // 카메라 리소스 재요청 간격(ms)
-      cameraResourceRequestRetryLimit: -1,
-      // 카메라 리소스 재요청 최대 횟수, -1이면 무한 재요청.
-
-      // 카메라 해상도 설정  : 'compatibility' (호환성 우선) || 'highQuality' (고화질 우선)
-      // cameraResolutionCriteria: 'compatibility', // 호환성 우선(권장, 디폴트) : 720으로 고정, 저사양 단말기 호환성 좋음
-      cameraResolutionCriteria: 'highQuality',
-      // 고화질 우선 : 1080이 가능하면 1080 불가능하면 720
-
-      // 가이드 박스 설정 : 'cameraResolution' (카메라 해상도) || 'ocrViewSize' (ocr div 크기)
-      calcGuideBoxCriteria: 'cameraResolution',
-      // 카메라 해상도 기준(권장, 디폴트) : 720x1280 해상도(세로모드) 일때 ocr view width size가 720보다 큰 경우, 가이드 박스를 720에 맞춤 (preview 화면 깨짐 없음)
-      // calcGuideBoxCriteria: 'ocrViewSize', // 화면 사이즈 기준 : 720x1280 해상도(세로모드) 일때 ocr view width size가 720보다 큰경우, 가이드 박스를 ocr view width 사에즈에 맞춤 (preview 화면 강제로 늘리기 때문에 다소 깨짐)
-
-      // 사본판별 RETRY 설정
-      // ssaRetryType
-      //   - REAL     : 본인(REAL) 거부율 -> False Negative(실제값은 REAL인데 예측값은 FAKE라서 틀린경우)를 낮추기 위해,
-      //   - FAKE     : 타인(FAKE) 수락율 -> False Positive(실제값은 FAKE인데 예측값은 REAL이라서 틀린경우)를 낮추기 위해
-      //   - ENSEMBLE : 평균 절대값 -> ssaMaxRetryCount 만큼 반복 수행하고 fd_confidence 절대값 값의 평균으로 판정
-      // ssaMaxRetryCount 설정 값만큼 재시도하여 한번이라도 기준값(REAL 또는 FAKE)이 뜨면 기준값(REAL 또는 FAKE)로 판정
-      ssaRetryType: 'ENSEMBLE',
-      ssaRetryPivot: 0.5,
-      // REAL/FAKE를 판정하는 fd_confidence 기준값 (wasm 배포 버전에 따라 다름) ※ 수정불가
-      ssaMaxRetryCount: 0,
-      // 최대 RETRY 회수설정 0이면 미사용
-
-      // this.__debug()를 통해 찍은 메시지를 alert으로 띄울지 여부
-      useDebugAlert: false,
-      // WASM 리소스 갱신 여부
-      force_wasm_reload: false,
-      force_wasm_reload_flag: ''
-    }));
+    _defineProperty(this, "__options", _objectSpread({}, OPTION_TEMPLATE));
     if (instance) return instance;
     instance = this;
     return instance;
@@ -637,16 +638,63 @@ class UseBOCR {
     })();
   }
   __preprocess() {
-    var convertTypeToNumber = function convertTypeToNumber(option) {
-      return isNaN(parseInt(option)) ? 0 : parseInt(option);
+    var convertTypeToInteger = function convertTypeToInteger(option, defaultValue) {
+      return isNaN(parseInt(option)) ? defaultValue : parseInt(option);
     };
-    var convertTypeToFloat = function convertTypeToFloat(option) {
-      return isNaN(parseFloat(option)) ? 20.0 : parseFloat(option);
+    var convertTypeToFloat = function convertTypeToFloat(option, defaultValue) {
+      return isNaN(parseFloat(option)) ? defaultValue : parseFloat(option);
     };
-    this.__options.ssaMaxRetryCount = convertTypeToNumber(this.__options.ssaMaxRetryCount);
-    this.__options.useCompressImageMaxVolume = convertTypeToNumber(this.__options.useCompressImageMaxVolume);
-    this.__options.useCompressImageMaxWidth = convertTypeToNumber(this.__options.useCompressImageMaxWidth);
-    this.__options.switchToServerThreshold = convertTypeToFloat(this.__options.switchToServerThreshold);
+    var convertTypeToBoolean = function convertTypeToBoolean(option, defaultValue) {
+      if (typeof option === 'string') {
+        return option === 'true' ? true : defaultValue;
+      } else {
+        return option;
+      }
+    };
+    var getOptionKeyListByType = (targetObj, targetType) => {
+      if (targetType === 'boolean') {
+        return Object.keys(targetObj).filter(value => {
+          return typeof targetObj[value] === targetType;
+        });
+      } else if (targetType === 'integer') {
+        return Object.keys(targetObj).filter(value => {
+          return typeof targetObj[value] === 'number' && Number.isInteger(targetObj[value]);
+        });
+      } else if (targetType === 'float') {
+        return Object.keys(targetObj).filter(value => {
+          return typeof targetObj[value] === 'number' && !Number.isInteger(targetObj[value]);
+        });
+      } else {
+        return [];
+      }
+    };
+
+    // boolean type list 가져오기
+    var booleanTypeOptions = getOptionKeyListByType(OPTION_TEMPLATE, 'boolean');
+    void 0;
+
+    // number type list 가져오기
+    var integerTypeOptions = getOptionKeyListByType(OPTION_TEMPLATE, 'integer');
+    void 0;
+
+    // float type list 가져오기
+    var floatTypeOptions = getOptionKeyListByType(OPTION_TEMPLATE, 'float');
+    void 0;
+
+    // boolean type 인 옵션에 string 값이 들어간 경우 boolean 변환 처리
+    booleanTypeOptions.forEach(key => {
+      this.__options[key] = convertTypeToBoolean(this.__options[key], OPTION_TEMPLATE[key]);
+    });
+
+    // integer type 인 옵션에 string 값이 들어간 경우 integer 변환 처리
+    integerTypeOptions.forEach(key => {
+      this.__options[key] = convertTypeToInteger(this.__options[key], OPTION_TEMPLATE[key]);
+    });
+
+    // float type 인 옵션에 string 값이 들어간 경우 float 변환 처리
+    floatTypeOptions.forEach(key => {
+      this.__options[key] = convertTypeToFloat(this.__options[key], OPTION_TEMPLATE[key]);
+    });
     if (this.isEncryptMode() && this.__options.ssaMaxRetryCount > 0) {
       this.__options.ssaMaxRetryCount = 0;
       void 0;
