@@ -18,7 +18,7 @@ class ObjectUtil {
   }
   stringToJson(str) {
     var obj = {};
-    var keyValuePairs = str.match(/\w+:(?:\([^)]*\)|[^;]+)/g);
+    var keyValuePairs = str.match(/\w+:(?:\([^)]*\)|[^;]*)/g);
     if (keyValuePairs) {
       for (var i = 0; i < keyValuePairs.length; i++) {
         var pair = keyValuePairs[i].split(':');

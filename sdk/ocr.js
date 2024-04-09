@@ -1442,7 +1442,7 @@ class UseBOCR {
   }
   __stringToJson(str) {
     var obj = {};
-    var keyValuePairs = str.match(/\w+:(?:\([^)]*\)|[^;]+)/g);
+    var keyValuePairs = str.match(/\w+:(?:\([^)]*\)|[^;]*)/g);
     if (keyValuePairs) {
       for (var i = 0; i < keyValuePairs.length; i++) {
         var pair = keyValuePairs[i].split(':');
@@ -2698,8 +2698,34 @@ class UseBOCR {
         // 옵션이 활성화 되면 새로운 WASM 리소스를 요청함.
         postfix = '?ver=' + _this22.__options.force_wasm_reload_flag;
       }
+      function __getFileXHR(_x3) {
+        return _getFileXHR.apply(this, arguments);
+      }
+      function _getFileXHR() {
+        _getFileXHR = _asyncToGenerator(function* (path) {
+          return new Promise((resolve, reject) => {
+            try {
+              var xhr = new XMLHttpRequest();
+              xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                  if (xhr.status === 200) {
+                    resolve(xhr.responseText);
+                  } else {
+                    resolve(null);
+                  }
+                }
+              };
+              xhr.open('GET', path);
+              xhr.send();
+            } catch (e) {
+              reject(e);
+            }
+          });
+        });
+        return _getFileXHR.apply(this, arguments);
+      }
       var url = new URL(sdkSupportEnv + '.js' + postfix, _this22.__options.resourceBaseUrl);
-      var src = yield fetch(url.href).then(res => res.text()).then(text => {
+      var src = yield __getFileXHR(url.href).then(text => {
         var regex = /(.*) = Module.cwrap/gm;
         var source = text.replace(regex, 'Module.$1 = Module.cwrap');
 
@@ -2725,7 +2751,7 @@ class UseBOCR {
         var _ref9 = _asyncToGenerator(function* (_) {
           void 0;
         });
-        return function (_x3) {
+        return function (_x4) {
           return _ref9.apply(this, arguments);
         };
       }();
@@ -3078,7 +3104,7 @@ class UseBOCR {
           reject(err);
         }
       });
-      return function (_x4, _x5) {
+      return function (_x5, _x6) {
         return _ref12.apply(this, arguments);
       };
     }());
@@ -3185,7 +3211,7 @@ class UseBOCR {
         (_this26$__captureButt = _this26.__captureButton) === null || _this26$__captureButt === void 0 ? void 0 : _this26$__captureButt.removeEventListener('click', __onClickCaptureButton);
         (_this26$__captureButt2 = _this26.__captureButton) === null || _this26$__captureButt2 === void 0 ? void 0 : _this26$__captureButt2.addEventListener('click', __onClickCaptureButton);
       });
-      return function (_x6, _x7) {
+      return function (_x7, _x8) {
         return _ref13.apply(this, arguments);
       };
     }());
