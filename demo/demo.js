@@ -105,13 +105,29 @@ function sendResult(result) {
       const review_result = json2.review_result;
 
       if (review_result.ocr_masking_image) {
-        review_result.ocr_masking_image = review_result.ocr_masking_image.substring(0, 50) + '...생략...';
+        review_result.ocr_masking_image = stringShortener(review_result.ocr_masking_image, 50);
       }
       if (review_result.ocr_origin_image) {
-        review_result.ocr_origin_image = review_result.ocr_origin_image.substring(0, 50) + '...생략...';
+        review_result.ocr_origin_image = stringShortener(review_result.ocr_origin_image, 50);
       }
       if (review_result.ocr_face_image) {
-        review_result.ocr_face_image = review_result.ocr_face_image.substring(0, 50) + '...생략...';
+        review_result.ocr_face_image = stringShortener(review_result.ocr_face_image, 50);
+      }
+
+      if (review_result.encrypted) {
+        if (review_result.encrypted.ocr_masking_image) {
+          review_result.encrypted.ocr_masking_image = stringShortener(review_result.encrypted.ocr_masking_image, 50);
+        }
+        if (review_result.encrypted.ocr_origin_image) {
+          review_result.encrypted.ocr_origin_image = stringShortener(review_result.encrypted.ocr_origin_image, 50);
+        }
+        if (review_result.encrypted.ocr_face_image) {
+          review_result.encrypted.ocr_face_image = stringShortener(review_result.encrypted.ocr_face_image, 50);
+        }
+      }
+
+      if (review_result.encrypted_overall) {
+        review_result.encrypted_overall = stringShortener(review_result.encrypted_overall, 50);
       }
     }
 

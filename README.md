@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/version-v1.18.6-blue)
+![Version](https://img.shields.io/badge/version-v1.18.7-blue)
 
 # [useB.WASM] (고객사) WEB ↔ ocr sdk 연동 가이드
 
