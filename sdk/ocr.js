@@ -19,6 +19,8 @@ var OPTION_TEMPLATE = new Object({
   // cilp-frame 보기
   showCanvasPreview: false,
   // canvas preview 보기
+  useIDNumberValidation: true,
+  // 주민번호, 운전면허번호, 외국인등록번호 뒷자리 유효성 검증 사용 여부
 
   // 출력 옵션
   // 암호화
@@ -971,6 +973,12 @@ class UseBOCR {
       this.__destroyScannerCallback();
       this.__destroyScannerCallback = null;
     }
+  }
+  __destroyEncryptedScanResult() {
+    this.__OCREngine.destroyEncryptedResult();
+  }
+  __setValidation(validation) {
+    this.__OCREngine.setNumberValidation(validation);
   }
   __isVideoResolutionCompatible(videoElement) {
     var _this8 = this;
@@ -2836,6 +2844,7 @@ class UseBOCR {
 
               // card is detected
               yield _this23.__changeStage(_this23.IN_PROGRESS.CARD_DETECT_SUCCESS);
+              _this23.__setValidation(_this23.__options.useIDNumberValidation);
 
               // ssa retry 설정이 되어 있으거나, 수동촬영UI를 사용하는 경우, card detect 성공시 이미지 저장
               _this23.__enqueueDetectedCardQueue(imgData);
@@ -3530,6 +3539,7 @@ class UseBOCR {
   /** 메모리 allocation free 함수 */
   cleanup() {
     this.__destroyScannerAddress();
+    this.__destroyEncryptedScanResult();
     this.__destroyBuffer();
     this.__destroyPrevImage();
     this.__destroyStringOnWasmHeap();

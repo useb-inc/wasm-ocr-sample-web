@@ -5,11 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>OCR/SSA WebAssembly Sample</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" type="text/css" href="./css/demo.css?ver=v1.18.7" />
+    <link rel="stylesheet" type="text/css" href="./css/demo.css?ver=v1.19.0" />
 
-    <script type="text/javascript" src="./js/util.js?ver=v1.18.7"></script>
-    <script type="text/javascript" src="./lib/lodash.min.js?ver=v1.18.7"></script>
-    <script type="module" src="./js/ui_simulator.js?ver=v1.18.7" async></script>
+    <script type="text/javascript" src="./js/util.js?ver=v1.19.0"></script>
+    <script type="text/javascript" src="./lib/lodash.min.js?ver=v1.19.0"></script>
+    <script type="module" src="./js/ui_simulator.js?ver=v1.19.0" async></script>
     <script src="https://kit.fontawesome.com/71d7c8cd6e.js" crossorigin="anonymous"></script>
   </head>
 
@@ -517,6 +517,10 @@
             <label for="use-debug-alert">debug alert 사용</label>
             <input type="checkbox" id="use-debug-alert" name="use-debug-alert" />
           </div>
+          <div>
+            <label for="use-id-number-validation">개인정보식별부호 뒷자리 유효성검증</label>
+            <input type="checkbox" id="use-id-number-validation" name="use-id-number-validation" checked />
+          </div>
         </fieldset>
         <fieldset>
           <legend>WASM 리소스 캐시설정</legend>
@@ -556,6 +560,6 @@
       <div id="ocr_result" class="custom--section"></div>
     </section>
 
-    <script type="module" src="./demo.js?ver=v1.18.7" async></script>
+    <script type="module" src="./demo.js?ver=v1.19.0" async></script>
   </body>
 </html>

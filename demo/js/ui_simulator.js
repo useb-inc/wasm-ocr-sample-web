@@ -486,6 +486,10 @@ class UISimulator {
         this.__settings.useDebugAlert = e.target.checked;
         this.__saveSettingsHandler();
       });
+      document.getElementById('use-id-number-validation').addEventListener('change', e => {
+        this.__settings.useIDNumberValidation = e.target.checked;
+        this.__saveSettingsHandler();
+      });
       document.getElementById('force_wasm_reload').addEventListener('change', e => {
         this.__settings.force_wasm_reload = e.target.checked;
         if (!e.target.checked) {

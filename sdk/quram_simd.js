@@ -5175,52 +5175,56 @@ var _setTruthEncrypt = Module["_setTruthEncrypt"] = function() {
  return (_setTruthEncrypt = Module["_setTruthEncrypt"] = Module["asm"]["Ab"]).apply(null, arguments);
 };
 
+var _setNumberValidation = Module["_setNumberValidation"] = function() {
+ return (_setNumberValidation = Module["_setNumberValidation"] = Module["asm"]["Bb"]).apply(null, arguments);
+};
+
 var ___errno_location = Module["___errno_location"] = function() {
- return (___errno_location = Module["___errno_location"] = Module["asm"]["Bb"]).apply(null, arguments);
+ return (___errno_location = Module["___errno_location"] = Module["asm"]["Cb"]).apply(null, arguments);
 };
 
 var ___getTypeName = Module["___getTypeName"] = function() {
- return (___getTypeName = Module["___getTypeName"] = Module["asm"]["Cb"]).apply(null, arguments);
+ return (___getTypeName = Module["___getTypeName"] = Module["asm"]["Db"]).apply(null, arguments);
 };
 
 var __embind_initialize_bindings = Module["__embind_initialize_bindings"] = function() {
- return (__embind_initialize_bindings = Module["__embind_initialize_bindings"] = Module["asm"]["Db"]).apply(null, arguments);
+ return (__embind_initialize_bindings = Module["__embind_initialize_bindings"] = Module["asm"]["Eb"]).apply(null, arguments);
 };
 
 var _setThrew = Module["_setThrew"] = function() {
- return (_setThrew = Module["_setThrew"] = Module["asm"]["Eb"]).apply(null, arguments);
+ return (_setThrew = Module["_setThrew"] = Module["asm"]["Fb"]).apply(null, arguments);
 };
 
 var stackSave = Module["stackSave"] = function() {
- return (stackSave = Module["stackSave"] = Module["asm"]["Fb"]).apply(null, arguments);
+ return (stackSave = Module["stackSave"] = Module["asm"]["Gb"]).apply(null, arguments);
 };
 
 var stackRestore = Module["stackRestore"] = function() {
- return (stackRestore = Module["stackRestore"] = Module["asm"]["Gb"]).apply(null, arguments);
+ return (stackRestore = Module["stackRestore"] = Module["asm"]["Hb"]).apply(null, arguments);
 };
 
 var stackAlloc = Module["stackAlloc"] = function() {
- return (stackAlloc = Module["stackAlloc"] = Module["asm"]["Hb"]).apply(null, arguments);
+ return (stackAlloc = Module["stackAlloc"] = Module["asm"]["Ib"]).apply(null, arguments);
 };
 
 var ___cxa_can_catch = Module["___cxa_can_catch"] = function() {
- return (___cxa_can_catch = Module["___cxa_can_catch"] = Module["asm"]["Ib"]).apply(null, arguments);
+ return (___cxa_can_catch = Module["___cxa_can_catch"] = Module["asm"]["Jb"]).apply(null, arguments);
 };
 
 var ___cxa_is_pointer_type = Module["___cxa_is_pointer_type"] = function() {
- return (___cxa_is_pointer_type = Module["___cxa_is_pointer_type"] = Module["asm"]["Jb"]).apply(null, arguments);
+ return (___cxa_is_pointer_type = Module["___cxa_is_pointer_type"] = Module["asm"]["Kb"]).apply(null, arguments);
 };
 
 var dynCall_j = Module["dynCall_j"] = function() {
- return (dynCall_j = Module["dynCall_j"] = Module["asm"]["Kb"]).apply(null, arguments);
+ return (dynCall_j = Module["dynCall_j"] = Module["asm"]["Lb"]).apply(null, arguments);
 };
 
 var dynCall_iiiiij = Module["dynCall_iiiiij"] = function() {
- return (dynCall_iiiiij = Module["dynCall_iiiiij"] = Module["asm"]["Lb"]).apply(null, arguments);
+ return (dynCall_iiiiij = Module["dynCall_iiiiij"] = Module["asm"]["Mb"]).apply(null, arguments);
 };
 
 var dynCall_jiiii = Module["dynCall_jiiii"] = function() {
- return (dynCall_jiiii = Module["dynCall_jiiii"] = Module["asm"]["Mb"]).apply(null, arguments);
+ return (dynCall_jiiii = Module["dynCall_jiiii"] = Module["asm"]["Nb"]).apply(null, arguments);
 };
 
 function invoke_iiii(index, a1, a2, a3) {
@@ -5672,3 +5676,5 @@ setImageResult = Module.cwrap("setImageResult", "", [ "number" ]);
 setTruthResult = Module.cwrap("setTruthResult", "", [ "string" ]);
 
 setTruthEncrypt = Module.cwrap("setTruthEncrypt", "", [ "string" ]);
+
+setNumberValidation = Module.cwrap("setNumberValidation", "", [ "bool" ]);
