@@ -1224,9 +1224,7 @@ class UseBOCR {
         var rawData = null;
         var ocrResult = null;
         if (!_this11.__ocrTypeList.includes(ocrType)) throw new Error('Unsupported OCR type');
-
-        // const [, resultBuffer] = this.__getBuffer();
-
+        var [, resultBuffer] = _this11.__getBuffer();
         var recognition = /*#__PURE__*/function () {
           var _ref5 = _asyncToGenerator(function* (isSetIgnoreComplete) {
             var _ocrResult, _ocrResult$ocr_result, _ocrResult2, _ocrResult2$ocr_resul;
@@ -1251,7 +1249,7 @@ class UseBOCR {
                 rawData = _this11.__OCREngine.scanAlien(address, 0);
                 break;
               case 'alien-back':
-                rawData = _this11.__OCREngine.scanAlienBack(address, 0);
+                rawData = _this11.__OCREngine.scanAlienBack(address, resultBuffer);
                 break;
               case 'credit':
                 rawData = _this11.__OCREngine.scanCredit(address, 0);
