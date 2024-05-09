@@ -1224,9 +1224,7 @@ class UseBOCR {
         var rawData = null;
         var ocrResult = null;
         if (!_this11.__ocrTypeList.includes(ocrType)) throw new Error('Unsupported OCR type');
-
-        // const [, resultBuffer] = this.__getBuffer();
-
+        var [, resultBuffer] = _this11.__getBuffer();
         var recognition = /*#__PURE__*/function () {
           var _ref5 = _asyncToGenerator(function* (isSetIgnoreComplete) {
             var _ocrResult, _ocrResult$ocr_result, _ocrResult2, _ocrResult2$ocr_resul;
@@ -1251,7 +1249,7 @@ class UseBOCR {
                 rawData = _this11.__OCREngine.scanAlien(address, 0);
                 break;
               case 'alien-back':
-                rawData = _this11.__OCREngine.scanAlienBack(address, 0);
+                rawData = _this11.__OCREngine.scanAlienBack(address, resultBuffer);
                 break;
               case 'credit':
                 rawData = _this11.__OCREngine.scanCredit(address, 0);
@@ -2753,8 +2751,8 @@ class UseBOCR {
         source = source.replace('var asm = createWasm();', 'console.log("create wasm and data - start")\n' + 'await (async function() {\n' + '  return new Promise(function(resolve) {\n' + '    var isCreatedWasm = false;\n' + '    var isCreatedData = false;\n' + '    createWasm().then(() => {\n' + '      isCreatedWasm = true;\n' + '      if (isCreatedData) { resolve(); }\n' + '    });\n' + '    createModelData().then(() => {\n' + '      isCreatedData = true;\n' + '      if (isCreatedWasm) { resolve(); }\n' + '    })\n' + '  });\n' + '})();\n' + 'console.log("create wasm and data - end")');
         return source;
       });
-      src = "\n    (async function() {\n      ".concat(src, "\n      Module.lengthBytesUTF8 = lengthBytesUTF8\n      Module.stringToUTF8 = stringToUTF8\n      return Module\n    })()\n        ");
-      _this22.__OCREngine = yield eval(src);
+      src = "\n    return (async function() {\n      ".concat(src, "\n      Module.lengthBytesUTF8 = lengthBytesUTF8\n      Module.stringToUTF8 = stringToUTF8\n      return Module\n    })()\n        ");
+      _this22.__OCREngine = yield new Function(src)();
       _this22.__OCREngine.onRuntimeInitialized = /*#__PURE__*/function () {
         var _ref9 = _asyncToGenerator(function* (_) {
           void 0;
@@ -3543,6 +3541,7 @@ class UseBOCR {
     this.__destroyBuffer();
     this.__destroyPrevImage();
     this.__destroyStringOnWasmHeap();
+    this.__detectedCardQueue = [];
   }
   restoreInitialize() {
     this.__initialized = false;

@@ -48,6 +48,14 @@ const onClickStartCallback = async (type, settings) => {
     ocrServerBaseUrl: OCR_SERVER_BASE_URL,
   };
 
+  try {
+    // document URL이 reload되지 않고 startOCR 중복호출 되었을 때,
+    // 자원정리 이슈 방지하여 stopOCR 미리 한번 호출.
+    ocr.stopOCR();
+  } catch (e) {
+    // nothing to do..
+  }
+
   switch (type) {
     // OCR
     case 'idcard':
