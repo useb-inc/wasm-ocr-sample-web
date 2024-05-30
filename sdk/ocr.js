@@ -201,7 +201,9 @@ var OPTION_TEMPLATE = new Object({
   useDebugAlert: false,
   // WASM 리소스 갱신 여부
   force_wasm_reload: false,
-  force_wasm_reload_flag: ''
+  force_wasm_reload_flag: '',
+  // ocr config 설정: 키오스크 등 특정 목적으로 사용되는 경우 config 값 설정, 해당 없는 경우 빈값('')으로 설정
+  ocr_config: ''
 });
 class UseBOCR {
   /** public properties */
@@ -899,6 +901,10 @@ class UseBOCR {
         default:
           throw new Error('Scanner does not exists');
       }
+      if (this.__options.ocr_config !== '') {
+        this.__setOcrConfig(this.__options.ocr_config);
+        void 0;
+      }
       this.__OCREngine._free(stringOnWasmHeap);
       if (address === 0) {
         if (this.__maxRetryCountGetAddress === this.__retryCountGetAddress) {
@@ -979,6 +985,12 @@ class UseBOCR {
   }
   __setValidation(validation) {
     this.__OCREngine.setNumberValidation(validation);
+  }
+  __setOcrConfig(config) {
+    this.__OCREngine.setConfig(config);
+  }
+  __getOcrConfig() {
+    return this.__OCREngine.getConfig();
   }
   __isVideoResolutionCompatible(videoElement) {
     var _this8 = this;

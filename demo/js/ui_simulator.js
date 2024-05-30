@@ -502,6 +502,10 @@ class UISimulator {
         this.__settings.force_wasm_reload_flag = checked ? e.target.value : '';
         this.__saveSettingsHandler();
       });
+      document.getElementById('ocr_config').addEventListener('change', e => {
+        this.__settings.ocr_config = e.target.value;
+        this.__saveSettingsHandler();
+      });
       document.getElementById('resolution-template').addEventListener('change', () => {
         if (document.getElementById('resolution-template').value === 'custom') {
           document.getElementById('resolution-custom').style.display = 'block';
