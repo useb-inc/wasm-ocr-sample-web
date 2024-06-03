@@ -2,12 +2,6 @@ import UseBOCR from './ocr.js';
 
 const ocr = new UseBOCR();
 let targetOrigin = null;
-const PRELOAD_TYPE = {
-  PRELOAD_TYPE_BRWOSER: 1,
-  PRELOAD_TYPE_WEBVIEW: 2,
-};
-
-let preloadType = PRELOAD_TYPE['PRELOAD_TYPE_BRWOSER']; // default;
 
 const messageHandler = async (e) => {
   try {
@@ -36,9 +30,6 @@ const messageHandler = async (e) => {
     if (typeof response === 'string' && response !== 'undefined') {
       try {
         data = JSON.parse(decodeURIComponent(atob(response)));
-        if (data.preloadType) {
-          preloadType = data.preloadType;
-        }
       } catch (err) {
         console.debug('[WARNING] parameter parsing error');
         throw new Error('parameter format is invalid');
@@ -46,14 +37,6 @@ const messageHandler = async (e) => {
 
       if (!!!data.settings) {
         throw new Error('settings info is empty');
-      }
-
-      try {
-        // document URL이 reload되지 않고 startOCR 중복호출 되었을 때,
-        // 자원정리 이슈 방지하여 stopOCR 미리 한번 호출.
-        ocr.stopOCR();
-      } catch (e) {
-        // nothing to do..
       }
 
       if (data.preloading) {
@@ -160,9 +143,7 @@ getPlatformInfomation();
 function sendResult(result) {
   console.debug('sendResult', result);
   const returnMessage = btoa(encodeURIComponent(JSON.stringify(result)));
-  if (result.preloadType === PRELOAD_TYPE['PRELOAD_TYPE_WEBVIEW'] && result.result === 'preloaded') {
-    window.parent.postMessage(returnMessage, targetOrigin);
-  } else if (window.platform.isWebViewIOSReactNative || window.platform.isWebViewAndroidReactNative) {
+  if (window.platform.isWebViewIOSReactNative || window.platform.isWebViewAndroidReactNative) {
     // android + react-native cli + webview
     // android + react-native expo + webview
     // iOS + react-native cli + webview
@@ -204,7 +185,7 @@ function sendResult(result) {
 
 function onPreloaded() {
   console.log('ocr-wasm-sdk onPreloaded');
-  sendResult({ result: 'preloaded', preloadType });
+  sendResult({ result: 'preloaded' });
 }
 async function __onInProgressChangeWASM(
   ocrMode,

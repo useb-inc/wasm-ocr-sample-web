@@ -201,9 +201,7 @@ var OPTION_TEMPLATE = new Object({
   useDebugAlert: false,
   // WASM 리소스 갱신 여부
   force_wasm_reload: false,
-  force_wasm_reload_flag: '',
-  // ocr config 설정: 키오스크 등 특정 목적으로 사용되는 경우 config 값 설정, 해당 없는 경우 빈값('')으로 설정
-  ocr_config: ''
+  force_wasm_reload_flag: ''
 });
 class UseBOCR {
   /** public properties */
@@ -901,10 +899,6 @@ class UseBOCR {
         default:
           throw new Error('Scanner does not exists');
       }
-      if (this.__options.ocr_config !== '') {
-        this.__setOcrConfig(this.__options.ocr_config);
-        void 0;
-      }
       this.__OCREngine._free(stringOnWasmHeap);
       if (address === 0) {
         if (this.__maxRetryCountGetAddress === this.__retryCountGetAddress) {
@@ -985,12 +979,6 @@ class UseBOCR {
   }
   __setValidation(validation) {
     this.__OCREngine.setNumberValidation(validation);
-  }
-  __setOcrConfig(config) {
-    this.__OCREngine.setConfig(config);
-  }
-  __getOcrConfig() {
-    return this.__OCREngine.getConfig();
   }
   __isVideoResolutionCompatible(videoElement) {
     var _this8 = this;
@@ -2763,8 +2751,8 @@ class UseBOCR {
         source = source.replace('var asm = createWasm();', 'console.log("create wasm and data - start")\n' + 'await (async function() {\n' + '  return new Promise(function(resolve) {\n' + '    var isCreatedWasm = false;\n' + '    var isCreatedData = false;\n' + '    createWasm().then(() => {\n' + '      isCreatedWasm = true;\n' + '      if (isCreatedData) { resolve(); }\n' + '    });\n' + '    createModelData().then(() => {\n' + '      isCreatedData = true;\n' + '      if (isCreatedWasm) { resolve(); }\n' + '    })\n' + '  });\n' + '})();\n' + 'console.log("create wasm and data - end")');
         return source;
       });
-      src = "\n    return (async function() {\n      ".concat(src, "\n      Module.lengthBytesUTF8 = lengthBytesUTF8\n      Module.stringToUTF8 = stringToUTF8\n      return Module\n    })()\n        ");
-      _this22.__OCREngine = yield new Function(src)();
+      src = "\n    (async function() {\n      ".concat(src, "\n      Module.lengthBytesUTF8 = lengthBytesUTF8\n      Module.stringToUTF8 = stringToUTF8\n      return Module\n    })()\n        ");
+      _this22.__OCREngine = yield eval(src);
       _this22.__OCREngine.onRuntimeInitialized = /*#__PURE__*/function () {
         var _ref9 = _asyncToGenerator(function* (_) {
           void 0;
@@ -3553,7 +3541,6 @@ class UseBOCR {
     this.__destroyBuffer();
     this.__destroyPrevImage();
     this.__destroyStringOnWasmHeap();
-    this.__detectedCardQueue = [];
   }
   restoreInitialize() {
     this.__initialized = false;
