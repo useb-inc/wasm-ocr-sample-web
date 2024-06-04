@@ -6,7 +6,7 @@ const ocr = new UseBOCR();
 // const OCR_TARGET_ORIGIN = "*";     // 보안적으로 취약하니 *을 사용하는것은 권장하지 않습니다. (refer : https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage#:~:text=serialize%20them%20yourself.-,targetOrigin,-Specifies%20what%20the)
 const OCR_TARGET_ORIGIN = 'https://ocr.useb.co.kr';
 const OCR_URL = 'https://ocr.useb.co.kr/ocr.html';
-const OCR_LICENSE_KEY = 'FPkTB86ym/u+5Gr2Ffvg5BnN8Jh2J64u8l920gwXmvv5/dxlwtGKhNiw9/aeBXRRSYE+5ylxEWRzk4sD8wAbS5xHeZXBw7o9H2fsoxx0FicsaNh0=';
+const OCR_LICENSE_KEY = 'FPkTB/+vBvxB62D5hmUOcap8783B65FUp2lJiLiguO6vyYFQg+U2Ylb3nmxrEW8smt6hLAzaomlK60X/g1WhoVym5CFaZrlU+MOwWISPtKXOEgAU=';
 const OCR_RESOURCE_BASE_URL = 'https://ocr.useb.co.kr/';
 
 /** localhost에서 'npm run start'로 실행 시 사용 참고 */
@@ -47,6 +47,14 @@ const onClickStartCallback = async (type, settings) => {
     authServerInfo: AUTH_SERVER_INFO,
     ocrServerBaseUrl: OCR_SERVER_BASE_URL,
   };
+
+  try {
+    // document URL이 reload되지 않고 startOCR 중복호출 되었을 때,
+    // 자원정리 이슈 방지하여 stopOCR 미리 한번 호출.
+    ocr.stopOCR();
+  } catch (e) {
+    // nothing to do..
+  }
 
   switch (type) {
     // OCR

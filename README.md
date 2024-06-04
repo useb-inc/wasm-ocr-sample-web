@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/version-v1.19.1-woori-bank-blue)
+![Version](https://img.shields.io/badge/version-v1.20.1-blue)
 
 # [useB.WASM] (고객사) WEB ↔ ocr sdk 연동 가이드
 
