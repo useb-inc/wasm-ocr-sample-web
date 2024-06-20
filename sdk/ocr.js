@@ -1546,7 +1546,6 @@ class UseBOCR {
             yield _this15.__adjustStyle();
           }));
           yield _this15.__changeStage(_this15.IN_PROGRESS.READY);
-          video.webkitExitFullscreen();
         } else {
           yield _this15.__changeStage(_this15.IN_PROGRESS.NOT_READY);
           _this15.__closeCamera();
