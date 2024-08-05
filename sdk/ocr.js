@@ -474,12 +474,12 @@ class UseBOCR {
     this.__license = settings.licenseKey;
     if (!!settings.ocrResultIdcardKeylist || !!settings.encryptedOcrResultIdcardKeylist || !!settings.ocrResultPassportKeylist || !!settings.encryptedOcrResultPassportKeylist || !!settings.ocrResultAlienKeylist || !!settings.encryptedOcrResultAlienKeylist) {
       var ocrResultKeylistStringToIter = (str, keyIter) => str.toLowerCase().replace(/\s/g, '').split(',').filter(k => keyIter.has(k));
-      settings.ocrResultIdcardKeylist = ocrResultKeylistStringToIter(settings.ocrResultIdcardKeylist, this.__ocrResultIdcardKeySet); // prettier-ignore
-      settings.encryptedOcrResultIdcardKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultIdcardKeylist, this.__ocrResultIdcardKeySet); // prettier-ignore
-      settings.ocrResultPassportKeylist = ocrResultKeylistStringToIter(settings.ocrResultPassportKeylist, this.__ocrResultPassportKeySet); // prettier-ignore
-      settings.encryptedOcrResultPassportKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultPassportKeylist, this.__ocrResultPassportKeySet); // prettier-ignore
-      settings.ocrResultAlienKeylist = ocrResultKeylistStringToIter(settings.ocrResultAlienKeylist, this.__ocrResultAlienKeySet); // prettier-ignore
-      settings.encryptedOcrResultAlienKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultAlienKeylist, this.__ocrResultAlienKeySet); // prettier-ignore
+      if (settings.ocrResultIdcardKeylist) settings.ocrResultIdcardKeylist = ocrResultKeylistStringToIter(settings.ocrResultIdcardKeylist, this.__ocrResultIdcardKeySet); // prettier-ignore
+      if (settings.encryptedOcrResultIdcardKeylist) settings.encryptedOcrResultIdcardKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultIdcardKeylist, this.__ocrResultIdcardKeySet); // prettier-ignore
+      if (settings.ocrResultPassportKeylist) settings.ocrResultPassportKeylist = ocrResultKeylistStringToIter(settings.ocrResultPassportKeylist, this.__ocrResultPassportKeySet); // prettier-ignore
+      if (settings.encryptedOcrResultPassportKeylist) settings.encryptedOcrResultPassportKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultPassportKeylist, this.__ocrResultPassportKeySet); // prettier-ignore
+      if (settings.ocrResultAlienKeylist) settings.ocrResultAlienKeylist = ocrResultKeylistStringToIter(settings.ocrResultAlienKeylist, this.__ocrResultAlienKeySet); // prettier-ignore
+      if (settings.encryptedOcrResultAlienKeylist) settings.encryptedOcrResultAlienKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultAlienKeylist, this.__ocrResultAlienKeySet); // prettier-ignore
     }
 
     var mergedOptions = _.merge({}, this.__options, settings);
@@ -981,7 +981,9 @@ class UseBOCR {
     }
   }
   __destroyEncryptedScanResult() {
-    this.__OCREngine.destroyEncryptedResult();
+    if (this.__OCREngine && this.isEncryptMode()) {
+      this.__OCREngine.destroyEncryptedResult();
+    }
   }
   __setValidation(validation) {
     this.__OCREngine.setNumberValidation(validation);
@@ -3504,7 +3506,7 @@ class UseBOCR {
     var _this32 = this;
     return _asyncToGenerator(function* () {
       _this32.__debug('server_mode');
-      _this32.cleanup();
+      if (!!_this32.getOCREngine()) _this32.cleanup();
       _this32.__options.useCaptureUI = true;
       yield _this32.__proceedCameraPermission();
       yield _this32.__startScanServerImpl();

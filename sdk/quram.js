@@ -169,7 +169,7 @@ Module.expectedDataFileDownloads++;
    "start": 353617,
    "end": 1054676
   }, {
-   "filename": "/model/qr_ssa_v2_r7_405_15.model",
+   "filename": "/model/qr_ssa_v2_r7_407_18.model",
    "start": 1054676,
    "end": 13861627
   }, {
@@ -221,91 +221,95 @@ Module.expectedDataFileDownloads++;
    "start": 17232505,
    "end": 17279075
   }, {
-   "filename": "/tessdata/number.traineddata",
+   "filename": "/tessdata/number.dat",
    "start": 17279075,
-   "end": 17303187
+   "end": 17561904
+  }, {
+   "filename": "/tessdata/number.traineddata",
+   "start": 17561904,
+   "end": 17586016
   }, {
    "filename": "/tessdata/ocr.traineddata",
-   "start": 17303187,
-   "end": 17321397
+   "start": 17586016,
+   "end": 17604226
   }, {
    "filename": "/tessdata/pass2.traineddata",
-   "start": 17321397,
-   "end": 17343041
+   "start": 17604226,
+   "end": 17625870
   }, {
    "filename": "/tessdata/passport.traineddata",
-   "start": 17343041,
-   "end": 17409950
+   "start": 17625870,
+   "end": 17692779
   }, {
    "filename": "/weights/apo_0",
-   "start": 17409950,
-   "end": 17590886
+   "start": 17692779,
+   "end": 17873715
   }, {
    "filename": "/weights/dash_0",
-   "start": 17590886,
-   "end": 17771822
+   "start": 17873715,
+   "end": 18054651
   }, {
    "filename": "/weights/expr_0",
-   "start": 17771822,
-   "end": 17953814
+   "start": 18054651,
+   "end": 18236643
   }, {
    "filename": "/weights/expr_1",
-   "start": 17953814,
-   "end": 18135806
+   "start": 18236643,
+   "end": 18418635
   }, {
    "filename": "/weights/name_dxdy_0",
-   "start": 18135806,
-   "end": 18330770
+   "start": 18418635,
+   "end": 18613599
   }, {
    "filename": "/weights/name_dxdy_1",
-   "start": 18330770,
-   "end": 18525734
+   "start": 18613599,
+   "end": 18808563
   }, {
    "filename": "/weights/name_org_0",
-   "start": 18525734,
-   "end": 18659258
+   "start": 18808563,
+   "end": 18942087
   }, {
    "filename": "/weights/name_org_1",
-   "start": 18659258,
-   "end": 18792782
+   "start": 18942087,
+   "end": 19075611
   }, {
    "filename": "/weights/number_0",
-   "start": 18792782,
-   "end": 18892854
+   "start": 19075611,
+   "end": 19175683
   }, {
    "filename": "/weights/number_1",
-   "start": 18892854,
-   "end": 18992926
+   "start": 19175683,
+   "end": 19275755
   }, {
    "filename": "/weights/number_2",
-   "start": 18992926,
-   "end": 19092998
+   "start": 19275755,
+   "end": 19375827
   }, {
    "filename": "/weights/number_3",
-   "start": 19092998,
-   "end": 19193070
+   "start": 19375827,
+   "end": 19475899
   }, {
    "filename": "/weights/slash_0",
-   "start": 19193070,
-   "end": 19374006
+   "start": 19475899,
+   "end": 19656835
   }, {
    "filename": "/weights/slash_1",
-   "start": 19374006,
-   "end": 19554942
+   "start": 19656835,
+   "end": 19837771
   }, {
    "filename": "/weights/slash_2",
-   "start": 19554942,
-   "end": 19735878
+   "start": 19837771,
+   "end": 20018707
   }, {
    "filename": "/weights/vseg_0",
-   "start": 19735878,
-   "end": 19777490
+   "start": 20018707,
+   "end": 20060319
   }, {
    "filename": "/weights/vseg_1",
-   "start": 19777490,
-   "end": 19819102
+   "start": 20060319,
+   "end": 20101931
   } ],
-  "remote_package_size": 19819102
+  "remote_package_size": 20101931
  });
 })();
 
@@ -822,12 +826,6 @@ function createWasm() {
 var tempDouble;
 
 var tempI64;
-
-var ASM_CONSTS = {
- 888676: $0 => {
-  console.log(UTF8ToString($0));
- }
-};
 
 function ExitStatus(status) {
  this.name = "ExitStatus";
@@ -3475,6 +3473,16 @@ function ___syscall_openat(dirfd, path, flags, varargs) {
  }
 }
 
+function ___syscall_stat64(path, buf) {
+ try {
+  path = SYSCALLS.getStr(path);
+  return SYSCALLS.doStat(FS.stat, path, buf);
+ } catch (e) {
+  if (typeof FS == "undefined" || !(e instanceof FS.ErrnoError)) throw e;
+  return -e.errno;
+ }
+}
+
 function __embind_register_bigint(primitiveType, name, size, minRange, maxRange) {}
 
 function getShiftFromSize(size) {
@@ -4242,25 +4250,6 @@ function _abort() {
  abort("");
 }
 
-var readAsmConstArgsArray = [];
-
-function readAsmConstArgs(sigPtr, buf) {
- readAsmConstArgsArray.length = 0;
- var ch;
- buf >>= 2;
- while (ch = HEAPU8[sigPtr++]) {
-  buf += ch != 105 & buf;
-  readAsmConstArgsArray.push(ch == 105 ? HEAP32[buf] : HEAPF64[buf++ >> 1]);
-  ++buf;
- }
- return readAsmConstArgsArray;
-}
-
-function _emscripten_asm_const_int(code, sigPtr, argbuf) {
- var args = readAsmConstArgs(sigPtr, argbuf);
- return ASM_CONSTS[code].apply(null, args);
-}
-
 function getHeapMax() {
  return 2147483648;
 }
@@ -4913,9 +4902,10 @@ var asmLibraryArg = {
  "ha": ___cxa_uncaught_exceptions,
  "f": ___resumeException,
  "R": ___syscall_fcntl64,
- "na": ___syscall_ioctl,
+ "oa": ___syscall_ioctl,
  "Q": ___syscall_openat,
- "_": __embind_register_bigint,
+ "ka": ___syscall_stat64,
+ "Z": __embind_register_bigint,
  "wa": __embind_register_bool,
  "va": __embind_register_emval,
  "T": __embind_register_float,
@@ -4926,26 +4916,25 @@ var asmLibraryArg = {
  "xa": __embind_register_void,
  "G": __emscripten_date_now,
  "qa": __emscripten_get_now_is_monotonic,
- "V": __emval_as,
+ "aa": __emval_as,
  "E": __emval_decref,
- "ia": __emval_get_global,
- "ba": __emval_get_property,
+ "na": __emval_get_global,
+ "ca": __emval_get_property,
  "da": __emval_new_cstring,
  "U": __emval_run_destructors,
  "ra": __localtime_js,
  "sa": __tzset_js,
  "y": _abort,
- "oa": _emscripten_asm_const_int,
- "ka": _emscripten_get_heap_max,
+ "ja": _emscripten_get_heap_max,
  "pa": _emscripten_get_now,
  "ta": _emscripten_memcpy_big,
- "ja": _emscripten_resize_heap,
+ "ia": _emscripten_resize_heap,
  "la": _environ_get,
  "ma": _environ_sizes_get,
  "A": _exit,
  "H": _fd_close,
  "P": _fd_read,
- "Z": _fd_seek,
+ "Y": _fd_seek,
  "F": _fd_write,
  "b": _getTempRet0,
  "K": invoke_diii,
@@ -4960,21 +4949,21 @@ var asmLibraryArg = {
  "v": invoke_iiiiiii,
  "M": invoke_iiiiiiii,
  "C": invoke_iiiiiiiiiiii,
- "X": invoke_iiiiij,
- "Y": invoke_j,
- "W": invoke_jiiii,
+ "W": invoke_iiiiij,
+ "X": invoke_j,
+ "V": invoke_jiiii,
  "i": invoke_v,
  "r": invoke_vi,
  "e": invoke_vii,
- "$": invoke_viid,
- "aa": invoke_viif,
+ "_": invoke_viid,
+ "$": invoke_viif,
  "q": invoke_viii,
  "D": invoke_viiii,
  "t": invoke_viiiiiii,
  "w": invoke_viiiiiiiiii,
  "B": invoke_viiiiiiiiiiiiiii,
  "J": _setTempRet0,
- "ca": _strftime_l
+ "ba": _strftime_l
 };
 
 var asm = createWasm();
