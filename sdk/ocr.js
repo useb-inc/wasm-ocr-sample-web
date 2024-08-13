@@ -470,19 +470,11 @@ class UseBOCR {
     return this.__OCREngine;
   }
   init(settings) {
-    if (!!!settings.licenseKey) throw new Error('License key is empty');
-    this.__license = settings.licenseKey;
-    if (!!settings.ocrResultIdcardKeylist || !!settings.encryptedOcrResultIdcardKeylist || !!settings.ocrResultPassportKeylist || !!settings.encryptedOcrResultPassportKeylist || !!settings.ocrResultAlienKeylist || !!settings.encryptedOcrResultAlienKeylist) {
-      var ocrResultKeylistStringToIter = (str, keyIter) => str.toLowerCase().replace(/\s/g, '').split(',').filter(k => keyIter.has(k));
-      if (settings.ocrResultIdcardKeylist) settings.ocrResultIdcardKeylist = ocrResultKeylistStringToIter(settings.ocrResultIdcardKeylist, this.__ocrResultIdcardKeySet); // prettier-ignore
-      if (settings.encryptedOcrResultIdcardKeylist) settings.encryptedOcrResultIdcardKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultIdcardKeylist, this.__ocrResultIdcardKeySet); // prettier-ignore
-      if (settings.ocrResultPassportKeylist) settings.ocrResultPassportKeylist = ocrResultKeylistStringToIter(settings.ocrResultPassportKeylist, this.__ocrResultPassportKeySet); // prettier-ignore
-      if (settings.encryptedOcrResultPassportKeylist) settings.encryptedOcrResultPassportKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultPassportKeylist, this.__ocrResultPassportKeySet); // prettier-ignore
-      if (settings.ocrResultAlienKeylist) settings.ocrResultAlienKeylist = ocrResultKeylistStringToIter(settings.ocrResultAlienKeylist, this.__ocrResultAlienKeySet); // prettier-ignore
-      if (settings.encryptedOcrResultAlienKeylist) settings.encryptedOcrResultAlienKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultAlienKeylist, this.__ocrResultAlienKeySet); // prettier-ignore
-    }
-
-    var mergedOptions = _.merge({}, this.__options, settings);
+    var _settings = _.cloneDeep(settings);
+    if (!!!_settings.licenseKey) throw new Error('License key is empty');
+    this.__license = _settings.licenseKey;
+    this.__setOptionResultKeyList(_settings);
+    var mergedOptions = _.merge({}, this.__options, _settings);
     this.setOption(mergedOptions);
     void 0;
     if (!this.isInitialized()) {
@@ -535,6 +527,18 @@ class UseBOCR {
       }
     })();
   }
+  __setOptionResultKeyList(settings) {
+    if (!!settings.ocrResultIdcardKeylist || !!settings.encryptedOcrResultIdcardKeylist || !!settings.ocrResultPassportKeylist || !!settings.encryptedOcrResultPassportKeylist || !!settings.ocrResultAlienKeylist || !!settings.encryptedOcrResultAlienKeylist) {
+      var ocrResultKeylistStringToIter = (str, keyIter) => str.toLowerCase().replace(/\s/g, '').split(',').filter(k => keyIter.has(k));
+      if (settings.ocrResultIdcardKeylist) settings.ocrResultIdcardKeylist = ocrResultKeylistStringToIter(settings.ocrResultIdcardKeylist, this.__ocrResultIdcardKeySet); // prettier-ignore
+      if (settings.encryptedOcrResultIdcardKeylist) settings.encryptedOcrResultIdcardKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultIdcardKeylist, this.__ocrResultIdcardKeySet); // prettier-ignore
+      if (settings.ocrResultPassportKeylist) settings.ocrResultPassportKeylist = ocrResultKeylistStringToIter(settings.ocrResultPassportKeylist, this.__ocrResultPassportKeySet); // prettier-ignore
+      if (settings.encryptedOcrResultPassportKeylist) settings.encryptedOcrResultPassportKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultPassportKeylist, this.__ocrResultPassportKeySet); // prettier-ignore
+      if (settings.ocrResultAlienKeylist) settings.ocrResultAlienKeylist = ocrResultKeylistStringToIter(settings.ocrResultAlienKeylist, this.__ocrResultAlienKeySet); // prettier-ignore
+      if (settings.encryptedOcrResultAlienKeylist) settings.encryptedOcrResultAlienKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultAlienKeylist, this.__ocrResultAlienKeySet); // prettier-ignore
+    }
+  }
+
   startOCR(type, onSuccess, onFailure) {
     var _arguments = arguments,
       _this3 = this;
