@@ -96,12 +96,20 @@ class OcrResultParser {
     if (ocrResult.image_base64_mask && !ocrResult.image_base64_mask.startsWith('data:image')) {
       ocrResult.image_base64_mask = 'data:image/jpeg;base64,' + ocrResult.image_base64_mask;
     }
+    if (ocrResult.marked && !ocrResult.marked.startsWith('data:image')) {
+      ocrResult.marked = 'data:image/jpeg;base64,' + ocrResult.marked;
+    }
     if (ocrResult.image_base64_face && !ocrResult.image_base64_face.startsWith('data:image')) {
       ocrResult.image_base64_face = 'data:image/jpeg;base64,' + ocrResult.image_base64_face;
     }
+    if (ocrResult.portrait && !ocrResult.portrait.startsWith('data:image')) {
+      ocrResult.portrait = 'data:image/jpeg;base64,' + ocrResult.portrait;
+    }
+    var maskingImageKey = ocrResult.image_base64_mask ? 'image_base64_mask' : 'marked';
+    var faceImageKey = ocrResult.image_base64_face ? 'image_base64_face' : 'portrait';
     var newFormatKeyMapBase64Image = {
-      image_base64_mask: 'ocr_masking_image',
-      image_base64_face: 'ocr_face_image'
+      [maskingImageKey]: 'ocr_masking_image',
+      [faceImageKey]: 'ocr_face_image'
     };
     this.__convertServerToWasmFormat(ocrResult, base64ImageResult, newFormatKeyMapBase64Image);
   }
