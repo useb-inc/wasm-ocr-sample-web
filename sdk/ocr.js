@@ -1038,6 +1038,9 @@ class UseBOCR {
   __getMirrorMode() {
     return this.__options.mirrorMode;
   }
+  __isServerOcrMode() {
+    return this.__isSwitchToServerMode;
+  }
   __cropImageFromVideo() {
     var _this9 = this;
     return _asyncToGenerator(function* () {
@@ -1129,7 +1132,7 @@ class UseBOCR {
       if (isAlienBack) {
         useDataURL = true;
       } else {
-        if (_this9.isEncryptMode()) {
+        if (_this9.isEncryptMode() && !_this9.__isServerOcrMode()) {
           void 0;
         } else {
           useDataURL = true;
