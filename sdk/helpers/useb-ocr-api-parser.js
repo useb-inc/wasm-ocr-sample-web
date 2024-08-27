@@ -32,7 +32,7 @@ class OcrResultParser {
       5: 'alien'
     });
   }
-  parseOcrResult(ocrType, ssaMode, ocrResult) {
+  parseOcrResult(ocrType, ssaMode, ocrResult, parseKeyList) {
     if (!this.__ocrTypeList.includes(ocrType)) throw new Error('ResultParser :: Unsupported OCR type');
     var legacyFormat = {},
       newFormat = {},
@@ -46,7 +46,7 @@ class OcrResultParser {
       case 'driver':
       case 'idcard-ssa':
       case 'driver-ssa':
-        var result = this.__parseIdDriver(ocrResult);
+        var result = this.__parseIdDriver(ocrResult, parseKeyList);
         _.assign(newFormat, result.newFormat);
         _.assign(legacyFormat, result.legacyFormat);
         _.assign(maskInfo, result.maskInfo);
@@ -55,7 +55,7 @@ class OcrResultParser {
       case 'passport-ssa':
       case 'foreign-passport':
       case 'foreign-passport-ssa':
-        var passport_result = this.__parsePassport(ocrResult); // prettier-ignore
+        var passport_result = this.__parsePassport(ocrResult, parseKeyList); // prettier-ignore
         _.assign(newFormat, passport_result.newFormat);
         _.assign(legacyFormat, passport_result.legacyFormat);
         _.assign(maskInfo, passport_result.maskInfo);
@@ -63,7 +63,7 @@ class OcrResultParser {
       case 'alien':
       case 'alien-back':
       case 'alien-ssa':
-        var alien_result = this.__parseAlien(ocrResult); // prettier-ignore
+        var alien_result = this.__parseAlien(ocrResult, parseKeyList); // prettier-ignore
         _.assign(newFormat, alien_result.newFormat);
         _.assign(legacyFormat, alien_result.legacyFormat);
         _.assign(maskInfo, alien_result.maskInfo);
@@ -127,7 +127,7 @@ class OcrResultParser {
    * @param {*} ocrResult
    * @return { newFormat, legacyFormat, maskInfo }
    */
-  __parseIdDriver(ocrResult) {
+  __parseIdDriver(ocrResult, parseKeyList) {
     var _ref, _flat$fd_confidence;
     // TODO wasm에서 지원해주는 idType 값이 없어 임의 매핑 (해외 여권이랑 외국인등록증 구분안되는 문제 있음)
     var idType = ocrResult.result_scan_type ? this.RESULT_SCAN_TYPE_MAP[ocrResult.result_scan_type] : ocrResult.data.idType;
@@ -138,7 +138,7 @@ class OcrResultParser {
 
     // new format ##########################
     // id 객체에서 flat 하게 만들 대상들
-    var newFormatKeys = ['complete', 'name', 'jumin', 'issued_date', 'region', 'found_face', 'specular_ratio', 'id_truth', 'fd_confidence'];
+    var newFormatKeys = ['complete', 'name', 'jumin', 'issued_date', 'region', 'found_face', 'specular_ratio', 'id_truth', 'fd_confidence', ...parseKeyList];
     var newFormat = _.pick(flat, newFormatKeys);
     newFormat.complete = newFormat.complete + '';
     newFormat.jumin = jumin;
@@ -191,7 +191,7 @@ class OcrResultParser {
       maskInfo: this.getMaskInfo(flat, idType)
     };
   }
-  __parsePassport(ocrResult) {
+  __parsePassport(ocrResult, parseKeyList) {
     var _ref2, _flat$fd_confidence2;
     // TODO wasm에서 지원해주는 idType 값이 없어 임의 매핑 (해외 여권이랑 외국인등록증 구분안되는 문제 있음)
     var idType = this.RESULT_SCAN_TYPE_MAP[ocrResult.result_scan_type];
@@ -203,7 +203,7 @@ class OcrResultParser {
     // new format ##########################
     // id 객체에서 flat 하게 만들 대상들
     // prettier-ignore
-    var newFormatKeys = ['complete', 'name', 'sur_name', 'given_name', 'passport_type', 'issuing_country', 'passport_number', 'nationality', 'issued_date', 'sex', 'expiry_date', 'personal_number', 'jumin', 'birthday', 'name_kor', 'color_point', 'found_face', 'specular_ratio', 'mrz1', 'mrz2', 'id_truth', 'fd_confidence'];
+    var newFormatKeys = ['complete', 'name', 'sur_name', 'given_name', 'passport_type', 'issuing_country', 'passport_number', 'nationality', 'issued_date', 'sex', 'expiry_date', 'personal_number', 'jumin', 'birthday', 'name_kor', 'color_point', 'found_face', 'specular_ratio', 'mrz1', 'mrz2', 'id_truth', 'fd_confidence', ...parseKeyList];
     var newFormat = _.pick(flat, newFormatKeys);
     newFormat.complete = newFormat.complete + '';
     newFormat.jumin = jumin;
@@ -245,7 +245,7 @@ class OcrResultParser {
       maskInfo: this.getMaskInfo(flat, idType)
     };
   }
-  __parseAlien(ocrResult) {
+  __parseAlien(ocrResult, parseKeyList) {
     var _ref3, _flat$fd_confidence3, _flat$nationality, _flat$visa_type, _flat$name_kor;
     // TODO wasm에서 지원해주는 idType 값이 없어 임의 매핑 (해외 여권이랑 외국인등록증 구분안되는 문제 있음)
     var idType = this.RESULT_SCAN_TYPE_MAP[ocrResult.result_scan_type];
@@ -261,7 +261,7 @@ class OcrResultParser {
 
     // new format ##########################
     // id 객체에서 flat 하게 만들 대상들
-    var newFormatKeys = ['complete', 'name', 'jumin', 'issued_date', 'nationality', 'visa_type', 'name_kor', 'found_face', 'specular_ratio', 'id_truth', 'fd_confidence'];
+    var newFormatKeys = ['complete', 'name', 'jumin', 'issued_date', 'nationality', 'visa_type', 'name_kor', 'found_face', 'specular_ratio', 'id_truth', 'fd_confidence', ...parseKeyList];
     var newFormat = _.pick(flat, newFormatKeys);
     newFormat.complete = newFormat.complete + '';
     newFormat.jumin = jumin;

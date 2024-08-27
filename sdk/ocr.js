@@ -210,8 +210,10 @@ var OPTION_TEMPLATE = new Object({
   ocrServerUrlPassport: '/ocr/passport',
   ocrServerUrlForeignPassport: '/ocr/passport',
   ocrServerUrlAlien: '/ocr/alien',
-  ocrServerUrlAlienBack: '/ocr/alien-back'
+  ocrServerUrlAlienBack: '/ocr/alien-back',
+  ocrServerParseKeyList: [] // ServerOCR 응답값에서 ocrResult로 추가할 키 목록
 });
+
 class UseBOCR {
   /** public properties */
 
@@ -484,6 +486,7 @@ class UseBOCR {
     if (!!!_settings.licenseKey) throw new Error('License key is empty');
     this.__license = _settings.licenseKey;
     this.__setOptionResultKeyList(_settings);
+    this.__setOptionServerOcrResultKeyList(_settings);
     var mergedOptions = _.merge({}, this.__options, _settings);
     this.setOption(mergedOptions);
     void 0;
@@ -549,6 +552,11 @@ class UseBOCR {
     }
   }
 
+  __setOptionServerOcrResultKeyList(settings) {
+    if (!!settings.ocrServerParseKeyList) {
+      settings.ocrServerParseKeyList = settings.ocrServerParseKeyList.replace(/\s/g, '').split(',');
+    }
+  }
   startOCR(type, onSuccess, onFailure) {
     var _arguments = arguments,
       _this3 = this;
@@ -3241,7 +3249,7 @@ class UseBOCR {
                   newFormat,
                   base64ImageResult,
                   maskInfo
-                } = usebOCRAPIParser.parseOcrResult(_this27.__ocrType, _this27.__ssaMode, ocrResult);
+                } = usebOCRAPIParser.parseOcrResult(_this27.__ocrType, _this27.__ssaMode, ocrResult, _this27.__options.ocrServerParseKeyList);
                 var review_result = {
                   ocr_type: _this27.__ocrType,
                   ocr_result: newFormat,
