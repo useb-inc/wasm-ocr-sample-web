@@ -12,7 +12,6 @@ import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js';
 import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js';
 import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js';
 import ImageUtil from './helpers/image-util.js';
-import { ServerOcrResult } from './__tests__/data.js';
 var instance;
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
@@ -3191,7 +3190,7 @@ class UseBOCR {
             var requestOptions = yield _this26.__createServerOcrParams(ssaMode, imgDataUrl);
             yield fetch(baseUrl, requestOptions).then(res => res.json()).then(result => {
               void 0;
-              resolve(ServerOcrResult);
+              resolve(result);
             });
           } catch (err) {
             void 0;
