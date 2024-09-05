@@ -220,7 +220,6 @@ class UISimulator {
     // { title: '신분증 사본탐지 신뢰도', value: 'fd_confidence' },
     // { title: '신분증 사본탐지 결과 (REAL : 실물, FAKE : 가짜)', value: 'id_truth' },
     ]);
-
     if (!!!onClickStartCallback || !!!onClickRestartCallback) {
       throw new Error('onClick callback function parameter is not exist');
     }
@@ -609,7 +608,6 @@ class UISimulator {
           if (e.target.id === 'alient-back') {
             this.__settings.useFaceImage = false; // 외국인등록증 뒷면은 얼굴 없음
           }
-
           this.__onClickStart();
           document.querySelector('#card-select-section').style.display = 'none';
           document.querySelector('#simulator-section').style.display = 'block';

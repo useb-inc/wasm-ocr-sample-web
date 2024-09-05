@@ -8,7 +8,7 @@ import objectUtil from './object-util.js';
 /* global-module */
 class OcrResultParser {
   constructor() {
-    _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'credit-ssa']);
+    _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'veteran', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'veteran-ssa', 'credit-ssa']);
     _defineProperty(this, "MASK_INFO", ['rect_id_issue_date', 'rect_id_number', 'rect_kor_personal_number', 'rect_license_number', 'rect_overseas_residents', 'rect_passport_jumin_number', 'rect_passport_number', 'rect_passport_number_mrz']);
     _defineProperty(this, "RESULT_SCAN_TYPE_MAP", {
       RESIDENT_REGISTRATION: '1',
@@ -21,7 +21,9 @@ class OcrResultParser {
       // TODO 현재 SERVER SDK 구분안함
       ALIEN_REGISTRATION_2: '5-2',
       // TODO 현재 SERVER SDK 구분안함
-      ALIEN_REGISTRATION_3: '5-3' // TODO 현재 SERVER SDK 구분안함
+      ALIEN_REGISTRATION_3: '5-3',
+      // TODO 현재 SERVER SDK 구분안함
+      VETERAN: '13'
     });
     _defineProperty(this, "RESULT_MASKING_TYPE_MAP", {
       1: 'kor',
@@ -29,7 +31,8 @@ class OcrResultParser {
       3: 'passport',
       4: 'passport-oversea',
       // TODO 현재 SERVER SDK 구분안함
-      5: 'alien'
+      5: 'alien',
+      13: 'veteran'
     });
   }
   parseOcrResult(ocrType, ssaMode, ocrResult, parseKeyList) {
@@ -67,6 +70,13 @@ class OcrResultParser {
         _.assign(newFormat, alien_result.newFormat);
         _.assign(legacyFormat, alien_result.legacyFormat);
         _.assign(maskInfo, alien_result.maskInfo);
+        break;
+      case 'veteran':
+      case 'veteran-ssa':
+        var veteran_result = this.__parseVeteran(ocrResult, parseKeyList); // prettier-ignore
+        _.assign(newFormat, veteran_result.newFormat);
+        _.assign(legacyFormat, veteran_result.legacyFormat);
+        _.assign(maskInfo, veteran_result.maskInfo);
         break;
       case 'credit':
       case 'credit-ssa':
@@ -278,6 +288,45 @@ class OcrResultParser {
       nationality: (_flat$nationality = flat.nationality) !== null && _flat$nationality !== void 0 ? _flat$nationality : '',
       visaType: (_flat$visa_type = flat.visa_type) !== null && _flat$visa_type !== void 0 ? _flat$visa_type : '',
       name_kor: (_flat$name_kor = flat.name_kor) !== null && _flat$name_kor !== void 0 ? _flat$name_kor : '',
+      face_score: newFormat.found_face,
+      specular: newFormat.specular_ratio,
+      id_type: idType,
+      truth: flat.id_truth,
+      truthConfidence: newFormat.fd_confidence,
+      truthRetryCount: 0
+    };
+    return {
+      newFormat,
+      legacyFormat,
+      maskInfo: this.getMaskInfo(flat, idType)
+    };
+  }
+  __parseVeteran(ocrResult, parseKeyList) {
+    var _ref4, _flat$fd_confidence4, _flat$masked_veterans;
+    // TODO wasm에서 지원해주는 idType 값이 없어 임의 매핑 (해외 여권이랑 외국인등록증 구분안되는 문제 있음)
+    var idType = ocrResult.result_scan_type ? this.RESULT_SCAN_TYPE_MAP[ocrResult.result_scan_type] : ocrResult.data.idType;
+    var flat = this.flatObj(ocrResult);
+
+    // 주민번호 형식 000000-0000000
+    var jumin = this.getIdNumberFormat(flat.jumin);
+
+    // new format ##########################
+    // id 객체에서 flat 하게 만들 대상들
+    var newFormatKeys = ['complete', 'name', 'jumin', 'issued_date', 'masked_veterans_number', 'found_face', 'specular_ratio', 'id_truth', 'fd_confidence', ...parseKeyList];
+    var newFormat = _.pick(flat, newFormatKeys);
+    newFormat.complete = newFormat.complete + '';
+    newFormat.jumin = jumin;
+    newFormat.id_truth_retry_count = 0;
+    newFormat.result_scan_type = idType;
+    newFormat.fd_confidence = (_ref4 = ((_flat$fd_confidence4 = flat.fd_confidence) === null || _flat$fd_confidence4 === void 0 ? void 0 : _flat$fd_confidence4.toFixed(3)) + '') !== null && _ref4 !== void 0 ? _ref4 : '';
+    newFormat.found_face = flat.found_face + '';
+    newFormat.specular_ratio = flat.specular_ratio + '';
+    var legacyFormat = {
+      Completed: newFormat.complete,
+      name: flat.name,
+      number: jumin,
+      Date: flat.issued_date,
+      masked_veterans_number: (_flat$masked_veterans = flat.masked_veterans_number) !== null && _flat$masked_veterans !== void 0 ? _flat$masked_veterans : '',
       face_score: newFormat.found_face,
       specular: newFormat.specular_ratio,
       id_type: idType,

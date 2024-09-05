@@ -11,7 +11,6 @@ class ObjectUtil {
         if (source[key] instanceof Object) Object.assign(source[key], this.objectDeepMerge(target[key], source[key]) // 재귀
         );
       }
-
       Object.assign(target || {}, source);
       return target;
     });
@@ -45,7 +44,6 @@ class ObjectUtil {
       return this.getObjectValueWithDot(obj[tmpKey], tmpKey2); // 재귀
     }
   }
-
   makeObjectWithDot(obj, key, value) {
     var mainKey = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
     var tmpKey = key.split('.')[0];
@@ -60,5 +58,4 @@ class ObjectUtil {
     return this.makeObjectWithDot(obj[tmpKey], tmpKey2, value, tmpKey); // 재귀
   }
 }
-
 export default new ObjectUtil();

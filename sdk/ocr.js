@@ -12,6 +12,7 @@ import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js';
 import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js';
 import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js';
 import ImageUtil from './helpers/image-util.js';
+import { ServerOcrResult } from './__tests__/data.js';
 var instance;
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
@@ -110,7 +111,6 @@ var OPTION_TEMPLATE = new Object({
     // OCR완료(사본판별 ON) : 초록
     ocr_failed: '#FA113D' // OCR실패 : 빨강
   },
-
   // 마스크 프레임 fill 컬러 변경 사용 여부
   useMaskFrameColorChange: true,
   // 마스크 프레임 옵션 (카메라 비디오 영역에서 인식 프레임만 보이게 하고 나머지를 덮어쓰는 프레임 영역)
@@ -143,7 +143,6 @@ var OPTION_TEMPLATE = new Object({
     // OCR완료(사본판별 ON)
     ocr_failed: '#111111' // OCR실패
   },
-
   // 촬영옵션
   useAutoSwitchToServerMode: false,
   // 저사양 단말에서 서버OCR로 자동 전환 기능
@@ -160,7 +159,6 @@ var OPTION_TEMPLATE = new Object({
     // 버튼 테두리(stroke) 색상
     base_color: '#5e8fff' // 버튼 색상
   },
-
   resourceBaseUrl: window.location.origin,
   // wasm, data 파일 리소스 base 경로 (CDN 사용시 변경)
   deviceLabel: '',
@@ -211,9 +209,9 @@ var OPTION_TEMPLATE = new Object({
   ocrServerUrlForeignPassport: '/ocr/passport',
   ocrServerUrlAlien: '/ocr/alien',
   ocrServerUrlAlienBack: '/ocr/alien-back',
+  ocrServerUrlVeteran: '/ocr/veteran',
   ocrServerParseKeyList: [] // ServerOCR 응답값에서 ocrResult로 추가할 키 목록
 });
-
 class UseBOCR {
   /** public properties */
 
@@ -282,9 +280,9 @@ class UseBOCR {
     _defineProperty(this, "__onSuccess", null);
     _defineProperty(this, "__onFailure", null);
     _defineProperty(this, "__onInProgressChange", null);
-    _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'alien-back', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa']);
-    _defineProperty(this, "__ocrTypeNumberToString", new Map([['1', 'idcard'], ['2', 'driver'], ['3', 'passport'], ['4', 'foreign-passport'], ['5', 'alien'], ['5-1', 'alien'], ['5-2', 'alien'], ['5-3', 'alien']]));
-    _defineProperty(this, "__ocrStringToTypeNumber", new Map([['idcard', '1'], ['driver', '2'], ['passport', '3'], ['foreign-passport', '4'], ['alien', '5'], ['alien', '5-1'], ['alien', '5-2'], ['alien', '5-3']]));
+    _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'alien-back', 'veteran', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'veteran-ssa']);
+    _defineProperty(this, "__ocrTypeNumberToString", new Map([['1', 'idcard'], ['2', 'driver'], ['3', 'passport'], ['4', 'foreign-passport'], ['5', 'alien'], ['5-1', 'alien'], ['5-2', 'alien'], ['5-3', 'alien'], ['13', 'veteran']]));
+    _defineProperty(this, "__ocrStringToTypeNumber", new Map([['idcard', '1'], ['driver', '2'], ['passport', '3'], ['foreign-passport', '4'], ['alien', '5'], ['alien', '5-1'], ['alien', '5-2'], ['alien', '5-3'], ['veteran', '13']]));
     _defineProperty(this, "__ocrResultIdcardKeySet", new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'region', 'overseas_resident', 'driver_number', 'driver_serial', 'driver_type', 'aptitude_test_date_start', 'aptitude_test_date_end',
     // 'is_old_format_driver_number',
     // 'birth',
@@ -292,6 +290,7 @@ class UseBOCR {
     'color_point', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image']));
     _defineProperty(this, "__ocrResultPassportKeySet", new Set(['result_scan_type', 'name', 'sur_name', 'given_name', 'passport_type', 'issuing_country', 'passport_number', 'nationality', 'issued_date', 'sex', 'expiry_date', 'personal_number', 'jumin', 'birthday', 'name_kor', 'mrz1', 'mrz2', 'color_point', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image']));
     _defineProperty(this, "__ocrResultAlienKeySet", new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'nationality', 'visa_type', 'name_kor', 'color_point', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image']));
+    _defineProperty(this, "__ocrResultVeteranKeySet", new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'masked_veterans_number', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image']));
     _defineProperty(this, "__ocrResultTruthKeySet", new Set(['truth', 'conf']));
     _defineProperty(this, "__pageEnd", false);
     _defineProperty(this, "__ocr", void 0);
@@ -541,7 +540,7 @@ class UseBOCR {
     })();
   }
   __setOptionResultKeyList(settings) {
-    if (!!settings.ocrResultIdcardKeylist || !!settings.encryptedOcrResultIdcardKeylist || !!settings.ocrResultPassportKeylist || !!settings.encryptedOcrResultPassportKeylist || !!settings.ocrResultAlienKeylist || !!settings.encryptedOcrResultAlienKeylist) {
+    if (!!settings.ocrResultIdcardKeylist || !!settings.encryptedOcrResultIdcardKeylist || !!settings.ocrResultPassportKeylist || !!settings.encryptedOcrResultPassportKeylist || !!settings.ocrResultAlienKeylist || !!settings.encryptedOcrResultAlienKeylist || !!settings.ocrResultVeteranKeylist || !!settings.encryptedOcrResultVeteranKeylist) {
       var ocrResultKeylistStringToIter = (str, keyIter) => str.toLowerCase().replace(/\s/g, '').split(',').filter(k => keyIter.has(k));
       if (settings.ocrResultIdcardKeylist) settings.ocrResultIdcardKeylist = ocrResultKeylistStringToIter(settings.ocrResultIdcardKeylist, this.__ocrResultIdcardKeySet); // prettier-ignore
       if (settings.encryptedOcrResultIdcardKeylist) settings.encryptedOcrResultIdcardKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultIdcardKeylist, this.__ocrResultIdcardKeySet); // prettier-ignore
@@ -549,9 +548,10 @@ class UseBOCR {
       if (settings.encryptedOcrResultPassportKeylist) settings.encryptedOcrResultPassportKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultPassportKeylist, this.__ocrResultPassportKeySet); // prettier-ignore
       if (settings.ocrResultAlienKeylist) settings.ocrResultAlienKeylist = ocrResultKeylistStringToIter(settings.ocrResultAlienKeylist, this.__ocrResultAlienKeySet); // prettier-ignore
       if (settings.encryptedOcrResultAlienKeylist) settings.encryptedOcrResultAlienKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultAlienKeylist, this.__ocrResultAlienKeySet); // prettier-ignore
+      if (settings.ocrResultVeteranKeylist) settings.ocrResultVeteranKeylist = ocrResultKeylistStringToIter(settings.ocrResultVeteranKeylist, this.__ocrResultVeteranKeySet); // prettier-ignore
+      if (settings.encryptedOcrResultVeteranKeylist) settings.encryptedOcrResultVeteranKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultVeteranKeylist, this.__ocrResultVeteranKeySet); // prettier-ignore
     }
   }
-
   __setOptionServerOcrResultKeyList(settings) {
     if (!!settings.ocrServerParseKeyList) {
       settings.ocrServerParseKeyList = settings.ocrServerParseKeyList.replace(/\s/g, '').split(',');
@@ -921,6 +921,11 @@ class UseBOCR {
           address = this.__OCREngine.getAlienScanner(stringOnWasmHeap);
           destroyCallback = () => this.__OCREngine.destroyAlienScanner(address);
           break;
+        case 'veteran':
+        case 'veteran-ssa':
+          address = this.__OCREngine.getVeteransScanner(stringOnWasmHeap);
+          destroyCallback = () => this.__OCREngine.destroyVeteransScanner(address);
+          break;
         case 'credit':
           address = this.__OCREngine.getCreditScanner(stringOnWasmHeap);
           destroyCallback = () => this.__OCREngine.destroyCreditScanner(address);
@@ -1233,6 +1238,10 @@ class UseBOCR {
           case 'credit':
             // nothing
             break;
+          case 'veteran':
+          case 'veteran-ssa':
+            // TODO: 이건 뭐지?
+            break;
           default:
             throw new Error('Unsupported OCR type');
         }
@@ -1297,6 +1306,10 @@ class UseBOCR {
                 break;
               case 'credit':
                 rawData = _this11.__OCREngine.scanCredit(address, 0);
+                break;
+              case 'veteran':
+              case 'veteran-ssa':
+                rawData = _this11.__OCREngine.scanVeterans(address, 0);
                 break;
               default:
                 throw new Error('Scanner does not exists');
@@ -1725,7 +1738,6 @@ class UseBOCR {
       yield _this16.__sleep(1); // for UI update
     })();
   }
-
   __updatePreviewUI(recognizedImage) {
     var {
       previewUIWrap,
@@ -2465,7 +2477,6 @@ class UseBOCR {
           return Math.min(a, b); // default : cameraResolution
         }
       };
-
       void 0;
       var {
         ocr,
@@ -2879,7 +2890,6 @@ class UseBOCR {
                   _this23.__blurCaptureButton();
                   _this23.setIgnoreComplete(false); // 필요한가?
                 }
-
                 return;
               }
 
@@ -2900,7 +2910,6 @@ class UseBOCR {
               //   this.setIgnoreComplete(false);        // 필요한가?
               // }
             }
-
             if (_this23.__ocrStatus >= _this23.OCR_STATUS.OCR_SUCCESS) {
               // ocr 완료 이후 상태
 
@@ -3035,7 +3044,6 @@ class UseBOCR {
       setTimeout(scan, 1); // UI 랜더링 blocking 방지 (setTimeout)
     });
   }
-
   __compressImages(review_result, constantNumber) {
     var _this24 = this;
     return _asyncToGenerator(function* () {
@@ -3051,7 +3059,6 @@ class UseBOCR {
           convertSize: _this24.__options.useCompressImageMaxVolume,
           targetCompressVolume: _this24.__options.useCompressImageMaxVolume // custom option
         };
-
         if (review_result.ocr_origin_image) {
           review_result.ocr_origin_image = yield _this24.__compressBase64Image(review_result.ocr_origin_image, defaultOptions, constantNumber);
         }
@@ -3121,6 +3128,10 @@ class UseBOCR {
       case 'alien-ssa':
         baseUrl += "/".concat(this.__options.ocrServerUrlAlien.replace(/\//, ''));
         break;
+      case 'veteran':
+      case 'veteran-ssa':
+        baseUrl += "/".concat(this.__options.ocrServerUrlVeteran.replace(/\//, ''));
+        break;
       case 'credit':
         throw new Error('Credit card is not Supported Server OCR type');
       default:
@@ -3189,6 +3200,8 @@ class UseBOCR {
             var baseUrl = _this26.__getOcrServerBaseUrl(ocrType);
             var requestOptions = yield _this26.__createServerOcrParams(ssaMode, imgDataUrl);
             yield fetch(baseUrl, requestOptions).then(res => res.json()).then(result => {
+              // console.log(ServerOcrResult);
+              // resolve(ServerOcrResult);
               void 0;
               resolve(result);
             });
@@ -3321,7 +3334,6 @@ class UseBOCR {
       void 0; // should be removed
     }
   }
-
   __onSuccessProcess(review_result) {
     var _this28 = this;
     return _asyncToGenerator(function* () {
@@ -3643,7 +3655,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.22.1';
+    return 'v1.23.0';
   }
 }
 export default UseBOCR;

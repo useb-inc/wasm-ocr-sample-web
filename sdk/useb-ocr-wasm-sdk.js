@@ -73,11 +73,13 @@ const messageHandler = async (e) => {
         case 'passport':
         case 'alien':
         case 'alien-back':
+        case 'veteran':
         case 'credit':
         // SSA
         case 'idcard-ssa':
         case 'passport-ssa':
         case 'alien-ssa':
+        case 'veteran-ssa':
           ocr.init(data.settings);
           await ocr.startOCR(data.ocrType, sendResult, sendResult, onInProgressChange);
           break;

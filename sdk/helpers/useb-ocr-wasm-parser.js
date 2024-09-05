@@ -9,7 +9,7 @@ function _toPrimitive(input, hint) { if (typeof input !== "object" || input === 
 import objectUtil from './object-util.js';
 class OcrResultParser {
   constructor() {
-    _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'alien-back', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'credit-ssa']);
+    _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'alien-back', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'credit-ssa', 'veteran', 'veteran-ssa']);
   }
   parseOcrResult(ocrType, ssaMode, ocrResult, ssaResult, ssaRetryCount, ssaResultList, ssaRetryType, ssaRetryPivot) {
     if (!this.__ocrTypeList.includes(ocrType)) throw new Error('ResultParser :: Unsupported OCR type');
@@ -39,6 +39,10 @@ class OcrResultParser {
         break;
       case 'alien-back':
         legacyFormat = _objectSpread({}, ocrResult.ocr_result);
+        break;
+      case 'veteran':
+      case 'veteran-ssa':
+        this.__parseVeteran(ocrResult.ocr_result, legacyFormat);
         break;
       case 'credit':
         [legacyFormat, newFormat] = this.__parseCredit(ocrResult.ocr_result, legacyFormat);
@@ -283,6 +287,23 @@ class OcrResultParser {
       nationality: 'nationality',
       visaType: 'visa_type',
       name_kor: 'name_kor',
+      color_point: 'color_point',
+      face_score: 'found_face',
+      specular: 'specular_ratio',
+      start_t: 'start_time',
+      end_t: 'end_time',
+      id_type: 'result_scan_type'
+    };
+    this.__convertLegacyFormat(ocrResult, legacyFormat, keyMapAlien);
+  }
+  __parseVeteran(ocrResult, legacyFormat) {
+    this.__reformatJumin(ocrResult);
+    var keyMapAlien = {
+      Completed: 'complete',
+      name: 'name',
+      number: 'jumin',
+      Date: 'issued_date',
+      masked_veterans_number: 'masked_veterans_number',
       color_point: 'color_point',
       face_score: 'found_face',
       specular: 'specular_ratio',
