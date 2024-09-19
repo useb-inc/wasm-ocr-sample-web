@@ -3181,7 +3181,7 @@ class UseBOCR {
     // }
     return baseUrl;
   }
-  __createServerOcrParams(ssaMode, imgDataUrl) {
+  __createServerOcrParams(ssaMode, encryptMode, imgDataUrl) {
     var _this26 = this;
     return _asyncToGenerator(function* () {
       /**
@@ -3198,14 +3198,13 @@ class UseBOCR {
         var apiToken = yield _this26.__requestGetAPIToken();
         var myHeaders = new Headers();
         myHeaders.append('Authorization', "Bearer ".concat(apiToken));
-        var param = {
-          base64jpg: imgDataUrl,
-          mask_mode: 'true',
-          face_mode: 'true'
-        };
-        if (ssaMode) {
-          param.ssa_mode = 'true';
-        }
+        var param = _objectSpread(_objectSpread({
+          base64jpg: imgDataUrl
+        }, ssaMode ? undefined : {
+          ssa_mode: 'false'
+        }), encryptMode ? {
+          useEncryptMode: 'true'
+        } : undefined);
         payload = JSON.stringify(param);
         var requestOptions = {
           method: 'POST',
@@ -3231,14 +3230,14 @@ class UseBOCR {
       }
     })();
   }
-  __requestServerOCR(ocrType, ssaMode, imgDataUrl) {
+  __requestServerOCR(ocrType, ssaMode, encryptMode, imgDataUrl) {
     var _this27 = this;
     return _asyncToGenerator(function* () {
       return new Promise( /*#__PURE__*/function () {
         var _ref12 = _asyncToGenerator(function* (resolve, reject) {
           try {
             var baseUrl = _this27.__getOcrServerBaseUrl(ocrType);
-            var requestOptions = yield _this27.__createServerOcrParams(ssaMode, imgDataUrl);
+            var requestOptions = yield _this27.__createServerOcrParams(ssaMode, encryptMode, imgDataUrl);
             yield fetch(baseUrl, requestOptions).then(res => res.json()).then(result => {
               void 0;
               resolve(result);
@@ -3280,7 +3279,7 @@ class UseBOCR {
                 // server ocr 성공
                 yield _this28.__changeStage(_this28.IN_PROGRESS.MANUAL_CAPTURE_SUCCESS, false, imgDataUrl);
                 try {
-                  ocrResult = yield _this28.__requestServerOCR(_this28.__ocrType, _this28.__ssaMode, imgDataUrl);
+                  ocrResult = yield _this28.__requestServerOCR(_this28.__ocrType, _this28.__ssaMode, _this28.isEncryptMode(), imgDataUrl);
 
                   // failure case
                   if (ocrResult === false) {
@@ -3741,7 +3740,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.24.0';
+    return 'v1.24.1';
   }
 }
 export default UseBOCR;
