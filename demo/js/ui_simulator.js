@@ -220,6 +220,7 @@ class UISimulator {
     // { title: '신분증 사본탐지 신뢰도', value: 'fd_confidence' },
     // { title: '신분증 사본탐지 결과 (REAL : 실물, FAKE : 가짜)', value: 'id_truth' },
     ]);
+
     if (!!!onClickStartCallback || !!!onClickRestartCallback) {
       throw new Error('onClick callback function parameter is not exist');
     }
@@ -353,6 +354,9 @@ class UISimulator {
       });
       document.getElementById('use-auto-switch').addEventListener('change', e => {
         this.__settings.useAutoSwitchToServerMode = e.target.checked;
+        var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
+        document.querySelector('#server-ocr-type-ui').style.display = showServerOcrBaseUrlUI ? 'block' : 'none';
+        document.querySelector('#server-ocr-result-key-list-ui').style.display = showServerOcrBaseUrlUI ? 'block' : 'none';
         this.__saveSettingsHandler();
       });
       document.getElementById('switch-to-server-threshold').addEventListener('change', e => {
@@ -361,6 +365,54 @@ class UISimulator {
       });
       document.getElementById('use-manual-switch').addEventListener('change', e => {
         this.__settings.useManualSwitchToServerMode = e.target.checked;
+        var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
+        document.querySelector('#server-ocr-type-ui').style.display = showServerOcrBaseUrlUI ? 'block' : 'none';
+        document.querySelector('#server-ocr-result-key-list-ui').style.display = showServerOcrBaseUrlUI ? 'block' : 'none';
+        this.__saveSettingsHandler();
+      });
+      document.querySelector('#server-ocr-type').addEventListener('change', e => {
+        this.__settings.ocrServerBaseUrl = '';
+        document.querySelector('#ocr-server-base-url-ui').style.display = e.target.value === 'default' ? 'none' : 'block';
+        this.__saveSettingsHandler();
+      });
+      document.querySelector('#ocr-server-base-url').addEventListener('change', e => {
+        var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
+        if (showServerOcrBaseUrlUI) this.__settings.ocrServerBaseUrl = e.target.value;
+        this.__saveSettingsHandler();
+      });
+      document.querySelector('#ocr-server-url-idcard').addEventListener('change', e => {
+        var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
+        if (showServerOcrBaseUrlUI) this.__settings.ocrServerUrlIdcard = e.target.value;
+        this.__saveSettingsHandler();
+      });
+      document.querySelector('#ocr-server-url-driver').addEventListener('change', e => {
+        var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
+        if (showServerOcrBaseUrlUI) this.__settings.ocrServerUrlDriver = e.target.value;
+        this.__saveSettingsHandler();
+      });
+      document.querySelector('#ocr-server-url-passport').addEventListener('change', e => {
+        var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
+        if (showServerOcrBaseUrlUI) this.__settings.ocrServerUrlPassport = e.target.value;
+        this.__saveSettingsHandler();
+      });
+      document.querySelector('#ocr-server-url-foreign-passport').addEventListener('change', e => {
+        var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
+        if (showServerOcrBaseUrlUI) this.__settings.ocrServerUrlForeignPassport = e.target.value;
+        this.__saveSettingsHandler();
+      });
+      document.querySelector('#ocr-server-url-alien').addEventListener('change', e => {
+        var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
+        if (showServerOcrBaseUrlUI) this.__settings.ocrServerUrlAlien = e.target.value;
+        this.__saveSettingsHandler();
+      });
+      document.querySelector('#ocr-server-url-veteran').addEventListener('change', e => {
+        var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
+        if (showServerOcrBaseUrlUI) this.__settings.ocrServerUrlVeteran = e.target.value;
+        this.__saveSettingsHandler();
+      });
+      document.querySelector('#server-ocr-result-key-list').addEventListener('change', e => {
+        var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
+        if (showServerOcrBaseUrlUI) this.__settings.ocrServerParseKeyList = e.target.value;
         this.__saveSettingsHandler();
       });
       var setEncryptOptionUI = (showKeylistUI, setKeylist) => {
@@ -608,6 +660,7 @@ class UISimulator {
           if (e.target.id === 'alient-back') {
             this.__settings.useFaceImage = false; // 외국인등록증 뒷면은 얼굴 없음
           }
+
           this.__onClickStart();
           document.querySelector('#card-select-section').style.display = 'none';
           document.querySelector('#simulator-section').style.display = 'block';

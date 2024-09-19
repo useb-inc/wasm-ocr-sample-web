@@ -5,11 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>OCR/SSA WebAssembly Sample</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" type="text/css" href="./css/demo.css?ver=v1.23.0" />
+    <link rel="stylesheet" type="text/css" href="./css/demo.css?ver=v1.24.0" />
 
-    <script type="text/javascript" src="./js/util.js?ver=v1.23.0"></script>
-    <script type="text/javascript" src="./lib/lodash.min.js?ver=v1.23.0"></script>
-    <script type="module" src="./js/ui_simulator.js?ver=v1.23.0" async></script>
+    <script type="text/javascript" src="./js/util.js?ver=v1.24.0"></script>
+    <script type="text/javascript" src="./lib/lodash.min.js?ver=v1.24.0"></script>
+    <script type="module" src="./js/ui_simulator.js?ver=v1.24.0" async></script>
     <script src="https://kit.fontawesome.com/71d7c8cd6e.js" crossorigin="anonymous"></script>
   </head>
 
@@ -55,11 +55,14 @@
           <button id="passport">국내/해외 여권</button>
           <button id="alien">외국인등록증</button>
           <button id="alien-back">외국인등록증 뒷면</button>
+          <button id="veteran">국가보훈증</button>
           <button id="credit">신용카드</button>
 
           <button id="idcard-ssa">주민등록증/운전면허증 + 사본판별</button>
           <button id="passport-ssa">국내/해외 여권 + 사본판별</button>
           <button id="alien-ssa">외국인등록증 + 사본판별</button>
+          <button id="veteran-ssa">국가보훈증 + 사본판별</button>
+          <button id="barcode">USIM 바코드</button>
         </div>
         <div class="prev-button">
           <button type="button" id="prev" class="prev">이전</button>
@@ -219,6 +222,38 @@
               <div>
                 <label for="use-manual-switch">수동 전환 사용</label>
                 <input type="checkbox" id="use-manual-switch" name="use-auto-switch" />
+              </div>
+              <div id="server-ocr-type-ui" style="display: none">
+                <label for="server-ocr-type">ServerOCR 타입</label>
+                <select id="server-ocr-type">
+                  <option value="default">default</option>
+                  <option value="custom">custom</option>
+                </select>
+
+                <div id="ocr-server-base-url-ui" style="display: none">
+                  <label for="ocr-server-base-url">ServerOCR BaseURL</label>
+                  <input type="text" id="ocr-server-base-url" name="ocr-server-base-url" /><br />
+                  <label for="ocr-server-url-idcard">└ 주민등록증:</label>
+                  <input type="text" id="ocr-server-url-idcard" name="ocr-server-url-idcard" /><br />
+                  <label for="ocr-server-url-driver">└ 운전면허증:</label>
+                  <input type="text" id="ocr-server-url-driver" name="ocr-server-url-driver" /><br />
+                  <label for="ocr-server-url-passport">└ 국내여권:</label>
+                  <input type="text" id="ocr-server-url-passport" name="ocr-server-url-passport" /><br />
+                  <label for="ocr-server-url-foreign-passport">└ 해외여권:</label>
+                  <input
+                    type="text"
+                    id="ocr-server-url-foreign-passport"
+                    name="ocr-server-url-foreign-passport"
+                  /><br />
+                  <label for="ocr-server-url-alien">└ 외국인등록증:</label>
+                  <input type="text" id="ocr-server-url-alien" name="ocr-server-url-alien" /><br />
+                  <label for="ocr-server-url-veteran">└ 국가보훈증:</label>
+                  <input type="text" id="ocr-server-url-veteran" name="ocr-server-url-veteran" /><br />
+                </div>
+              </div>
+              <div id="server-ocr-result-key-list-ui" style="display: none">
+                <label for="server-ocr-result-key-list">ServerOCR 결과 확장 Key목록</label>
+                <input type="text" id="server-ocr-result-key-list" name="server-ocr-result-key-list" />
               </div>
             </fieldset>
             <fieldset>
@@ -567,6 +602,6 @@
       <div id="ocr_result" class="custom--section"></div>
     </section>
 
-    <script type="module" src="./demo.js?ver=v1.23.0" async></script>
+    <script type="module" src="./demo.js?ver=v1.24.0" async></script>
   </body>
 </html>

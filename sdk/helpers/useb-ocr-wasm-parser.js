@@ -9,7 +9,7 @@ function _toPrimitive(input, hint) { if (typeof input !== "object" || input === 
 import objectUtil from './object-util.js';
 class OcrResultParser {
   constructor() {
-    _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'alien-back', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'credit-ssa', 'veteran', 'veteran-ssa']);
+    _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'alien-back', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'credit-ssa', 'veteran', 'veteran-ssa', 'barcode']);
   }
   parseOcrResult(ocrType, ssaMode, ocrResult, ssaResult, ssaRetryCount, ssaResultList, ssaRetryType, ssaRetryPivot) {
     if (!this.__ocrTypeList.includes(ocrType)) throw new Error('ResultParser :: Unsupported OCR type');
@@ -46,6 +46,10 @@ class OcrResultParser {
         break;
       case 'credit':
         [legacyFormat, newFormat] = this.__parseCredit(ocrResult.ocr_result, legacyFormat);
+        ocrResult.ocr_result = newFormat;
+        break;
+      case 'barcode':
+        [legacyFormat, newFormat] = this.__parseBarcode(ocrResult.ocr_result, legacyFormat);
         ocrResult.ocr_result = newFormat;
         break;
       default:
@@ -320,6 +324,9 @@ class OcrResultParser {
     if (resultIndex < resultSplit.length) legacyFormat.number = resultSplit[resultIndex], resultIndex++;
     if (resultIndex < resultSplit.length) legacyFormat.exp_date = resultSplit[resultIndex], resultIndex++;
     return [legacyFormat, legacyFormat];
+  }
+  __parseBarcode(ocrResult, legacyFormat) {
+    return [legacyFormat, ocrResult];
   }
 }
 export default new OcrResultParser();

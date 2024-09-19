@@ -8,7 +8,7 @@ import objectUtil from './object-util.js';
 /* global-module */
 class OcrResultParser {
   constructor() {
-    _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'veteran', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'veteran-ssa', 'credit-ssa']);
+    _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'veteran', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'veteran-ssa', 'credit-ssa', 'barcode']);
     _defineProperty(this, "MASK_INFO", ['rect_id_issue_date', 'rect_id_number', 'rect_kor_personal_number', 'rect_license_number', 'rect_overseas_residents', 'rect_passport_jumin_number', 'rect_passport_number', 'rect_passport_number_mrz']);
     _defineProperty(this, "RESULT_SCAN_TYPE_MAP", {
       RESIDENT_REGISTRATION: '1',
@@ -23,7 +23,8 @@ class OcrResultParser {
       // TODO 현재 SERVER SDK 구분안함
       ALIEN_REGISTRATION_3: '5-3',
       // TODO 현재 SERVER SDK 구분안함
-      VETERAN: '13'
+      VETERAN: '13',
+      BARCODE: '8'
     });
     _defineProperty(this, "RESULT_MASKING_TYPE_MAP", {
       1: 'kor',
@@ -32,7 +33,8 @@ class OcrResultParser {
       4: 'passport-oversea',
       // TODO 현재 SERVER SDK 구분안함
       5: 'alien',
-      13: 'veteran'
+      13: 'veteran',
+      8: 'barcode'
     });
   }
   parseOcrResult(ocrType, ssaMode, ocrResult, parseKeyList) {
