@@ -380,14 +380,9 @@ class UISimulator {
         if (showServerOcrBaseUrlUI) this.__settings.ocrServerBaseUrl = e.target.value;
         this.__saveSettingsHandler();
       });
-      document.querySelector('#ocr-server-url-idcard').addEventListener('change', e => {
+      document.querySelector('#ocr-server-url-idcard-driver').addEventListener('change', e => {
         var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
-        if (showServerOcrBaseUrlUI) this.__settings.ocrServerUrlIdcard = e.target.value;
-        this.__saveSettingsHandler();
-      });
-      document.querySelector('#ocr-server-url-driver').addEventListener('change', e => {
-        var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
-        if (showServerOcrBaseUrlUI) this.__settings.ocrServerUrlDriver = e.target.value;
+        if (showServerOcrBaseUrlUI) this.__settings.ocrServerUrlIdcardDriver = e.target.value;
         this.__saveSettingsHandler();
       });
       document.querySelector('#ocr-server-url-passport').addEventListener('change', e => {

@@ -206,13 +206,12 @@ var OPTION_TEMPLATE = new Object({
   // ocr config 설정: 키오스크 등 특정 목적으로 사용되는 경우 config 값 설정, 해당 없는 경우 빈값('')으로 설정
   ocr_config: '',
   ocrServerBaseUrl: 'https://quram.useb.co.kr',
-  ocrServerUrlIdcard: '/ocr/idcard-driver',
-  ocrServerUrlDriver: '/ocr/idcard-driver',
-  ocrServerUrlPassport: '/ocr/passport',
-  ocrServerUrlForeignPassport: '/ocr/passport',
-  ocrServerUrlAlien: '/ocr/alien',
-  ocrServerUrlAlienBack: '/ocr/alien-back',
-  ocrServerUrlVeteran: '/ocr/veteran',
+  ocrServerUrlIdcardDriver: '',
+  ocrServerUrlPassport: '',
+  ocrServerUrlForeignPassport: '',
+  ocrServerUrlAlien: '',
+  ocrServerUrlAlienBack: '',
+  ocrServerUrlVeteran: '',
   ocrServerParseKeyList: [] // ServerOCR 응답값에서 ocrResult로 추가할 키 목록
 });
 
@@ -3142,46 +3141,48 @@ class UseBOCR {
     });
   }
   __getOcrServerBaseUrl(ocrType) {
-    var baseUrl = this.__options.ocrServerBaseUrl.replace(/(.*)\/$/, '$1');
+    var __makePathname = pathname => {
+      if (!pathname) return pathname;
+      return pathname.startsWith('/') ? pathname : "/".concat(pathname);
+    };
+    var baseUrl = new URL(this.__options.ocrServerBaseUrl);
     if (!baseUrl) throw new Error("'ocrServerBaseUrl' is empty.");
+    var origin = baseUrl.origin;
+    var pathname = baseUrl.pathname;
     switch (ocrType) {
       case 'idcard':
       case 'idcard-ssa':
-        baseUrl += "/".concat(this.__options.ocrServerUrlIdcard.replace(/\//, ''));
-        break;
       case 'driver':
       case 'driver-ssa':
-        baseUrl += "/".concat(this.__options.ocrServerUrlDriver.replace(/\//, ''));
+        pathname += this.isUsebServerOCR() ? 'ocr/idcard-driver' : __makePathname(this.__options.ocrServerUrlIdcardDriver);
         break;
       case 'passport':
       case 'passport-ssa':
-        baseUrl += "/".concat(this.__options.ocrServerUrlPassport.replace(/\//, ''));
+        pathname += this.isUsebServerOCR() ? 'ocr/passport' : __makePathname(this.__options.ocrServerUrlPassport);
         break;
       case 'foreign-passport':
       case 'foreign-passport-ssa':
-        baseUrl += "/".concat(this.__options.ocrServerUrlForeignPassport.replace(/\//, ''));
+        pathname += this.isUsebServerOCR() ? 'ocr/passport' : __makePathname(this.__options.ocrServerUrlForeignPassport);
         break;
       case 'alien-back':
-        baseUrl += "/".concat(this.__options.ocrServerUrlAlienBack.replace(/\//, ''));
+        pathname += this.isUsebServerOCR() ? 'ocr/alien-back' : __makePathname(this.__options.ocrServerUrlAlienBack);
         break;
       case 'alien':
       case 'alien-ssa':
-        baseUrl += "/".concat(this.__options.ocrServerUrlAlien.replace(/\//, ''));
+        pathname += this.isUsebServerOCR() ? 'ocr/alien' : __makePathname(this.__options.ocrServerUrlAlien);
         break;
       case 'veteran':
       case 'veteran-ssa':
-        baseUrl += "/".concat(this.__options.ocrServerUrlVeteran.replace(/\//, ''));
+        pathname += this.isUsebServerOCR() ? 'ocr/veteran' : __makePathname(this.__options.ocrServerUrlVeteran);
         break;
       case 'credit':
         throw new Error('Credit card is not Supported Server OCR type');
       default:
         throw new Error("Unsupported OCR type: ".concat(ocrType));
     }
-    // if (this.isUsebServerOCR()) {
-    // }
-    return baseUrl;
+    return origin + pathname;
   }
-  __createServerOcrParams(ssaMode, encryptMode, imgDataUrl) {
+  __createServerOcrParams(ocrType, ssaMode, encryptMode, imgDataUrl) {
     var _this26 = this;
     return _asyncToGenerator(function* () {
       /**
@@ -3199,6 +3200,7 @@ class UseBOCR {
         var myHeaders = new Headers();
         myHeaders.append('Authorization', "Bearer ".concat(apiToken));
         var param = _objectSpread(_objectSpread({
+          ocrType,
           base64jpg: imgDataUrl
         }, ssaMode ? undefined : {
           ssa_mode: 'false'
@@ -3215,6 +3217,7 @@ class UseBOCR {
         return requestOptions;
       } else {
         var formData = new FormData();
+        formData.append('ocrType', ocrType);
         formData.append('base64jpg', _this26.__removeMimeType(imgDataUrl));
         // formData.append('config', 'org_image');
         // formData.append('config', 'portrait');
@@ -3237,7 +3240,7 @@ class UseBOCR {
         var _ref12 = _asyncToGenerator(function* (resolve, reject) {
           try {
             var baseUrl = _this27.__getOcrServerBaseUrl(ocrType);
-            var requestOptions = yield _this27.__createServerOcrParams(ssaMode, encryptMode, imgDataUrl);
+            var requestOptions = yield _this27.__createServerOcrParams(ocrType, ssaMode, encryptMode, imgDataUrl);
             yield fetch(baseUrl, requestOptions).then(res => res.json()).then(result => {
               void 0;
               resolve(result);
@@ -3740,7 +3743,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.24.1';
+    return 'v1.24.2';
   }
 }
 export default UseBOCR;
