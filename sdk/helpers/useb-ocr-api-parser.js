@@ -105,17 +105,26 @@ class OcrResultParser {
     };
   }
   __parseBase64ImageResult(ocrResult, base64ImageResult) {
-    if (ocrResult.image_base64_mask && !ocrResult.image_base64_mask.startsWith('data:image')) {
-      ocrResult.image_base64_mask = 'data:image/jpeg;base64,' + ocrResult.image_base64_mask;
+    var mimeType = 'data:image/jpeg;base64,';
+    if (ocrResult.image_base64_mask && !ocrResult.image_base64_mask.startsWith(mimeType)) {
+      if (this.detectMimeType(ocrResult.image_base64_mask)) {
+        ocrResult.image_base64_mask = mimeType + ocrResult.image_base64_mask;
+      }
     }
-    if (ocrResult.marked && !ocrResult.marked.startsWith('data:image')) {
-      ocrResult.marked = 'data:image/jpeg;base64,' + ocrResult.marked;
+    if (ocrResult.marked && !ocrResult.marked.startsWith(mimeType)) {
+      if (this.detectMimeType(ocrResult.marked)) {
+        ocrResult.marked = mimeType + ocrResult.marked;
+      }
     }
-    if (ocrResult.image_base64_face && !ocrResult.image_base64_face.startsWith('data:image')) {
-      ocrResult.image_base64_face = 'data:image/jpeg;base64,' + ocrResult.image_base64_face;
+    if (ocrResult.image_base64_face && !ocrResult.image_base64_face.startsWith(mimeType)) {
+      if (this.detectMimeType(ocrResult.image_base64_face)) {
+        ocrResult.image_base64_face = mimeType + ocrResult.image_base64_face;
+      }
     }
-    if (ocrResult.portrait && !ocrResult.portrait.startsWith('data:image')) {
-      ocrResult.portrait = 'data:image/jpeg;base64,' + ocrResult.portrait;
+    if (ocrResult.portrait && !ocrResult.portrait.startsWith(mimeType)) {
+      if (this.detectMimeType(ocrResult.portrait)) {
+        ocrResult.portrait = mimeType + ocrResult.portrait;
+      }
     }
     var maskingImageKey = ocrResult.image_base64_mask ? 'image_base64_mask' : 'marked';
     var faceImageKey = ocrResult.image_base64_face ? 'image_base64_face' : 'portrait';
@@ -389,6 +398,20 @@ class OcrResultParser {
       } else result[key] = value;
     }
     return result;
+  }
+  detectMimeType(base64) {
+    var signatures = {
+      JVBERi0: 'application/pdf',
+      R0lGODdh: 'image/gif',
+      R0lGODlh: 'image/gif',
+      iVBORw0KGgo: 'image/png',
+      '/9j/': 'image/jpeg'
+    };
+    for (var sign in signatures) {
+      if (base64.startsWith(sign)) {
+        return signatures[sign];
+      }
+    }
   }
 }
 export default new OcrResultParser();

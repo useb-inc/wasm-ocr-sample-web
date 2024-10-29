@@ -12,7 +12,8 @@ import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js';
 import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js';
 import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js';
 import ImageUtil from './helpers/image-util.js';
-import EncryptModule from './helpers/useb_aes256.js';
+import { AlcheraAES256 as AlcheraAES256SDK } from './helpers/AlcheraAES256SDK.js'; // alchera aes256 encrypt sdk
+
 var instance;
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
@@ -2848,11 +2849,11 @@ class UseBOCR {
       void 0;
     })();
   }
-  __loadEnryptResource() {
+  __loadEncryptResource() {
     var _this23 = this;
     return _asyncToGenerator(function* () {
       var resourceBaseUrl = _this23.__options.resourceBaseUrl;
-      _this23.__EncryptModule = EncryptModule(resourceBaseUrl);
+      _this23.__EncryptModule = new AlcheraAES256SDK(resourceBaseUrl);
     })();
   }
 
@@ -3219,6 +3220,9 @@ class UseBOCR {
         var formData = new FormData();
         formData.append('ocrType', ocrType);
         formData.append('base64jpg', _this26.__removeMimeType(imgDataUrl));
+        if (encryptMode) {
+          formData.append('useEncryptMode', true);
+        }
         // formData.append('config', 'org_image');
         // formData.append('config', 'portrait');
         // formData.append('config', 'marked_image');
@@ -3266,7 +3270,7 @@ class UseBOCR {
         // TODO: 서버모드일 때 암호화 사용인 경우 base64 image를 useb_aes256.wasm 으로 암호화 (base64 -> encrypted text)
         // 처리 후 ServerOCR로 전송하기.
         if (_this28.isEncryptMode()) {
-          _this28.__loadEnryptResource();
+          yield _this28.__loadEncryptResource();
         }
         _this28.__blurCaptureButton();
         var __onClickCaptureButton = /*#__PURE__*/function () {
@@ -3275,7 +3279,7 @@ class UseBOCR {
               var ocrResult = null;
               // 캔버스에서 이미지를 가져옴
               var [, originImageDataUrl] = yield _this28.__cropImageFromVideo();
-              var imgDataUrl = _this28.isEncryptMode() ? _this28.__encryptBase64(originImageDataUrl) : originImageDataUrl;
+              var imgDataUrl = _this28.isEncryptMode() ? _this28.__encryptBase64(_this28.__removeMimeType(originImageDataUrl)) : originImageDataUrl;
               if (1 === true) {
                 // server ocr 실패 (발생 가능성 없음)
               } else {
@@ -3585,17 +3589,10 @@ class UseBOCR {
   __encryptBase64(inputString) {
     if (typeof inputString === 'number') inputString = inputString.toString();
     if (inputString === '') return '';
-    var useb_aes256_encrypt = this.__EncryptModule.cwrap('useb_aes256_encrypt', 'string', ['number']);
-    var inputPointer = null;
     try {
-      inputPointer = this.__EncryptModule._malloc(this.__EncryptModule.lengthBytesUTF8(inputString) + 1);
-      this.__EncryptModule.stringToUTF8(inputString, inputPointer, inputString.length + 1);
-      return useb_aes256_encrypt(inputPointer);
-    } finally {
-      if (inputPointer) {
-        this.__EncryptModule._free(inputPointer);
-        inputPointer = null;
-      }
+      return this.__EncryptModule.encrypt(inputString);
+    } catch (e) {
+      void 0;
     }
   }
   /**
@@ -3605,17 +3602,10 @@ class UseBOCR {
   __decryptBase64(inputString) {
     if (typeof inputString === 'number') inputString = inputString.toString();
     if (inputString === '') return '';
-    var useb_aes256_decrypt = this.__EncryptModule.cwrap('useb_aes256_decrypt', 'string', ['number']);
-    var inputPointer = null;
     try {
-      inputPointer = this.__EncryptModule._malloc(this.__EncryptModule.lengthBytesUTF8(inputString) + 1);
-      this.__EncryptModule.stringToUTF8(inputString, inputPointer, inputString.length + 1);
-      return useb_aes256_decrypt(inputPointer);
-    } finally {
-      if (inputPointer) {
-        this.__EncryptModule._free(inputPointer);
-        inputPointer = null;
-      }
+      return this.__EncryptModule.decrypt(inputString);
+    } catch (e) {
+      void 0;
     }
   }
   __getEncryptedSize() {
