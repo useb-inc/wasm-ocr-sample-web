@@ -3743,7 +3743,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.24.2';
+    return 'v1.24.3';
   }
 }
 export default UseBOCR;
