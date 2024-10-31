@@ -1652,11 +1652,22 @@ class UseBOCR {
           void 0;
           void 0;
           _this15.__onFailureProcess('E404', e, _errorMessage2);
+        } else if (e.name === 'OverconstrainedError') {
+          var _errorMessage3 = "Camera resolution over: ".concat(e.constraint);
+          void 0;
+          void 0;
+          _this15.__onFailureProcess('E400', e, _errorMessage3);
+        } else if (e.name === 'UnsupportedError') {
+          // navigator.mediaDevices WebAPI가 없음
+          var _errorMessage4 = e.message;
+          void 0;
+          void 0;
+          _this15.__onFailureProcess('E400', e, _errorMessage4);
         } else {
-          var _errorMessage3 = 'Unknown Error Occured';
+          var _errorMessage5 = 'Unknown Error Occured';
           void 0;
           void 0;
-          _this15.__onFailureProcess('E999', e, _errorMessage3);
+          _this15.__onFailureProcess('E999', e, _errorMessage5);
         }
       }
     })();
@@ -1804,7 +1815,9 @@ class UseBOCR {
     return _asyncToGenerator(function* () {
       // throw error if navigator.mediaDevices is not supported
       if (!navigator.mediaDevices) {
-        throw new Error('navigator.mediaDevices is not supported');
+        var error = new Error('navigator.mediaDevices is not supported');
+        error.name = 'UnsupportedError';
+        throw error;
       }
       var devices = yield navigator.mediaDevices.enumerateDevices();
       var camera = [];
@@ -3733,7 +3746,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.24.3';
+    return 'v1.24.4';
   }
 }
 export default UseBOCR;
