@@ -1617,6 +1617,7 @@ class UseBOCR {
             _this15.__camSetComplete = true;
             yield _this15.__adjustStyle();
           }));
+          _this15.exitFullscreen(video);
           yield _this15.__changeStage(_this15.IN_PROGRESS.READY);
         } else {
           yield _this15.__changeStage(_this15.IN_PROGRESS.NOT_READY);
@@ -2295,6 +2296,18 @@ class UseBOCR {
       captureButton
     } = detector.getOCRElements();
     return captureButton ? captureButton.getAttribute('is-clicked') === 'true' : false;
+  }
+  exitFullscreen(video) {
+    try {
+      if (video.exitFullscreen) video.exitFullscreen();else if (video.webkitExitFullscreen) video.webkitExitFullscreen(); //chrome & safari
+      else if (video.mozCancelFullScreen) video.mozCancelFullScreen(); // firefox
+      else if (video.msExitFullscreen) video.msExitFullscreen(); // IE
+      else if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); // default
+      else if (document.fullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen(); // chrome & safari
+      else if (document.fullscreenElement && document.msExitFullscreen) document.msExitFullscreen(); // IE
+    } catch (e) {
+      void 0;
+    }
   }
   __setupVideo(isPassport) {
     var _this19 = this;
@@ -3746,7 +3759,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.25.0';
+    return 'v1.26.0';
   }
 }
 export default UseBOCR;
