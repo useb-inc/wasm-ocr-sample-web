@@ -5,11 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>OCR/SSA WebAssembly Sample</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" type="text/css" href="./css/demo.css?ver=v1.26.0" />
+    <link rel="stylesheet" type="text/css" href="./css/demo.css?ver=v1.27.0" />
 
-    <script type="text/javascript" src="./js/util.js?ver=v1.26.0"></script>
-    <script type="text/javascript" src="./lib/lodash.min.js?ver=v1.26.0"></script>
-    <script type="module" src="./js/ui_simulator.js?ver=v1.26.0" async></script>
+    <script type="text/javascript" src="./js/util.js?ver=v1.27.0"></script>
+    <script type="text/javascript" src="./lib/lodash.min.js?ver=v1.27.0"></script>
+    <script type="module" src="./js/ui_simulator.js?ver=v1.27.0" async></script>
     <script src="https://kit.fontawesome.com/71d7c8cd6e.js" crossorigin="anonymous"></script>
   </head>
 
@@ -362,6 +362,9 @@
               <option value="highQuality">화질 우선(권장)</option>
               <option value="compatibility">호환성 우선</option>
             </select>
+
+            <label for="origin-image-square-ratio">원본이미지 정방형 비율 사용</label>
+            <input type="checkbox" id="origin-image-square-ratio" name="origin-image-square-ratio" />
           </div>
           <div>
             <label for="camera-resource-request-retry-limit">카메라 리소스요청 재시도 횟수</label>
@@ -600,6 +603,6 @@
       <div id="ocr_result" class="custom--section"></div>
     </section>
 
-    <script type="module" src="./demo.js?ver=v1.26.0" async></script>
+    <script type="module" src="./demo.js?ver=v1.27.0" async></script>
   </body>
 </html>

@@ -186,6 +186,8 @@ var OPTION_TEMPLATE = new Object({
   calcGuideBoxCriteria: 'cameraResolution',
   // 카메라 해상도 기준(권장, 디폴트) : 720x1280 해상도(세로모드) 일때 ocr view width size가 720보다 큰 경우, 가이드 박스를 720에 맞춤 (preview 화면 깨짐 없음)
   // calcGuideBoxCriteria: 'ocrViewSize', // 화면 사이즈 기준 : 720x1280 해상도(세로모드) 일때 ocr view width size가 720보다 큰경우, 가이드 박스를 ocr view width 사에즈에 맞춤 (preview 화면 강제로 늘리기 때문에 다소 깨짐)
+  useOriginImageSquareRatio: false,
+  // 신분증 원본이미지를 1080x1080 정방형 비율로 사용할지 여부. (default: false)
 
   // 사본판별 RETRY 설정
   // ssaRetryType
@@ -893,6 +895,8 @@ class UseBOCR {
         isSupportedResolution = true;
       } else if (videoElement.videoWidth === 1280 && videoElement.videoHeight === 720 || videoElement.videoWidth === 720 && videoElement.videoHeight === 1280) {
         isSupportedResolution = true;
+      } else if (videoElement.videoWidth === 1080 && videoElement.videoHeight === 1080 || videoElement.videoWidth === 720 && videoElement.videoHeight === 720) {
+        isSupportedResolution = true;
       } else {
         videoElement.srcObject = null;
         isSupportedResolution = false;
@@ -1143,6 +1147,10 @@ class UseBOCR {
       var sHeight = Math.min(Math.round(calcCropImageSizeHeight * ratio), calcMaxSHeight);
       sx = Math.max(Math.round((calcVideoClientWidth - calcCropImageSizeWidth) / 2 * ratio), 0);
       sy = Math.max(Math.round((calcVideoClientHeight - calcCropImageSizeHeight) / 2 * ratio), 0);
+      if (_this9.__options.useOriginImageSquareRatio) {
+        sx = sy = 0;
+        [sWidth, sHeight] = [Math.min(calcVideoWidth, calcResolution_w), Math.min(calcVideoHeight, calcResolution_h)];
+      }
       if (isAlienBack) {
         [calcResolution_w, calcResolution_h] = [calcResolution_h, calcResolution_w];
       }
@@ -1811,6 +1819,14 @@ class UseBOCR {
     });
     previewImage.src = '';
   }
+  __setResolution(_ref8) {
+    var {
+      width,
+      height
+    } = _ref8;
+    this.__resolutionWidth = width;
+    this.__resolutionHeight = height;
+  }
   __getInputDevices() {
     var _this17 = this;
     return _asyncToGenerator(function* () {
@@ -2189,12 +2205,12 @@ class UseBOCR {
         var switchCheckbox = switchUI.getElementsByTagName('input')[0];
         var _this_2 = _this18;
         var __onClickSwitchUI = /*#__PURE__*/function () {
-          var _ref8 = _asyncToGenerator(function* (event) {
+          var _ref9 = _asyncToGenerator(function* (event) {
             _this_2.__isSwitchToServerMode = event.target.checked;
             yield _this_2.restartOCR(_this_2.__ocrType, _this_2.__onSuccess, _this_2.__onFailure, _this_2.__onInProgressChange, true);
           });
           return function __onClickSwitchUI(_x2) {
-            return _ref8.apply(this, arguments);
+            return _ref9.apply(this, arguments);
           };
         }();
         switchCheckbox.addEventListener('click', __onClickSwitchUI, {
@@ -2312,9 +2328,16 @@ class UseBOCR {
   __setupVideo(isPassport) {
     var _this19 = this;
     return _asyncToGenerator(function* () {
-      // wasm 인식성능 최적화된 해상도
-      _this19.__resolutionWidth = 1080;
-      _this19.__resolutionHeight = 720;
+      // wasm 인식성능 최적화된 해상도 (1080 x 720)
+      // 원본이미지 정방형 비율 사용시 1080 x 1080
+      var resolution = _this19.__options.useOriginImageSquareRatio ? {
+        width: 1080,
+        height: 1080
+      } : {
+        width: 1080,
+        height: 720
+      };
+      _this19.__setResolution(resolution);
       _this19.__camSetComplete = false;
       var {
         video,
@@ -2328,25 +2351,36 @@ class UseBOCR {
       var constraintWidth, constraintHeight;
       if (_this19.__options.cameraResolutionCriteria === 'highQuality') {
         // 카메라 해상도 설정 : 화질 우선
-        // 1920x1080이 가능한경우 사용 아니면 1280x720 사용
-        constraintWidth = {
+        // 1920 x 1080이 가능한경우 사용 아니면 1280 x 720 사용
+        constraintWidth = _this19.__options.useOriginImageSquareRatio ? {
+          ideal: 1080,
+          min: 720
+        } : {
           ideal: 1920,
           min: 1280
         };
-        constraintHeight = {
+        constraintHeight = _this19.__options.useOriginImageSquareRatio ? {
+          ideal: 1080,
+          min: 720
+        } : {
           ideal: 1080,
           min: 720
         };
       } else {
         // 'compatibility'
         // 카메라 해상도 설정 : 호환성 우선
-        // 1920x1080이 사용 가능하더라도 1280x720을 사용하도록 고정
+        // 1920x1080이 사용 가능하더라도 1280 x 720을 사용하도록 고정
         // 사유 : 갤럭시 entry 모델(A시리즈 / Wide 모델 등)에서 1920 x 1080 처리시 비율이 이상해짐(홀쭉이됨)
         // 항상 1280 x 720을 사용하도록 변경
-        constraintWidth = {
+        // 원본이미지 정방형 비율 사용하면 720 x 720을 사용하도록 함
+        constraintWidth = _this19.__options.useOriginImageSquareRatio ? {
+          ideal: 1080
+        } : {
           ideal: 1280
         };
-        constraintHeight = {
+        constraintHeight = _this19.__options.useOriginImageSquareRatio ? {
+          ideal: 1080
+        } : {
           ideal: 720
         };
       }
@@ -2388,12 +2422,16 @@ class UseBOCR {
 
       // 갤럭시 wide 등 저사양 기기에서 FHD 해상도 카메라 사용시 홀쭉이되는 현상 방지
       // 저사양 기기 판단기준 : 후면카메라의 개수가 1개라는 가정
-      if (camera.length === 1) {
+      if (camera.length <= 1) {
         _this19.__debug('maybe device is entry model such as galaxy wide');
-        constraints.video.width = {
+        constraints.video.width = _this19.__options.useOriginImageSquareRatio ? {
+          ideal: 720
+        } : {
           ideal: 1280
         };
-        constraints.video.height = {
+        constraints.video.height = _this19.__options.useOriginImageSquareRatio ? {
+          ideal: 720
+        } : {
           ideal: 720
         };
       }
@@ -2466,16 +2504,16 @@ class UseBOCR {
         // 비디오를 가로 UI의 height 기준으로 줄이고
         // 가로 UI height 기준으로 비디오의 width 계산
         guideBoxHeight = calcOcrClientHeight * videoRatioByHeight;
-        guideBoxWidth = guideBoxHeight * baseWidth / baseHeight;
+        guideBoxWidth = guideBoxHeight / scannerFrameRatio;
       }
-      guideBoxWidth += borderWidth * 2;
-      guideBoxHeight += borderWidth * 2;
-      var reducedGuideBoxWidth = guideBoxWidth * _this20.__guideBoxReduceRatio;
-      var reducedGuideBoxHeight = guideBoxHeight * _this20.__guideBoxReduceRatio;
+      var guideBoxWidthIncludeBorder = guideBoxWidth + borderWidth * 2;
+      var guideBoxHeightIncludeBorder = guideBoxHeight + borderWidth * 2;
+      var reducedGuideBoxWidth = guideBoxWidthIncludeBorder * _this20.__guideBoxReduceRatio;
+      var reducedGuideBoxHeight = guideBoxHeightIncludeBorder * _this20.__guideBoxReduceRatio;
       if (topUI) {
         _this20.__setStyle(topUI, {
           'padding-bottom': '10px',
-          height: (calcOcrClientHeight - guideBoxHeight) / 2 + 'px',
+          height: (calcOcrClientHeight - guideBoxHeightIncludeBorder) / 2 + 'px',
           display: 'flex',
           'flex-direction': 'column-reverse'
         });
@@ -2493,7 +2531,7 @@ class UseBOCR {
       if (bottomUI) {
         _this20.__setStyle(bottomUI, {
           'padding-top': '10px',
-          height: (calcOcrClientHeight - guideBoxHeight) / 2 + 'px',
+          height: (calcOcrClientHeight - guideBoxHeightIncludeBorder) / 2 + 'px',
           display: 'flex',
           'flex-direction': 'column'
         });
@@ -2575,10 +2613,11 @@ class UseBOCR {
       }
       var newVideoWidth = calcVideoClientWidth;
       var newVideoHeight = calcVideoClientHeight;
-      var guideBoxRatioByWidth = _this21.__guideBoxRatioByWidth;
-      var videoRatioByHeight = _this21.__videoRatioByHeight;
-      var newVideoRatioByWidth = calcVideoClientHeight / calcVideoClientWidth;
-      var newVideoRatioByHeight = calcVideoClientWidth / calcVideoClientHeight;
+      var guideBoxRatioByWidth = _this21.__guideBoxRatioByWidth; // 너비에 따른 가이드박스 비율, 1
+      var videoRatioByHeight = _this21.__videoRatioByHeight; // 높이에 따른 비디오 비율, 0.9
+      var newVideoRatioByWidth = calcVideoClientHeight / calcVideoClientWidth; // 비디오 UI 높이/너비
+      var newVideoRatioByHeight = calcVideoClientWidth / calcVideoClientHeight; // 비디오 UI 너비/높이
+
       if (_this21.__uiOrientation === 'portrait') {
         // 세로 UI
         _this21.__setStyle(captureUIWrap, {
@@ -2589,19 +2628,46 @@ class UseBOCR {
         if (calcVideoOrientation === _this21.__uiOrientation) {
           // 카메라도 세로
           // 세로 UI && 세로 비디오
-          // 가로 기준으로 가이드박스 계산
-          guideBoxWidth = __calcGuideBoxCriteria(calcOcrClientWidth, calcVideoWidth) * guideBoxRatioByWidth;
-          guideBoxHeight = guideBoxWidth * scannerFrameRatio;
+          if (_this21.__options.useOriginImageSquareRatio) {
+            // 신분증 원본이미지 정방형 옵션 사용 시
+            // 비디오 너비를 기준으로 가이드박스 너비를 먼저 계산
+            if (isAlienBack) {
+              guideBoxHeight = __calcGuideBoxCriteria(calcOcrClientHeight, calcVideoHeight);
+              guideBoxWidth = guideBoxHeight / scannerFrameRatio;
+            } else {
+              guideBoxWidth = __calcGuideBoxCriteria(calcOcrClientWidth, calcVideoWidth);
+              guideBoxHeight = guideBoxWidth * scannerFrameRatio;
+            }
+          } else {
+            // 기본 동작
+            // 가로 기준으로 가이드박스 계산
+            guideBoxWidth = __calcGuideBoxCriteria(calcOcrClientWidth, calcVideoWidth) * guideBoxRatioByWidth;
+            guideBoxHeight = guideBoxWidth * scannerFrameRatio;
 
-          // 가이드 박스 가로 기준으로 비디오 확대
-          newVideoWidth = guideBoxWidth;
-          newVideoHeight = newVideoWidth * newVideoRatioByWidth;
+            // 가이드 박스 가로 기준으로 비디오 확대
+            newVideoWidth = guideBoxWidth;
+            newVideoHeight = newVideoWidth * newVideoRatioByWidth;
+          }
         } else {
           // 카메라는 가로
           // 세로 UI && 가로 비디오
-          // 가이드 박스를 비디오 세로 길이에 맞춤
-          guideBoxHeight = __calcGuideBoxCriteria(calcVideoClientHeight, calcVideoHeight);
-          guideBoxWidth = guideBoxHeight * baseWidth / baseHeight;
+          if (_this21.__options.useOriginImageSquareRatio) {
+            // 신분증 원본이미지 정방형 옵션 사용 시
+            // 비디오 높이를 기준으로 가이드박스 너비를 먼저 계산
+            if (isAlienBack) {
+              // 외국인등록증 뒷면은 가이드박스가 세로로 길어야 해서 높이/너비 계산순서를 바꿈
+              guideBoxHeight = __calcGuideBoxCriteria(calcOcrClientWidth, calcVideoWidth);
+              guideBoxWidth = guideBoxHeight / scannerFrameRatio;
+            } else {
+              guideBoxWidth = __calcGuideBoxCriteria(calcOcrClientWidth, calcVideoWidth);
+              guideBoxHeight = guideBoxWidth * scannerFrameRatio;
+            }
+          } else {
+            // 기본 동작
+            // 가이드 박스를 비디오 세로 길이에 맞춤
+            guideBoxHeight = __calcGuideBoxCriteria(calcVideoClientHeight, calcVideoHeight);
+            guideBoxWidth = guideBoxHeight / scannerFrameRatio;
+          }
         }
       } else {
         // 가로 UI
@@ -2614,42 +2680,74 @@ class UseBOCR {
           // 비디오를 가로 UI의 height 기준으로 줄이고
           // 가로 UI height 기준으로 비디오의 width 계산
 
-          // 가이드박스는 세로 기준으로 맞춤
-          guideBoxHeight = __calcGuideBoxCriteria(calcOcrClientHeight, calcVideoHeight) * videoRatioByHeight;
-          guideBoxWidth = guideBoxHeight * baseWidth / baseHeight;
+          if (_this21.__options.useOriginImageSquareRatio) {
+            // 신분증 원본이미지 정방형 옵션 사용 시
+            // UI높이를 기준으로 가이드박스 너비를 먼저 계산
+            if (isAlienBack) {
+              guideBoxHeight = __calcGuideBoxCriteria(calcOcrClientHeight, calcVideoHeight);
+              guideBoxWidth = guideBoxHeight / scannerFrameRatio;
 
-          // 비디오를 세로 기준으로 다시 맞춤
-          newVideoHeight = guideBoxHeight;
-          newVideoWidth = newVideoHeight * newVideoRatioByHeight;
+              // 비디오를 세로 기준으로 다시 맞춤
+              newVideoWidth = guideBoxHeight;
+              newVideoHeight = newVideoWidth * newVideoRatioByWidth;
+            } else {
+              guideBoxWidth = __calcGuideBoxCriteria(calcOcrClientHeight, calcVideoHeight);
+              guideBoxHeight = guideBoxWidth * scannerFrameRatio;
 
-          // 가이드박스의 가로 크기가 가로 UI width * ratio 값보다 크면,
-          if (guideBoxWidth > __calcGuideBoxCriteria(calcOcrClientWidth, calcVideoWidth) * guideBoxRatioByWidth) {
-            // 계산 방식을 바꾼다 (사유 : 거의 정사각형에 가까운 경우 가이드 박스 가로가 꽉차게 됨.)
-            guideBoxWidth = __calcGuideBoxCriteria(calcOcrClientWidth, calcVideoWidth) * guideBoxRatioByWidth;
-            guideBoxHeight = guideBoxWidth * scannerFrameRatio;
+              // 비디오를 세로 기준으로 다시 맞춤
+              newVideoWidth = guideBoxWidth;
+              newVideoHeight = newVideoWidth * newVideoRatioByWidth;
+            }
+          } else {
+            // 기본 동작
+            // 가이드박스는 세로 기준으로 맞춤
+            guideBoxHeight = __calcGuideBoxCriteria(calcOcrClientHeight, calcVideoHeight) * videoRatioByHeight;
+            guideBoxWidth = guideBoxHeight / scannerFrameRatio;
 
-            // 가이드 박스 가로 기준으로 비디오 확대
-            newVideoWidth = guideBoxWidth;
-            newVideoHeight = newVideoWidth * newVideoRatioByWidth;
+            // 비디오를 세로 기준으로 다시 맞춤
+            newVideoHeight = guideBoxHeight;
+            newVideoWidth = newVideoHeight * newVideoRatioByHeight;
+
+            // 가이드박스의 가로 크기가 가로 UI width * ratio 값보다 크면,
+            if (guideBoxWidth > __calcGuideBoxCriteria(calcOcrClientWidth, calcVideoWidth) * guideBoxRatioByWidth) {
+              // 계산 방식을 바꾼다 (사유 : 거의 정사각형에 가까운 경우 가이드 박스 가로가 꽉차게 됨.)
+              guideBoxWidth = __calcGuideBoxCriteria(calcOcrClientWidth, calcVideoWidth) * guideBoxRatioByWidth;
+              guideBoxHeight = guideBoxWidth * scannerFrameRatio;
+
+              // 가이드 박스 가로 기준으로 비디오 확대
+              newVideoWidth = guideBoxWidth;
+              newVideoHeight = newVideoWidth * newVideoRatioByWidth;
+            }
           }
         } else {
           // 가로 UI && 세로 비디오
           // 가로 기준으로 가이드박스 계산
-
-          // 가이드박스의 height 크기를 UI의 height 기준에 맞춤
-          guideBoxHeight = __calcGuideBoxCriteria(calcOcrClientHeight, calcVideoHeight) * videoRatioByHeight;
-          guideBoxWidth = guideBoxHeight * baseWidth / baseHeight;
-
-          // 가이드박스의 가로 크기가 가로 UI width * ratio 값보다 크면,
-          if (guideBoxWidth > __calcGuideBoxCriteria(calcOcrClientWidth, calcVideoWidth) * guideBoxRatioByWidth) {
-            // 계산 방식을 바꾼다 (사유 : 거의 정사각형에 가까운 경우 가이드 박스 가로가 꽉차게 됨.)
-            guideBoxWidth = __calcGuideBoxCriteria(calcOcrClientWidth, calcVideoWidth) * guideBoxRatioByWidth;
+          if (_this21.__options.useOriginImageSquareRatio) {
+            // 신분증 원본이미지 정방형 옵션 사용 시
+            // UI높이를 기준으로 가이드박스 너비를 먼저 계산
+            guideBoxWidth = __calcGuideBoxCriteria(calcOcrClientHeight, calcVideoHeight);
             guideBoxHeight = guideBoxWidth * scannerFrameRatio;
-          }
 
-          // 가이드 박스 가로 기준으로 비디오 축소
-          newVideoWidth = guideBoxWidth;
-          newVideoHeight = newVideoWidth * newVideoRatioByWidth;
+            // 비디오를 세로 기준으로 다시 맞춤
+            newVideoWidth = guideBoxWidth;
+            newVideoHeight = newVideoWidth * newVideoRatioByWidth;
+          } else {
+            // 기본 동작
+            // 가이드박스의 height 크기를 UI의 height 기준에 맞춤
+            guideBoxHeight = __calcGuideBoxCriteria(calcOcrClientHeight, calcVideoHeight) * videoRatioByHeight;
+            guideBoxWidth = guideBoxHeight / scannerFrameRatio;
+
+            // 가이드박스의 가로 크기가 가로 UI width * ratio 값보다 크면,
+            if (guideBoxWidth > __calcGuideBoxCriteria(calcOcrClientWidth, calcVideoWidth) * guideBoxRatioByWidth) {
+              // 계산 방식을 바꾼다 (사유 : 거의 정사각형에 가까운 경우 가이드 박스 가로가 꽉차게 됨.)
+              guideBoxWidth = __calcGuideBoxCriteria(calcOcrClientWidth, calcVideoWidth) * guideBoxRatioByWidth;
+              guideBoxHeight = guideBoxWidth * scannerFrameRatio;
+            }
+
+            // 가이드 박스 가로 기준으로 비디오 축소
+            newVideoWidth = guideBoxWidth;
+            newVideoHeight = newVideoWidth * newVideoRatioByWidth;
+          }
         }
       }
 
@@ -2657,13 +2755,27 @@ class UseBOCR {
       if (_this21.__options.calcGuideBoxCriteria === 'ocrViewSize') {
         // guideBoxHeight 이 calcOcrClientHeight 보다 큰경우(가이드박스가 화면을 넘어가는 경우) 다시 계산
         if (guideBoxHeight > calcOcrClientHeight) {
-          guideBoxHeight = Math.min(calcOcrClientHeight, calcVideoHeight) * videoRatioByHeight;
-          guideBoxWidth = guideBoxHeight * baseWidth / baseHeight;
-          newVideoWidth = guideBoxWidth;
-          newVideoHeight = newVideoWidth * newVideoRatioByWidth;
+          if (_this21.__options.useOriginImageSquareRatio) {
+            if (isAlienBack) {
+              guideBoxHeight = Math.min(_this21.__uiOrientation === 'portrait' ? calcVideoClientHeight : calcOcrClientHeight, calcVideoHeight); // prettier-ignore
+              guideBoxWidth = guideBoxHeight / scannerFrameRatio;
+              newVideoWidth = guideBoxHeight;
+              newVideoHeight = newVideoWidth * newVideoRatioByWidth;
+            } else {
+              guideBoxWidth = Math.min(calcOcrClientHeight, calcVideoHeight) * videoRatioByHeight;
+              guideBoxHeight = guideBoxWidth * scannerFrameRatio;
+              newVideoWidth = calcOcrClientHeight;
+              newVideoHeight = newVideoWidth * newVideoRatioByWidth;
+            }
+          } else {
+            guideBoxHeight = Math.min(calcOcrClientHeight, calcVideoHeight) * videoRatioByHeight;
+            guideBoxWidth = guideBoxHeight / scannerFrameRatio;
+            newVideoWidth = guideBoxWidth;
+            newVideoHeight = newVideoWidth * newVideoRatioByWidth;
+          }
         }
 
-        // guideBoxHeight 이 calcOcrClientHeight 보다 큰경우(가이드박스가 화면을 넘어가는 경우) 다시 계산
+        // guideBoxWidth 이 calcOcrClientWidth 보다 큰경우(가이드박스가 화면을 넘어가는 경우) 다시 계산
         if (guideBoxWidth > calcOcrClientWidth) {
           guideBoxWidth = Math.min(calcOcrClientWidth, calcVideoWidth) * guideBoxRatioByWidth;
           guideBoxHeight = guideBoxWidth * scannerFrameRatio;
@@ -2676,14 +2788,14 @@ class UseBOCR {
       if (_this21.__isRotated90or270) {
         [newVideoWidth, newVideoHeight] = [newVideoHeight, newVideoWidth];
       }
-      guideBoxWidth += borderWidth * 2;
-      guideBoxHeight += borderWidth * 2;
-      var reducedGuideBoxWidth = guideBoxWidth * _this21.__guideBoxReduceRatio;
-      var reducedGuideBoxHeight = guideBoxHeight * _this21.__guideBoxReduceRatio;
+      var guideBoxWidthIncludeBorder = guideBoxWidth + borderWidth * 2;
+      var guideBoxHeightIncludeBorder = guideBoxHeight + borderWidth * 2;
+      var reducedGuideBoxWidth = guideBoxWidthIncludeBorder * _this21.__guideBoxReduceRatio;
+      var reducedGuideBoxHeight = guideBoxHeightIncludeBorder * _this21.__guideBoxReduceRatio;
       if (topUI) {
         _this21.__setStyle(topUI, {
           'padding-bottom': '10px',
-          height: (calcOcrClientHeight - guideBoxHeight) / 2 + 'px',
+          height: (calcOcrClientHeight - guideBoxHeightIncludeBorder) / 2 + 'px',
           display: 'flex',
           'flex-direction': 'column-reverse'
         });
@@ -2701,7 +2813,7 @@ class UseBOCR {
       if (bottomUI) {
         _this21.__setStyle(bottomUI, {
           'padding-top': '10px',
-          height: (calcOcrClientHeight - guideBoxHeight) / 2 + 'px',
+          height: (calcOcrClientHeight - guideBoxHeightIncludeBorder) / 2 + 'px',
           display: 'flex',
           'flex-direction': 'column'
         });
@@ -2746,7 +2858,7 @@ class UseBOCR {
           captureUIPaddingBottom -= isNaN(parseInt(bottomUI.style.paddingTop)) ? 0 : parseInt(bottomUI.style.paddingTop);
           captureUIPaddingBottom -= calcSumOfHeightBottomUIChildNodes;
           captureUIPaddingBottom -= calcCaptureButtonHeight;
-          var baseline = calcOcrClientHeight - (calcOcrClientHeight / 2 + guideBoxHeight / 2);
+          var baseline = calcOcrClientHeight - (calcOcrClientHeight / 2 + guideBoxHeightIncludeBorder / 2);
           if (captureUIPaddingBottom > 0 && captureUIPaddingBottom < baseline) {
             _this21.__setStyle(captureUI, {
               'padding-right': '',
@@ -2863,11 +2975,11 @@ class UseBOCR {
       src = "\n    return (async function() {\n      ".concat(src, "\n      Module.lengthBytesUTF8 = lengthBytesUTF8\n      Module.stringToUTF8 = stringToUTF8\n      return Module\n    })()\n        ");
       _this22.__OCREngine = yield new Function(src)();
       _this22.__OCREngine.onRuntimeInitialized = /*#__PURE__*/function () {
-        var _ref9 = _asyncToGenerator(function* (_) {
+        var _ref10 = _asyncToGenerator(function* (_) {
           void 0;
         });
         return function (_x4) {
-          return _ref9.apply(this, arguments);
+          return _ref10.apply(this, arguments);
         };
       }();
       yield _this22.__OCREngine.onRuntimeInitialized();
@@ -2905,7 +3017,7 @@ class UseBOCR {
       this.__manualOCRRetryCount = 0;
       this.__ssaRetryCount = 0;
       var scan = /*#__PURE__*/function () {
-        var _ref10 = _asyncToGenerator(function* () {
+        var _ref11 = _asyncToGenerator(function* () {
           try {
             var ocrResult = null,
               isDetectedCard = null,
@@ -3011,7 +3123,7 @@ class UseBOCR {
                       return "break";
                     }
                     var execute = /*#__PURE__*/function () {
-                      var _ref11 = _asyncToGenerator(function* () {
+                      var _ref12 = _asyncToGenerator(function* () {
                         _this24.__ssaRetryCount++;
                         void 0; // prettier-ignore
                         ssaResult = yield _this24.__startTruthRetry(_this24.__ocrType, _this24.__address, item); // prettier-ignore
@@ -3020,7 +3132,7 @@ class UseBOCR {
                         ssaResultList.push(ssaResult);
                       });
                       return function execute() {
-                        return _ref11.apply(this, arguments);
+                        return _ref12.apply(this, arguments);
                       };
                     }();
                     if (FAKE) {
@@ -3102,7 +3214,7 @@ class UseBOCR {
           }
         });
         return function scan() {
-          return _ref10.apply(this, arguments);
+          return _ref11.apply(this, arguments);
         };
       }();
       setTimeout(scan, 1); // UI 랜더링 blocking 방지 (setTimeout)
@@ -3267,7 +3379,7 @@ class UseBOCR {
     var _this27 = this;
     return _asyncToGenerator(function* () {
       return new Promise( /*#__PURE__*/function () {
-        var _ref12 = _asyncToGenerator(function* (resolve, reject) {
+        var _ref13 = _asyncToGenerator(function* (resolve, reject) {
           try {
             var baseUrl = _this27.__getOcrServerBaseUrl(ocrType);
             var requestOptions = yield _this27.__createServerOcrParams(ocrType, ssaMode, encryptMode, imgDataUrl);
@@ -3281,7 +3393,7 @@ class UseBOCR {
           }
         });
         return function (_x5, _x6) {
-          return _ref12.apply(this, arguments);
+          return _ref13.apply(this, arguments);
         };
       }());
     })();
@@ -3289,7 +3401,7 @@ class UseBOCR {
   __startScanServerImpl() {
     var _this28 = this;
     return new Promise( /*#__PURE__*/function () {
-      var _ref13 = _asyncToGenerator(function* (resolve, reject) {
+      var _ref14 = _asyncToGenerator(function* (resolve, reject) {
         var _this28$__captureButt, _this28$__captureButt2;
         // TODO: 서버 모드일때 암호화 는 어떻게 ? 지우는게 맞는가? js 레벨로하면 메모리에 남음 서버에서 암호화된값을 내려주는 옵션이 있어야함
         // this.__setPiiEncrypt(this.__options.useEncryptMode); // ocr result encrypt
@@ -3300,7 +3412,7 @@ class UseBOCR {
         }
         _this28.__blurCaptureButton();
         var __onClickCaptureButton = /*#__PURE__*/function () {
-          var _ref14 = _asyncToGenerator(function* () {
+          var _ref15 = _asyncToGenerator(function* () {
             try {
               var ocrResult = null;
               // 캔버스에서 이미지를 가져옴
@@ -3388,14 +3500,14 @@ class UseBOCR {
             }
           });
           return function __onClickCaptureButton() {
-            return _ref14.apply(this, arguments);
+            return _ref15.apply(this, arguments);
           };
         }();
         (_this28$__captureButt = _this28.__captureButton) === null || _this28$__captureButt === void 0 ? void 0 : _this28$__captureButt.removeEventListener('click', __onClickCaptureButton);
         (_this28$__captureButt2 = _this28.__captureButton) === null || _this28$__captureButt2 === void 0 ? void 0 : _this28$__captureButt2.addEventListener('click', __onClickCaptureButton);
       });
       return function (_x7, _x8) {
-        return _ref13.apply(this, arguments);
+        return _ref14.apply(this, arguments);
       };
     }());
   }
@@ -3759,7 +3871,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.26.0';
+    return 'v1.27.0';
   }
 }
 export default UseBOCR;

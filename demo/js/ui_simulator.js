@@ -508,6 +508,10 @@ class UISimulator {
         this.__settings.cameraResolutionCriteria = e.target.value;
         this.__saveSettingsHandler();
       });
+      document.getElementById('origin-image-square-ratio').addEventListener('change', e => {
+        this.__settings.useOriginImageSquareRatio = e.target.checked;
+        this.__saveSettingsHandler();
+      });
       document.getElementById('camera-resource-request-retry-limit').addEventListener('change', e => {
         this.__settings.cameraResourceRequestRetryLimit = e.target.value;
         this.__saveSettingsHandler();
