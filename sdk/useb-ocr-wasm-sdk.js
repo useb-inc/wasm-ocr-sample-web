@@ -1,4 +1,4 @@
-import UseBOCR from './ocr.js?ver={{ENV_SDK_VERSION}}';
+import UseBOCR from './ocr.js?ver=v1.28.0';
 
 const ocr = new UseBOCR();
 let targetOrigin = null;
