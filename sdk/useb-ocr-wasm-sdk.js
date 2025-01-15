@@ -1,4 +1,4 @@
-import UseBOCR from './ocr.js?ver=v1.28.0';
+import UseBOCR from './ocr.js?ver=v1.29.0';
 
 const ocr = new UseBOCR();
 let targetOrigin = null;
@@ -51,7 +51,7 @@ const messageHandler = async (e) => {
       try {
         // document URL이 reload되지 않고 startOCR 중복호출 되었을 때,
         // 자원정리 이슈 방지하여 stopOCR 미리 한번 호출.
-        ocr.stopOCR();
+        await ocr.stopOCR();
       } catch (e) {
         // nothing to do..
       }
@@ -82,7 +82,7 @@ const messageHandler = async (e) => {
         case 'veteran-ssa':
         case 'barcode':
           ocr.init(data.settings);
-          await ocr.startOCR(data.ocrType, sendResult, sendResult, onInProgressChange);
+          await ocr.startOCR(data.ocrType, sendResult, sendResult, onInProgressChange, serverOCRPreprocessor);
           break;
         default:
           new Error('Invalid ocrType');
@@ -98,6 +98,11 @@ const messageHandler = async (e) => {
     sendErrorResult('error', e.message);
   }
 };
+
+function serverOCRPreprocessor(result) {
+  console.log('serverOCRPreprocessor', { result });
+  return result;
+}
 
 //ios
 window.addEventListener('message', messageHandler);
