@@ -7,11 +7,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.29.0';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.29.0';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.29.0';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.29.0';
-import ImageUtil from './helpers/image-util.js?ver=v1.29.0';
+import detector from './helpers/detector.js?ver=v1.30.0';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.30.0';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.30.0';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.30.0';
+import ImageUtil from './helpers/image-util.js?ver=v1.30.0';
 var instance;
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
@@ -153,6 +153,8 @@ var OPTION_TEMPLATE = new Object({
   // 자동전환 기준값 (성능 측정치 ms)
   useForceCompleteUI: false,
   // WASM 모드일때 버튼 누를시 해당 시점에 강제로 완료 사용여부
+  skipServerModeRequestOCR: false,
+  // ServerMode일 때 OCR서버 요청 skip 여부
 
   // 수동촬영 버튼 옵션
   captureButtonStyle: {
@@ -372,19 +374,21 @@ class UseBOCR {
   preloading(onPreloaded) {
     var _this = this;
     return _asyncToGenerator(function* () {
-      if (_this.isPreloaded()) {
+      var preloadingStatus = _this.getPreloadingStatus();
+      if (!_this.isPreloaded() && preloadingStatus === _this.PRELOADING_STATUS.NOT_STARTED) {
         void 0;
+        yield _this.__preloadingWasm();
         if (onPreloaded) onPreloaded();
       } else {
-        void 0;
-        _this.showOCRLoadingUI();
-        _this.__preloadingStatus = _this.PRELOADING_STATUS.STARTED;
-        yield _this.__loadResources();
-        _this.__preloadingStatus = _this.PRELOADING_STATUS.DONE;
-        _this.__preloaded = true;
-        if (onPreloaded) onPreloaded();
-        _this.hideOCRLoadingUI();
-        void 0;
+        if (preloadingStatus === _this.PRELOADING_STATUS.STARTED) {
+          void 0;
+          yield _this.__waitPreloaded();
+        } else if (preloadingStatus === _this.PRELOADING_STATUS.DONE) {
+          void 0;
+          if (onPreloaded) onPreloaded();
+        } else {
+          throw new Error("abnormally preloading status, preloaded: ".concat(_this.isPreloaded(), " / preloadingStatus: ").concat(_this.getPreloadingStatus()));
+        }
       }
     })();
   }
@@ -617,7 +621,7 @@ class UseBOCR {
           yield _this3.__startScanServer();
         } else {
           // wasmMode
-          yield _this3.__preloadingWasm();
+          yield _this3.preloading();
           yield _this3.__startScanWasm();
         }
       } catch (e) {
@@ -1638,10 +1642,10 @@ class UseBOCR {
             void 0;
             void 0;
             _this16.__camSetComplete = true;
+            yield _this16.__changeStage(_this16.IN_PROGRESS.READY);
             yield _this16.__adjustStyle();
           }));
           _this16.exitFullscreen(video);
-          yield _this16.__changeStage(_this16.IN_PROGRESS.READY);
         } else {
           yield _this16.__changeStage(_this16.IN_PROGRESS.NOT_READY);
           _this16.__closeCamera();
@@ -3441,6 +3445,18 @@ class UseBOCR {
               } else {
                 // server ocr 성공
                 yield _this29.__changeStage(_this29.IN_PROGRESS.MANUAL_CAPTURE_SUCCESS, false, imgDataUrl);
+                if (_this29.__options.skipServerModeRequestOCR) {
+                  // Server OCR Request를 skip하는 경우 원본이미지만 반환 후 OCR 종료
+                  var _review_result = {
+                    ocr_type: _this29.__ocrType,
+                    ocr_result: null,
+                    ocr_origin_image: imgDataUrl
+                  };
+                  yield _this29.__onSuccessProcess(_review_result);
+                  _this29.__closeCamera();
+                  resolve();
+                  return;
+                }
                 try {
                   ocrResult = yield _this29.__requestServerOCR(_this29.__ocrType, _this29.__ssaMode, _this29.isEncryptMode(), imgDataUrl);
 
@@ -3606,19 +3622,17 @@ class UseBOCR {
   __preloadingWasm() {
     var _this32 = this;
     return _asyncToGenerator(function* () {
-      var preloadingStatus = _this32.getPreloadingStatus();
-      if (!_this32.isPreloaded() && preloadingStatus === _this32.PRELOADING_STATUS.NOT_STARTED) {
+      if (_this32.isPreloaded()) {
         void 0;
-        yield _this32.preloading();
       } else {
-        if (preloadingStatus === _this32.PRELOADING_STATUS.STARTED) {
-          void 0;
-          yield _this32.__waitPreloaded();
-        } else if (preloadingStatus === _this32.PRELOADING_STATUS.DONE) {
-          void 0;
-        } else {
-          throw new Error("abnormally preloading status, preloaded: ".concat(_this32.isPreloaded(), " / preloadingStatus: ").concat(_this32.getPreloadingStatus()));
-        }
+        void 0;
+        _this32.showOCRLoadingUI();
+        _this32.__preloadingStatus = _this32.PRELOADING_STATUS.STARTED;
+        yield _this32.__loadResources();
+        _this32.__preloadingStatus = _this32.PRELOADING_STATUS.DONE;
+        _this32.__preloaded = true;
+        _this32.hideOCRLoadingUI();
+        void 0;
       }
     })();
   }
@@ -3903,7 +3917,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.29.0';
+    return 'v1.30.0';
   }
 }
 export default UseBOCR;

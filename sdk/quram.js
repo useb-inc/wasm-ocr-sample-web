@@ -169,7 +169,7 @@ Module.expectedDataFileDownloads++;
    "start": 353617,
    "end": 1054676
   }, {
-   "filename": "/model/qr_ssa_v2_r7_411_26.model",
+   "filename": "/model/qr_ssa_v2_r7_501_12.model",
    "start": 1054676,
    "end": 7469793
   }, {
@@ -243,81 +243,81 @@ Module.expectedDataFileDownloads++;
   }, {
    "filename": "/tessdata/qocrkor.dat",
    "start": 11167729,
-   "end": 16838168
+   "end": 16840956
   }, {
    "filename": "/tessdata/serial.dat",
-   "start": 16838168,
-   "end": 16989335
+   "start": 16840956,
+   "end": 16992115
   }, {
    "filename": "/weights/apo_0",
-   "start": 16989335,
-   "end": 17170271
+   "start": 16992115,
+   "end": 17173051
   }, {
    "filename": "/weights/dash_0",
-   "start": 17170271,
-   "end": 17351207
+   "start": 17173051,
+   "end": 17353987
   }, {
    "filename": "/weights/expr_0",
-   "start": 17351207,
-   "end": 17533199
+   "start": 17353987,
+   "end": 17535979
   }, {
    "filename": "/weights/expr_1",
-   "start": 17533199,
-   "end": 17715191
+   "start": 17535979,
+   "end": 17717971
   }, {
    "filename": "/weights/name_dxdy_0",
-   "start": 17715191,
-   "end": 17910155
+   "start": 17717971,
+   "end": 17912935
   }, {
    "filename": "/weights/name_dxdy_1",
-   "start": 17910155,
-   "end": 18105119
+   "start": 17912935,
+   "end": 18107899
   }, {
    "filename": "/weights/name_org_0",
-   "start": 18105119,
-   "end": 18238643
+   "start": 18107899,
+   "end": 18241423
   }, {
    "filename": "/weights/name_org_1",
-   "start": 18238643,
-   "end": 18372167
+   "start": 18241423,
+   "end": 18374947
   }, {
    "filename": "/weights/number_0",
-   "start": 18372167,
-   "end": 18472239
+   "start": 18374947,
+   "end": 18475019
   }, {
    "filename": "/weights/number_1",
-   "start": 18472239,
-   "end": 18572311
+   "start": 18475019,
+   "end": 18575091
   }, {
    "filename": "/weights/number_2",
-   "start": 18572311,
-   "end": 18672383
+   "start": 18575091,
+   "end": 18675163
   }, {
    "filename": "/weights/number_3",
-   "start": 18672383,
-   "end": 18772455
+   "start": 18675163,
+   "end": 18775235
   }, {
    "filename": "/weights/slash_0",
-   "start": 18772455,
-   "end": 18953391
+   "start": 18775235,
+   "end": 18956171
   }, {
    "filename": "/weights/slash_1",
-   "start": 18953391,
-   "end": 19134327
+   "start": 18956171,
+   "end": 19137107
   }, {
    "filename": "/weights/slash_2",
-   "start": 19134327,
-   "end": 19315263
+   "start": 19137107,
+   "end": 19318043
   }, {
    "filename": "/weights/vseg_0",
-   "start": 19315263,
-   "end": 19356875
+   "start": 19318043,
+   "end": 19359655
   }, {
    "filename": "/weights/vseg_1",
-   "start": 19356875,
-   "end": 19398487
+   "start": 19359655,
+   "end": 19401267
   } ],
-  "remote_package_size": 19398487
+  "remote_package_size": 19401267
  });
 })();
 
