@@ -5,11 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>OCR/SSA WebAssembly Sample</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" type="text/css" href="./css/demo.css?ver=v1.30.0" />
+    <link rel="stylesheet" type="text/css" href="./css/demo.css?ver=v1.31.0" />
 
-    <script type="text/javascript" src="./js/util.js?ver=v1.30.0"></script>
-    <script type="text/javascript" src="./lib/lodash.min.js?ver=v1.30.0"></script>
-    <script type="module" src="./js/ui_simulator.js?ver=v1.30.0" async></script>
+    <script type="text/javascript" src="./js/util.js?ver=v1.31.0"></script>
+    <script type="text/javascript" src="./lib/lodash.min.js?ver=v1.31.0"></script>
+    <script type="module" src="./js/ui_simulator.js?ver=v1.31.0" async></script>
     <script src="https://kit.fontawesome.com/71d7c8cd6e.js" crossorigin="anonymous"></script>
   </head>
 
@@ -93,7 +93,7 @@
       <!-- 이미지 스캔 카메라 섹션 -->
       <section class="scan-section">
         <div id="resolution-simulation-frame" class="resolution-simulation-frame">
-          <div data-useb-ocr="ocr" style="display: none">
+          <div data-useb-ocr="ocr">
             <div data-useb-ocr="topUI">
               <!-- TOP UI는 flex-direction: column-reverse 인점 고려하여 순서 배치 -->
               <div id="top-ui-bg" style="width: 100%">
@@ -137,11 +137,11 @@
 
       <!-- 옵션 세팅 섹션 -->
       <section class="settings-section collapsed">
-        <div id="settings-toggle">
+        <button id="settings-toggle">
           <b>UI Simulator</b>
           <span>[펼치기]</span>
           <i class="chevron fa-solid fa-chevron-up"></i>
-        </div>
+        </button>
         <fieldset>
           <legend>사본판별 RETRY 설정</legend>
 
@@ -603,6 +603,6 @@
       <div id="ocr_result" class="custom--section"></div>
     </section>
 
-    <script type="module" src="./demo.js?ver=v1.30.0" async></script>
+    <script type="module" src="./demo.js?ver=v1.31.0" async></script>
   </body>
 </html>

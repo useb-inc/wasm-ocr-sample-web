@@ -199,6 +199,8 @@ body {
   border-radius: 8px;
   background-color: #eee;
   cursor: pointer;
+  font-size: 16px;
+  line-height: 24px;
 }
 
 .type-button {
@@ -275,7 +277,7 @@ body {
 
 .resolution-simulation-frame {
   position: relative;
-  background: #d2d2d2;
+  background: #000;
   width: 90%;
   height: 90%;
   margin: 0 auto;
@@ -362,6 +364,10 @@ button.active {
   max-height: 350px;
 }
 
+.settings-section.collapsed fieldset {
+  visibility: hidden;
+}
+
 .settings-section fieldset {
   padding: 8px 16px;
 }
@@ -397,6 +403,10 @@ button.active {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
+  font-size: 16px;
+  border: 0;
+  padding: 0;
+  background-color: transparent;
 }
 
 .collapsed {
