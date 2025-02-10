@@ -7,11 +7,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.31.0';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.31.0';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.31.0';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.31.0';
-import ImageUtil from './helpers/image-util.js?ver=v1.31.0';
+import detector from './helpers/detector.js?ver=v1.31.1';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.31.1';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.31.1';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.31.1';
+import ImageUtil from './helpers/image-util.js?ver=v1.31.1';
 var instance;
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
@@ -2948,34 +2948,8 @@ class UseBOCR {
         // 옵션이 활성화 되면 새로운 WASM 리소스를 요청함.
         postfix = '?ver=' + _this23.__options.force_wasm_reload_flag;
       }
-      function __getFileXHR(_x4) {
-        return _getFileXHR.apply(this, arguments);
-      }
-      function _getFileXHR() {
-        _getFileXHR = _asyncToGenerator(function* (path) {
-          return new Promise((resolve, reject) => {
-            try {
-              var xhr = new XMLHttpRequest();
-              xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                  if (xhr.status === 200) {
-                    resolve(xhr.responseText);
-                  } else {
-                    resolve(null);
-                  }
-                }
-              };
-              xhr.open('GET', path);
-              xhr.send();
-            } catch (e) {
-              reject(e);
-            }
-          });
-        });
-        return _getFileXHR.apply(this, arguments);
-      }
       var url = new URL(sdkSupportEnv + '.js' + postfix, _this23.__options.resourceBaseUrl);
-      var src = yield __getFileXHR(url.href).then(text => {
+      var src = yield fetch(url.href).then(res => res.text()).then(text => {
         var regex = /(.*) = Module.cwrap/gm;
         var source = text.replace(regex, 'Module.$1 = Module.cwrap');
 
@@ -3001,7 +2975,7 @@ class UseBOCR {
         var _ref11 = _asyncToGenerator(function* (_) {
           void 0;
         });
-        return function (_x5) {
+        return function (_x4) {
           return _ref11.apply(this, arguments);
         };
       }();
@@ -3415,7 +3389,7 @@ class UseBOCR {
             reject(err);
           }
         });
-        return function (_x6, _x7) {
+        return function (_x5, _x6) {
           return _ref14.apply(this, arguments);
         };
       }());
@@ -3552,7 +3526,7 @@ class UseBOCR {
           once: true
         });
       });
-      return function (_x8, _x9) {
+      return function (_x7, _x8) {
         return _ref15.apply(this, arguments);
       };
     }());
@@ -3918,7 +3892,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.31.0';
+    return 'v1.31.1';
   }
 }
 export default UseBOCR;
