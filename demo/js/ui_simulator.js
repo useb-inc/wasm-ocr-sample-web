@@ -352,11 +352,16 @@ class UISimulator {
         this.__settings.useForceCompleteUI = e.target.checked;
         this.__saveSettingsHandler();
       });
+      document.getElementById('wasm-resource-timeout').addEventListener('change', e => {
+        this.__settings.wasmResourceTimeout = Number(e.target.value) > 0 ? Number(e.target.value) : -1;
+        this.__saveSettingsHandler();
+      });
       document.getElementById('use-auto-switch').addEventListener('change', e => {
         this.__settings.useAutoSwitchToServerMode = e.target.checked;
         var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
         document.querySelector('#server-ocr-type-ui').style.display = showServerOcrBaseUrlUI ? 'block' : 'none';
         document.querySelector('#server-ocr-result-key-list-ui').style.display = showServerOcrBaseUrlUI ? 'block' : 'none';
+        document.querySelector('#wasm-resource-timeout-ui').style.display = e.target.checked ? 'block' : 'none';
         this.__saveSettingsHandler();
       });
       document.getElementById('switch-to-server-threshold').addEventListener('change', e => {

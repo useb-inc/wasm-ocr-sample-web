@@ -7,11 +7,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.31.1';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.31.1';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.31.1';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.31.1';
-import ImageUtil from './helpers/image-util.js?ver=v1.31.1';
+import detector from './helpers/detector.js?ver=v1.32.0';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.32.0';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.32.0';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.32.0';
+import ImageUtil from './helpers/image-util.js?ver=v1.32.0';
 var instance;
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
@@ -206,6 +206,9 @@ var OPTION_TEMPLATE = new Object({
   // WASM 리소스 갱신 여부
   force_wasm_reload: false,
   force_wasm_reload_flag: '',
+  wasmResourceTimeout: -1,
+  // WASM 리소스 load 시 최대 대기 시간, -1이면 무한 대기.
+
   // ocr config 설정: 키오스크 등 특정 목적으로 사용되는 경우 config 값 설정, 해당 없는 경우 빈값('')으로 설정
   ocr_config: '',
   ocrServerBaseUrl: 'https://quram.useb.co.kr',
@@ -364,6 +367,7 @@ class UseBOCR {
     _defineProperty(this, "__cropImageSizeWidth", 0);
     _defineProperty(this, "__cropImageSizeHeight", 0);
     _defineProperty(this, "__isSwitchToServerMode", false);
+    _defineProperty(this, "__maxWasmResourceTimeout", 1000 * 60 * 60 * 24);
     _defineProperty(this, "__options", _objectSpread({}, OPTION_TEMPLATE));
     if (instance) return instance;
     instance = this;
@@ -625,7 +629,12 @@ class UseBOCR {
           yield _this3.__startScanWasm();
         }
       } catch (e) {
-        void 0;
+        if (e.errorCode === 'SE001') {
+          yield _this3.__setupDomElements();
+          yield _this3.__startScanServer();
+        } else {
+          void 0;
+        }
       } finally {
         // await this.stopOCR();
       }
@@ -2201,7 +2210,8 @@ class UseBOCR {
           'justify-content': '',
           width: '',
           overflow: '',
-          'flex-direction': 'column-reverse'
+          'flex-direction': 'column-reverse',
+          'z-index': 1
         });
         _this19.__setStyle(switchUIWrap, switchUIWrapStyle);
         ocr.appendChild(switchUIWrap);
@@ -2970,18 +2980,38 @@ class UseBOCR {
         return source;
       });
       src = "\n    return (async function() {\n      ".concat(src, "\n      Module.lengthBytesUTF8 = lengthBytesUTF8\n      Module.stringToUTF8 = stringToUTF8\n      return Module\n    })()\n        ");
-      _this23.__OCREngine = yield new Function(src)();
-      _this23.__OCREngine.onRuntimeInitialized = /*#__PURE__*/function () {
-        var _ref11 = _asyncToGenerator(function* (_) {
+      var initializeOCREngine = new Function(src)();
+      var useLoadResourceTimeout = _this23.__options.useAutoSwitchToServerMode && _this23.__options.wasmResourceTimeout > 0;
+      var wasmResourceTimeout = useLoadResourceTimeout ? _this23.__options.wasmResourceTimeout : _this23.__maxWasmResourceTimeout;
+      var timeout = new Promise((_, reject) => {
+        setTimeout(() => {
+          var timeoutError = new Error('[Network Error] Load to WASM Resource failed with timeout');
+          timeoutError.errorCode = 'SE001';
+          reject(timeoutError);
+        }, wasmResourceTimeout);
+      });
+      try {
+        _this23.__OCREngine = useLoadResourceTimeout ? yield Promise.race([initializeOCREngine, timeout]) : yield Promise.resolve(initializeOCREngine);
+        _this23.__OCREngine.onRuntimeInitialized = /*#__PURE__*/function () {
+          var _ref11 = _asyncToGenerator(function* (_) {
+            void 0;
+          });
+          return function (_x4) {
+            return _ref11.apply(this, arguments);
+          };
+        }();
+        yield _this23.__OCREngine.onRuntimeInitialized();
+        _this23.__resourcesLoaded = true;
+        void 0;
+      } catch (e) {
+        if (e.errorCode === 'SE001') {
           void 0;
-        });
-        return function (_x4) {
-          return _ref11.apply(this, arguments);
-        };
-      }();
-      yield _this23.__OCREngine.onRuntimeInitialized();
-      _this23.__resourcesLoaded = true;
-      void 0;
+          _this23.__isSwitchToServerMode = true;
+        } else {
+          void 0;
+        }
+        throw e;
+      }
     })();
   }
   __loadEncryptResource() {
@@ -3600,14 +3630,22 @@ class UseBOCR {
       if (_this32.isPreloaded()) {
         void 0;
       } else {
-        void 0;
-        _this32.showOCRLoadingUI();
-        _this32.__preloadingStatus = _this32.PRELOADING_STATUS.STARTED;
-        yield _this32.__loadResources();
-        _this32.__preloadingStatus = _this32.PRELOADING_STATUS.DONE;
-        _this32.__preloaded = true;
-        _this32.hideOCRLoadingUI();
-        void 0;
+        try {
+          void 0;
+          _this32.showOCRLoadingUI();
+          _this32.__preloadingStatus = _this32.PRELOADING_STATUS.STARTED;
+          yield _this32.__loadResources();
+          _this32.__preloadingStatus = _this32.PRELOADING_STATUS.DONE;
+          _this32.__preloaded = true;
+          _this32.hideOCRLoadingUI();
+          void 0;
+        } catch (e) {
+          if (e.errorCode === 'SE001') {
+            _this32.hideOCRLoadingUI();
+            _this32.__restoreResourceInitialize();
+          }
+          throw e;
+        }
       }
     })();
   }
@@ -3881,6 +3919,9 @@ class UseBOCR {
   }
   restoreInitialize() {
     this.__initialized = false;
+    this.__restoreResourceInitialize();
+  }
+  __restoreResourceInitialize() {
     this.__preloaded = false;
     this.__preloadingStatus = this.PRELOADING_STATUS.NOT_STARTED;
     this.__resourcesLoaded = false;
@@ -3892,7 +3933,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.31.1';
+    return 'v1.32.0';
   }
 }
 export default UseBOCR;
