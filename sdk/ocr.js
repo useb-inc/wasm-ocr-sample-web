@@ -7,11 +7,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.32.0';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.32.0';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.32.0';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.32.0';
-import ImageUtil from './helpers/image-util.js?ver=v1.32.0';
+import detector from './helpers/detector.js?ver=v1.32.1';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.32.1';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.32.1';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.32.1';
+import ImageUtil from './helpers/image-util.js?ver=v1.32.1';
 var instance;
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
@@ -236,6 +236,10 @@ class UseBOCR {
   // 수정불가
   // 수정불가
 
+  // wasm resource 타이머 id
+  // wasm resource 타이머 반환값 (Promise)
+  // wasm resource timeout 여부
+
   /** Default options */
 
   /** constructor */
@@ -368,6 +372,9 @@ class UseBOCR {
     _defineProperty(this, "__cropImageSizeHeight", 0);
     _defineProperty(this, "__isSwitchToServerMode", false);
     _defineProperty(this, "__maxWasmResourceTimeout", 1000 * 60 * 60 * 24);
+    _defineProperty(this, "__wasmResourceTimerId", void 0);
+    _defineProperty(this, "__wasmResourceTimeoutFn", void 0);
+    _defineProperty(this, "__isResourceTimeout", false);
     _defineProperty(this, "__options", _objectSpread({}, OPTION_TEMPLATE));
     if (instance) return instance;
     instance = this;
@@ -551,6 +558,7 @@ class UseBOCR {
         // 수동전환 off 이면 자동전환 체크
         if (_this2.__options.useAutoSwitchToServerMode) {
           // 자동전환 on일때
+          if (_this2.__isResourceTimeout) return true;
           // 성능 측정값을 기준으로 WASM or Server
           var [latencyPer100ms, measureReport] = yield measure();
           _this2.__debug(measureReport);
@@ -630,8 +638,7 @@ class UseBOCR {
         }
       } catch (e) {
         if (e.errorCode === 'SE001') {
-          yield _this3.__setupDomElements();
-          yield _this3.__startScanServer();
+          yield _this3.startOCR(type, onSuccess, onFailure, onInProgressChange, serverOCRPreprocessor);
         } else {
           void 0;
         }
@@ -2982,16 +2989,9 @@ class UseBOCR {
       src = "\n    return (async function() {\n      ".concat(src, "\n      Module.lengthBytesUTF8 = lengthBytesUTF8\n      Module.stringToUTF8 = stringToUTF8\n      return Module\n    })()\n        ");
       var initializeOCREngine = new Function(src)();
       var useLoadResourceTimeout = _this23.__options.useAutoSwitchToServerMode && _this23.__options.wasmResourceTimeout > 0;
-      var wasmResourceTimeout = useLoadResourceTimeout ? _this23.__options.wasmResourceTimeout : _this23.__maxWasmResourceTimeout;
-      var timeout = new Promise((_, reject) => {
-        setTimeout(() => {
-          var timeoutError = new Error('[Network Error] Load to WASM Resource failed with timeout');
-          timeoutError.errorCode = 'SE001';
-          reject(timeoutError);
-        }, wasmResourceTimeout);
-      });
+      _this23.__wasmResourceTimeoutFn = _this23.__wasmResourceTimeoutFn ? _this23.__wasmResourceTimeoutFn : _this23.__wasmResourceTimer();
       try {
-        _this23.__OCREngine = useLoadResourceTimeout ? yield Promise.race([initializeOCREngine, timeout]) : yield Promise.resolve(initializeOCREngine);
+        _this23.__OCREngine = useLoadResourceTimeout ? yield Promise.race([initializeOCREngine, _this23.__wasmResourceTimeoutFn]) : yield Promise.resolve(initializeOCREngine);
         _this23.__OCREngine.onRuntimeInitialized = /*#__PURE__*/function () {
           var _ref11 = _asyncToGenerator(function* (_) {
             void 0;
@@ -3006,7 +3006,7 @@ class UseBOCR {
       } catch (e) {
         if (e.errorCode === 'SE001') {
           void 0;
-          _this23.__isSwitchToServerMode = true;
+          _this23.__isResourceTimeout = true;
         } else {
           void 0;
         }
@@ -3904,17 +3904,33 @@ class UseBOCR {
       this.__stream = null;
     }
   }
+  __wasmResourceTimer() {
+    var _this37 = this;
+    return _asyncToGenerator(function* () {
+      return new Promise((_, reject) => {
+        var useLoadResourceTimeout = _this37.__options.useAutoSwitchToServerMode && _this37.__options.wasmResourceTimeout > 0;
+        var wasmResourceTimeout = useLoadResourceTimeout ? _this37.__options.wasmResourceTimeout : _this37.__maxWasmResourceTimeout;
+        if (!_this37.__wasmResourceTimerId) {
+          _this37.__wasmResourceTimerId = setTimeout(() => {
+            var timeoutError = new Error('[Network Error] Load to WASM Resource failed with timeout');
+            timeoutError.errorCode = 'SE001';
+            reject(timeoutError);
+          }, wasmResourceTimeout);
+        }
+      });
+    })();
+  }
 
   /** 메모리 allocation free 함수 */
   cleanup() {
-    var _this37 = this;
+    var _this38 = this;
     return _asyncToGenerator(function* () {
-      _this37.__destroyScannerAddress();
-      _this37.__destroyEncryptedScanResult();
-      _this37.__destroyBuffer();
-      _this37.__destroyPrevImage();
-      _this37.__destroyStringOnWasmHeap();
-      _this37.__detectedCardQueue = [];
+      _this38.__destroyScannerAddress();
+      _this38.__destroyEncryptedScanResult();
+      _this38.__destroyBuffer();
+      _this38.__destroyPrevImage();
+      _this38.__destroyStringOnWasmHeap();
+      _this38.__detectedCardQueue = [];
     })();
   }
   restoreInitialize() {
@@ -3933,7 +3949,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.32.0';
+    return 'v1.32.1';
   }
 }
 export default UseBOCR;
