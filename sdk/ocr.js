@@ -7,11 +7,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.32.1';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.32.1';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.32.1';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.32.1';
-import ImageUtil from './helpers/image-util.js?ver=v1.32.1';
+import detector from './helpers/detector.js?ver=v1.32.2';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.32.2';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.32.2';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.32.2';
+import ImageUtil from './helpers/image-util.js?ver=v1.32.2';
 var instance;
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
@@ -3949,7 +3949,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.32.1';
+    return 'v1.32.2';
   }
 }
 export default UseBOCR;
