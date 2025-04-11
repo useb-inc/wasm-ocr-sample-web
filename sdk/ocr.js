@@ -1,3 +1,4 @@
+function _readOnlyError(name) { throw new TypeError("\"" + name + "\" is read-only"); }
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
@@ -7,11 +8,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.32.2';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.32.2';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.32.2';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.32.2';
-import ImageUtil from './helpers/image-util.js?ver=v1.32.2';
+import detector from './helpers/detector.js?ver=v1.33.0';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.33.0';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.33.0';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.33.0';
+import ImageUtil from './helpers/image-util.js?ver=v1.33.0';
 var instance;
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
@@ -218,7 +219,9 @@ var OPTION_TEMPLATE = new Object({
   ocrServerUrlAlien: '',
   ocrServerUrlAlienBack: '',
   ocrServerUrlVeteran: '',
-  ocrServerParseKeyList: [] // ServerOCR 응답값에서 ocrResult로 추가할 키 목록
+  ocrServerParseKeyList: [],
+  // ServerOCR 응답값에서 ocrResult로 추가할 키 목록
+  useFakeImage: false // ServerOCR 신분증 원본이미지 fake 처리 여부
 });
 
 function defaultServerOCRPreprocessor(result) {
@@ -637,7 +640,7 @@ class UseBOCR {
           yield _this3.__startScanWasm();
         }
       } catch (e) {
-        if (e.errorCode === 'SE001') {
+        if ((e === null || e === void 0 ? void 0 : e.errorCode) === 'SE001') {
           yield _this3.startOCR(type, onSuccess, onFailure, onInProgressChange, serverOCRPreprocessor);
         } else {
           void 0;
@@ -1218,6 +1221,123 @@ class UseBOCR {
       }
     })();
   }
+  __cropFakeImageFromVideo() {
+    var _this11 = this;
+    return _asyncToGenerator(function* () {
+      if (!_this11.__camSetComplete) return [null, null, null];
+      var resolutionWidth = 1280;
+      var resolutionHeight = 720;
+      var [calcResolution_w, calcResolution_h] = [resolutionWidth, resolutionHeight];
+      var {
+        video,
+        canvas,
+        rotationCanvas
+      } = detector.getOCRElements();
+
+      // source image (or video)
+      // ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+      // ┃     ┊ sy                              ┃
+      // ┃┈┈┈┈ ┏━━━━━━━━━━━━━━━┓ ┊               ┃
+      // ┃ sx  ┃               ┃ ┊               ┃
+      // ┃     ┃               ┃ ┊ sHeight       ┃
+      // ┃     ┃               ┃ ┊               ┃               destination canvas
+      // ┃     ┗━━━━━━━━━━━━━━━┛ ┊               ┃━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+      // ┃     ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈                 ┃    ┊                           ┃
+      // ┃           sWidth                      ┃    ┊ dy                        ┃
+      // ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛    ┏━━━━━━━━━━━━━━━┓ ┊         ┃
+      //                                  ┃┈┈┈┈┈┈┈┈┈┈┈┃               ┃ ┊         ┃
+      //                                  ┃    dx     ┃               ┃ ┊ dHeight ┃
+      //                                  ┃           ┃               ┃ ┊         ┃
+      //                                  ┃           ┗━━━━━━━━━━━━━━━┛ ┊         ┃
+      //                                  ┃           ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈           ┃
+      //                                  ┃                 dWidth                ┃
+      //                                  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+      // drawImage(image, dx, dy)
+      // drawImage(image, dx, dy, dWidth, dHeight)
+      // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+      // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+
+      var calcCanvas = canvas;
+      var calcVideoWidth = video.videoWidth;
+      var calcVideoHeight = video.videoHeight;
+      var calcVideoClientWidth = video.clientWidth;
+      var calcVideoClientHeight = video.clientHeight;
+      var calcCropImageSizeWidth = _this11.__cropImageSizeWidth;
+      var calcCropImageSizeHeight = _this11.__cropImageSizeHeight;
+      var calcVideoOrientation = _this11.__videoOrientation;
+      var isAlienBack = _this11.__ocrType === 'alien-back';
+      if (_this11.__isRotated90or270) {
+        [calcCropImageSizeWidth, calcCropImageSizeHeight] = [calcCropImageSizeHeight, calcCropImageSizeWidth];
+        [calcResolution_w, calcResolution_h] = [calcResolution_h, calcResolution_w];
+        calcCanvas = rotationCanvas;
+        calcVideoOrientation = _this11.__videoOrientation === 'portrait' ? 'landscape' : 'portrait';
+      }
+      var calcMaxSWidth = 99999;
+      var calcMaxSHeight = 99999;
+      if (_this11.__uiOrientation === 'portrait') {
+        if (calcVideoOrientation === _this11.__uiOrientation) {
+          // 세로 UI / 세로 카메라
+          calcMaxSWidth = calcVideoWidth;
+          calcMaxSHeight = calcVideoHeight;
+        } else {
+          // 세로 UI / 가로 카메라
+          calcMaxSHeight = calcVideoHeight;
+        }
+      } else {
+        if (calcVideoOrientation === _this11.__uiOrientation) {
+          // 가로 UI / 가로 카메라
+          calcMaxSHeight = calcVideoHeight;
+        } else {
+          // 가로 UI / 세로 카메라
+          calcMaxSWidth = calcVideoWidth;
+          calcMaxSHeight = calcVideoHeight;
+        }
+      }
+      var sx, sy;
+      var ratio = calcVideoWidth / calcVideoClientWidth;
+      var sWidth = Math.min(Math.round(calcCropImageSizeWidth * ratio), calcMaxSWidth);
+      var sHeight = Math.min(Math.round(calcCropImageSizeHeight * ratio), calcMaxSHeight);
+      sx = Math.max(Math.round((calcVideoClientWidth - calcCropImageSizeWidth) / 2 * ratio), 0);
+      sy = Math.max(Math.round((calcVideoClientHeight - calcCropImageSizeHeight) / 2 * ratio), 0);
+      if (_this11.__options.useOriginImageSquareRatio) {
+        sx = sy = 0;
+        [sWidth, sHeight] = [Math.min(calcVideoWidth, calcResolution_w), Math.min(calcVideoHeight, calcResolution_h)];
+      }
+      if (isAlienBack) {
+        [calcResolution_w, calcResolution_h] = [calcResolution_h, calcResolution_w];
+      }
+      var shuffleCanvas = document.createElement('canvas');
+      var shuffleContext = shuffleCanvas.getContext('2d');
+      shuffleCanvas.setAttribute('width', calcResolution_w);
+      shuffleCanvas.setAttribute('height', calcResolution_h);
+      shuffleContext.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, calcResolution_w, calcResolution_h);
+      var imageData = shuffleContext.getImageData(0, 0, calcResolution_w, calcResolution_h);
+      var data = imageData.data;
+      calcCanvas.setAttribute('width', calcResolution_h);
+      calcCanvas.setAttribute('height', calcResolution_w);
+      var calcContext = calcCanvas.getContext('2d');
+      var newImageData = calcContext.getImageData(0, 0, calcResolution_h, calcResolution_w);
+      var newData = newImageData.data;
+      for (var i = 0; i < newData.length; i += 4) {
+        newData[i] = data[i]; // R
+        newData[i + 1] = data[i + 1]; // G
+        newData[i + 2] = data[i + 2]; // B
+        newData[i + 3] = data[i + 3]; // A
+      }
+
+      calcContext.putImageData(newImageData, 0, 0);
+      var imgData = newData;
+      var imgDataUrl = calcCanvas.toDataURL('image/png');
+      if (isAlienBack) {
+        yield _this11.__rotate(imgData, imgDataUrl, 270), _readOnlyError("imgData");
+      }
+      if (_this11.__isRotated90or270) {
+        return yield _this11.__rotate(imgData, imgDataUrl, _this11.__getRotationDegree());
+      } else {
+        return [imgData, imgDataUrl];
+      }
+    })();
+  }
   __rotate(imgData, imgDataUrl, degree) {
     return _asyncToGenerator(function* () {
       return new Promise(resolve => {
@@ -1250,7 +1370,7 @@ class UseBOCR {
   }
   __isCardboxDetected(address) {
     var _arguments3 = arguments,
-      _this11 = this;
+      _this12 = this;
     return _asyncToGenerator(function* () {
       var boxType = _arguments3.length > 1 && _arguments3[1] !== undefined ? _arguments3[1] : 0;
       var retryImg = _arguments3.length > 2 && _arguments3[2] !== undefined ? _arguments3[2] : null;
@@ -1260,21 +1380,21 @@ class UseBOCR {
       try {
         var imgData;
         var imgDataUrl = null;
-        var [buffer] = _this11.__getBuffer();
+        var [buffer] = _this12.__getBuffer();
         if (retryImg !== null) {
           imgData = retryImg;
         } else {
-          [imgData, imgDataUrl] = yield _this11.__cropImageFromVideo();
+          [imgData, imgDataUrl] = yield _this12.__cropImageFromVideo();
         }
         if (!!!imgData) {
           return [false, null];
         }
-        _this11.__OCREngine.HEAP8.set(imgData.data, buffer);
+        _this12.__OCREngine.HEAP8.set(imgData.data, buffer);
         var kor = false,
           alien = false,
           passport = false,
           barcode = false;
-        switch (_this11.__ocrType) {
+        switch (_this12.__ocrType) {
           case 'idcard':
           case 'driver':
           case 'idcard-ssa':
@@ -1305,11 +1425,11 @@ class UseBOCR {
         }
         var result = null;
         if (kor || passport || alien) {
-          result = _this11.__OCREngine.detect_idcard_opt(buffer, _this11.__resolutionWidth, _this11.__resolutionHeight, address, kor, alien, passport);
+          result = _this12.__OCREngine.detect_idcard_opt(buffer, _this12.__resolutionWidth, _this12.__resolutionHeight, address, kor, alien, passport);
         } else if (barcode) {
-          result = _this11.__OCREngine.detect_barcode(buffer, _this11.__resolutionWidth, _this11.__resolutionHeight, address);
+          result = _this12.__OCREngine.detect_barcode(buffer, _this12.__resolutionWidth, _this12.__resolutionHeight, address);
         } else {
-          result = _this11.__OCREngine.detect_idcard(buffer, _this11.__resolutionWidth, _this11.__resolutionHeight, address, boxType);
+          result = _this12.__OCREngine.detect_idcard(buffer, _this12.__resolutionWidth, _this12.__resolutionHeight, address, boxType);
         }
 
         // console.log('isCardboxDetected result -=-----', result)
@@ -1326,7 +1446,7 @@ class UseBOCR {
     })();
   }
   __startRecognition(address, ocrType, ssaMode, isSetIgnoreComplete, imgData, imgDataUrl) {
-    var _this12 = this;
+    var _this13 = this;
     return _asyncToGenerator(function* () {
       try {
         if (address === null) {
@@ -1336,75 +1456,75 @@ class UseBOCR {
         }
         var rawData = null;
         var ocrResult = null;
-        if (!_this12.__ocrTypeList.includes(ocrType)) throw new Error('Unsupported OCR type');
-        var [, resultBuffer] = _this12.__getBuffer();
+        if (!_this13.__ocrTypeList.includes(ocrType)) throw new Error('Unsupported OCR type');
+        var [, resultBuffer] = _this13.__getBuffer();
         var recognition = /*#__PURE__*/function () {
           var _ref6 = _asyncToGenerator(function* (isSetIgnoreComplete) {
             var _ocrResult, _ocrResult$ocr_result, _ocrResult2, _ocrResult2$ocr_resul;
             if (isSetIgnoreComplete) {
-              yield _this12.__isCardboxDetected(address, 0, imgData);
+              yield _this13.__isCardboxDetected(address, 0, imgData);
             }
             switch (ocrType) {
               case 'idcard':
               case 'driver':
               case 'idcard-ssa':
               case 'driver-ssa':
-                rawData = _this12.__OCREngine.scanIDCard(address, 0);
+                rawData = _this13.__OCREngine.scanIDCard(address, 0);
                 break;
               case 'passport':
               case 'foreign-passport':
               case 'passport-ssa':
               case 'foreign-passport-ssa':
-                rawData = _this12.__OCREngine.scanPassport(address, 0);
+                rawData = _this13.__OCREngine.scanPassport(address, 0);
                 break;
               case 'alien':
               case 'alien-ssa':
-                rawData = _this12.__OCREngine.scanAlien(address, 0);
+                rawData = _this13.__OCREngine.scanAlien(address, 0);
                 break;
               case 'alien-back':
-                rawData = _this12.__OCREngine.scanAlienBack(address, resultBuffer);
+                rawData = _this13.__OCREngine.scanAlienBack(address, resultBuffer);
                 break;
               case 'credit':
-                rawData = _this12.__OCREngine.scanCredit(address, 0);
+                rawData = _this13.__OCREngine.scanCredit(address, 0);
                 break;
               case 'veteran':
               case 'veteran-ssa':
-                rawData = _this12.__OCREngine.scanVeterans(address, 0);
+                rawData = _this13.__OCREngine.scanVeterans(address, 0);
                 break;
               case 'barcode':
-                rawData = _this12.__OCREngine.scanBarcode(address, 0);
+                rawData = _this13.__OCREngine.scanBarcode(address, 0);
                 break;
               default:
                 throw new Error('Scanner does not exists');
             }
 
             // TODO: 신용카드는 아직 key:value 형태로 변환 안되어 있음
-            if (_this12.isCreditCard()) {
+            if (_this13.isCreditCard()) {
               if (rawData === null || rawData === '' || rawData === 'false' || rawData[0] === 'false') {
                 return false;
               } else {
                 var {
                   originImage
-                } = yield _this12.__getResultImages(ocrType, address);
+                } = yield _this13.__getResultImages(ocrType, address);
                 ocrResult = {
                   ocr_result: rawData,
                   ocr_origin_image: originImage
                 };
                 return true;
               }
-            } else if (_this12.isBarcode()) {
+            } else if (_this13.isBarcode()) {
               if (rawData !== 'complete:false') {
-                rawData = _this12.__stringToJson(rawData);
+                rawData = _this13.__stringToJson(rawData);
                 ocrResult = {
                   ocr_result: rawData
                 };
               }
             } else {
               if (rawData !== 'complete:false') {
-                rawData = _this12.__stringToJson(rawData);
+                rawData = _this13.__stringToJson(rawData);
 
                 // Pii encrypt 일때만 포멧이 다름
-                if (_this12.isEncryptMode() && _this12.__options.useEncryptMode) {
+                if (_this13.isEncryptMode() && _this13.__options.useEncryptMode) {
                   ocrResult = {
                     ocr_result: rawData,
                     ocr_origin_image: rawData.ocr_origin_image,
@@ -1419,16 +1539,16 @@ class UseBOCR {
                   delete ocrResultTmp.ocr_result;
                   ocrResult = {
                     ocr_result: ocrResultTmp,
-                    ocr_origin_image: _this12.__ocrImageGuard(ocrResultTmp.ocr_origin_image),
-                    ocr_masking_image: _this12.__ocrImageGuard(ocrResultTmp.ocr_masking_image),
-                    ocr_face_image: _this12.__ocrImageGuard(ocrResultTmp.ocr_face_image)
+                    ocr_origin_image: _this13.__ocrImageGuard(ocrResultTmp.ocr_origin_image),
+                    ocr_masking_image: _this13.__ocrImageGuard(ocrResultTmp.ocr_masking_image),
+                    ocr_face_image: _this13.__ocrImageGuard(ocrResultTmp.ocr_face_image)
                   };
                   delete ocrResult.ocr_result.ocr_origin_image;
                   delete ocrResult.ocr_result.ocr_masking_image;
                   delete ocrResult.ocr_result.ocr_face_image;
 
                   // valueEncryptMode 일때 포멧 맞춰주기
-                  if (_this12.isEncryptMode() && _this12.__options.useEncryptValueMode) {
+                  if (_this13.isEncryptMode() && _this13.__options.useEncryptValueMode) {
                     var encryptedOcrResult = _objectSpread({}, ocrResult.ocr_result.encrypted);
                     var encrypted = {
                       ocr_result: encryptedOcrResult,
@@ -1441,14 +1561,14 @@ class UseBOCR {
                     delete encrypted.ocr_result.ocr_face_image;
                     ocrResult.encrypted = encrypted;
                     delete ocrResult.ocr_result.encrypted;
-                  } else if (_this12.isEncryptMode() && _this12.__options.useEncryptOverallMode) {
+                  } else if (_this13.isEncryptMode() && _this13.__options.useEncryptOverallMode) {
                     ocrResult.encrypted_overall = ocrResult.ocr_result.encrypted_overall;
                     delete ocrResult.ocr_result.encrypted_overall;
                   }
                 }
 
                 // overall 인 경우만 timestamp 처리 /
-                if (_this12.isEncryptMode() && _this12.__options.useEncryptOverallMode) {
+                if (_this13.isEncryptMode() && _this13.__options.useEncryptOverallMode) {
                   ocrResult.timestamp = ocrResult.ocr_result.timestamp;
                   delete ocrResult.ocr_result.timestamp;
                 } else {
@@ -1460,20 +1580,20 @@ class UseBOCR {
               return true;
             } else {
               if (isSetIgnoreComplete) {
-                if (_this12.__manualOCRRetryCount < _this12.__manualOCRMaxRetryCount) {
+                if (_this13.__manualOCRRetryCount < _this13.__manualOCRMaxRetryCount) {
                   // detectedCardQueue에서 한장을 꺼내서 갱신한다.
                   // 저장되어있는 이미지의 숫자가 retry 보다 작은경우 대비하여 %를 사용함
-                  var queueIdx = _this12.__manualOCRRetryCount % _this12.__detectedCardQueue.length;
-                  imgData = _this12.__detectedCardQueue[queueIdx];
-                  _this12.__manualOCRRetryCount++;
+                  var queueIdx = _this13.__manualOCRRetryCount % _this13.__detectedCardQueue.length;
+                  imgData = _this13.__detectedCardQueue[queueIdx];
+                  _this13.__manualOCRRetryCount++;
                   return yield recognition(isSetIgnoreComplete);
                 } else {
                   // 사진 한장으로 OCR 실패 (popup 내리고 setIgnoreComplete(false) 처리?
-                  _this12.__manualOCRRetryCount = 0;
-                  _this12.setIgnoreComplete(false);
-                  _this12.__blurCaptureButton(); // 팝업이 내려갈때 처리되지만 미리 처리
-                  yield _this12.__changeStage(_this12.IN_PROGRESS.MANUAL_CAPTURE_FAILED, false, imgDataUrl);
-                  _this12.__setStyle(detector.getOCRElements().video, {
+                  _this13.__manualOCRRetryCount = 0;
+                  _this13.setIgnoreComplete(false);
+                  _this13.__blurCaptureButton(); // 팝업이 내려갈때 처리되지만 미리 처리
+                  yield _this13.__changeStage(_this13.IN_PROGRESS.MANUAL_CAPTURE_FAILED, false, imgDataUrl);
+                  _this13.__setStyle(detector.getOCRElements().video, {
                     display: ''
                   });
                   return false;
@@ -1491,9 +1611,9 @@ class UseBOCR {
 
         if (yield recognition(isSetIgnoreComplete)) {
           if (ssaMode) {
-            yield _this12.__changeStage(_this12.IN_PROGRESS.OCR_RECOGNIZED_WITH_SSA, false, ocrResult.ocr_masking_image);
+            yield _this13.__changeStage(_this13.IN_PROGRESS.OCR_RECOGNIZED_WITH_SSA, false, ocrResult.ocr_masking_image);
           } else {
-            yield _this12.__changeStage(_this12.IN_PROGRESS.OCR_RECOGNIZED);
+            yield _this13.__changeStage(_this13.IN_PROGRESS.OCR_RECOGNIZED);
           }
           return ocrResult;
         } else {
@@ -1506,41 +1626,41 @@ class UseBOCR {
     })();
   }
   __getResultImages(ocrType, address) {
-    var _this13 = this;
+    var _this14 = this;
     return _asyncToGenerator(function* () {
       var originImageMode;
-      if (_this13.isCreditCard()) {
-        originImageMode = _this13.OCR_IMG_MODE.CROPPING;
-      } else if (_this13.__options.useImageCropping) {
-        originImageMode = _this13.OCR_IMG_MODE.CROPPING;
-      } else if (_this13.__options.useImageWarping) {
-        originImageMode = _this13.OCR_IMG_MODE.WARPING;
+      if (_this14.isCreditCard()) {
+        originImageMode = _this14.OCR_IMG_MODE.CROPPING;
+      } else if (_this14.__options.useImageCropping) {
+        originImageMode = _this14.OCR_IMG_MODE.CROPPING;
+      } else if (_this14.__options.useImageWarping) {
+        originImageMode = _this14.OCR_IMG_MODE.WARPING;
       } else {
-        originImageMode = _this13.OCR_IMG_MODE.NONE;
+        originImageMode = _this14.OCR_IMG_MODE.NONE;
       }
       var originImage;
-      if (!_this13.isCreditCard() && _this13.isEncryptMode()) {
-        originImage = _this13.__getPiiEncryptImageBase64(address, _this13.OCR_IMG_MASK_MODE.FALSE, originImageMode);
+      if (!_this14.isCreditCard() && _this14.isEncryptMode()) {
+        originImage = _this14.__getPiiEncryptImageBase64(address, _this14.OCR_IMG_MASK_MODE.FALSE, originImageMode);
         void 0;
       } else {
-        originImage = yield _this13.__getImageBase64(address, _this13.OCR_IMG_MASK_MODE.FALSE, originImageMode);
+        originImage = yield _this14.__getImageBase64(address, _this14.OCR_IMG_MASK_MODE.FALSE, originImageMode);
       }
       var maskImageMode;
       var maskImage = null;
       var faceImage = null;
-      if (!_this13.isCreditCard()) {
-        if (_this13.__options.useImageCropping) {
-          maskImageMode = _this13.OCR_IMG_MODE.CROPPING;
+      if (!_this14.isCreditCard()) {
+        if (_this14.__options.useImageCropping) {
+          maskImageMode = _this14.OCR_IMG_MODE.CROPPING;
         } else {
-          maskImageMode = _this13.OCR_IMG_MODE.WARPING;
+          maskImageMode = _this14.OCR_IMG_MODE.WARPING;
         }
-        if (_this13.isEncryptMode()) {
-          maskImage = _this13.__getPiiEncryptImageBase64(address, _this13.OCR_IMG_MASK_MODE.TRUE, maskImageMode);
-          faceImage = _this13.__options.useFaceImage ? _this13.__getPiiEncryptImageBase64(address, null, originImageMode, 'face') : null;
+        if (_this14.isEncryptMode()) {
+          maskImage = _this14.__getPiiEncryptImageBase64(address, _this14.OCR_IMG_MASK_MODE.TRUE, maskImageMode);
+          faceImage = _this14.__options.useFaceImage ? _this14.__getPiiEncryptImageBase64(address, null, originImageMode, 'face') : null;
         } else {
-          maskImage = yield _this13.__getImageBase64(address, _this13.OCR_IMG_MASK_MODE.TRUE, maskImageMode);
+          maskImage = yield _this14.__getImageBase64(address, _this14.OCR_IMG_MASK_MODE.TRUE, maskImageMode);
           maskImage = maskImage === 'data:' ? null : maskImage;
-          faceImage = _this13.__options.useFaceImage ? yield _this13.__getImageBase64(address, null, originImageMode, 'face') : null;
+          faceImage = _this14.__options.useFaceImage ? yield _this14.__getImageBase64(address, null, originImageMode, 'face') : null;
         }
       }
       return {
@@ -1610,28 +1730,28 @@ class UseBOCR {
     return result === null ? null : this.__csvToObject(result);
   }
   __startTruthRetry(ocrType, address, imgData) {
-    var _this14 = this;
+    var _this15 = this;
     return _asyncToGenerator(function* () {
-      yield _this14.__isCardboxDetected(address, 0, imgData);
+      yield _this15.__isCardboxDetected(address, 0, imgData);
       // await this.__startRecognition(address, ocrType, true);      // for 성능을 위해 진행 X
-      return yield _this14.__startTruth(ocrType, address);
+      return yield _this15.__startTruth(ocrType, address);
     })();
   }
   __setCameraPermissionTimeoutTimer() {
-    var _this15 = this;
+    var _this16 = this;
     this.__clearCameraPermissionTimeoutTimer();
     this.__cameraPermissionTimeoutTimer = setTimeout( /*#__PURE__*/_asyncToGenerator(function* () {
       // 1초 delay 후 실행
-      yield _this15.__proceedCameraPermission();
+      yield _this16.__proceedCameraPermission();
     }), this.__options.cameraResourceRequestRetryInterval);
   }
   __proceedCameraPermission() {
-    var _this16 = this;
+    var _this17 = this;
     return _asyncToGenerator(function* () {
       try {
-        _this16.__clearCameraPermissionTimeoutTimer();
-        var isPassport = _this16.__ocrType.includes('passport');
-        yield _this16.__setupVideo(isPassport);
+        _this17.__clearCameraPermissionTimeoutTimer();
+        var isPassport = _this17.__ocrType.includes('passport');
+        yield _this17.__setupVideo(isPassport);
         var {
           video
         } = detector.getOCRElements();
@@ -1640,10 +1760,10 @@ class UseBOCR {
           // const capability = track.getCapabilities();
           // console.debug('CardScan__initialize capability', capability);
           if ('srcObject' in video) {
-            video.srcObject = _this16.__stream;
+            video.srcObject = _this17.__stream;
           } else {
             // Avoid using this in new browsers, as it is going away.
-            video.src = window.URL.createObjectURL(_this16.__stream);
+            video.src = window.URL.createObjectURL(_this17.__stream);
           }
           video.addEventListener('loadedmetadata', () => {
             // console.debug('proceedCameraPermission - onloadedmetadata');
@@ -1653,18 +1773,18 @@ class UseBOCR {
             void 0;
 
             // video element style 설정
-            _this16.__videoOrientation = video.videoWidth / video.videoHeight < 1 ? 'portrait' : 'landscape';
+            _this17.__videoOrientation = video.videoWidth / video.videoHeight < 1 ? 'portrait' : 'landscape';
             void 0;
             void 0;
             void 0;
-            _this16.__camSetComplete = true;
-            yield _this16.__changeStage(_this16.IN_PROGRESS.READY);
-            yield _this16.__adjustStyle();
+            _this17.__camSetComplete = true;
+            yield _this17.__changeStage(_this17.IN_PROGRESS.READY);
+            yield _this17.__adjustStyle();
           }));
-          _this16.exitFullscreen(video);
+          _this17.exitFullscreen(video);
         } else {
-          yield _this16.__changeStage(_this16.IN_PROGRESS.NOT_READY);
-          _this16.__closeCamera();
+          yield _this17.__changeStage(_this17.IN_PROGRESS.NOT_READY);
+          _this17.__closeCamera();
         }
       } catch (e) {
         void 0;
@@ -1672,22 +1792,22 @@ class UseBOCR {
           var errorMessage = 'Camera Access Permission is not allowed';
           void 0;
           void 0;
-          _this16.__onFailureProcess('E403', e, errorMessage);
+          _this17.__onFailureProcess('E403', e, errorMessage);
         } else if (e.name === 'NotReadableError') {
           // 다른곳에서 카메라 자원을 사용중
-          yield _this16.__changeStage(_this16.IN_PROGRESS.NOT_READY);
-          _this16.stopStream();
-          if (_this16.__options.cameraResourceRequestRetryLimit < 0) {
+          yield _this17.__changeStage(_this17.IN_PROGRESS.NOT_READY);
+          _this17.stopStream();
+          if (_this17.__options.cameraResourceRequestRetryLimit < 0) {
             // 카메라 리소스 재요청 횟수제한 없음
-            _this16.__cameraResourceRetryCount += 1;
-            _this16.__setCameraPermissionTimeoutTimer(); // 재귀 호출
+            _this17.__cameraResourceRetryCount += 1;
+            _this17.__setCameraPermissionTimeoutTimer(); // 재귀 호출
           } else {
-            if (_this16.__options.cameraResourceRequestRetryLimit > _this16.__cameraResourceRetryCount) {
-              _this16.__cameraResourceRetryCount += 1;
-              _this16.__setCameraPermissionTimeoutTimer(); // 재귀 호출
+            if (_this17.__options.cameraResourceRequestRetryLimit > _this17.__cameraResourceRetryCount) {
+              _this17.__cameraResourceRetryCount += 1;
+              _this17.__setCameraPermissionTimeoutTimer(); // 재귀 호출
             } else {
               var _errorMessage = 'Camera permissions were granted, but Failed to acquire Camera resources.';
-              _this16.__onFailureProcess('E403', e, _errorMessage);
+              _this17.__onFailureProcess('E403', e, _errorMessage);
             }
           }
         } else if (e.name === 'NotFoundError') {
@@ -1695,23 +1815,23 @@ class UseBOCR {
           var _errorMessage2 = 'Camera Not Found';
           void 0;
           void 0;
-          _this16.__onFailureProcess('E404', e, _errorMessage2);
+          _this17.__onFailureProcess('E404', e, _errorMessage2);
         } else if (e.name === 'OverconstrainedError') {
           var _errorMessage3 = "Camera resolution over: ".concat(e.constraint);
           void 0;
           void 0;
-          _this16.__onFailureProcess('E400', e, _errorMessage3);
+          _this17.__onFailureProcess('E400', e, _errorMessage3);
         } else if (e.name === 'UnsupportedError') {
           // navigator.mediaDevices WebAPI가 없음
           var _errorMessage4 = e.message;
           void 0;
           void 0;
-          _this16.__onFailureProcess('E400', e, _errorMessage4);
+          _this17.__onFailureProcess('E400', e, _errorMessage4);
         } else {
           var _errorMessage5 = 'Unknown Error Occured';
           void 0;
           void 0;
-          _this16.__onFailureProcess('E999', e, _errorMessage5);
+          _this17.__onFailureProcess('E999', e, _errorMessage5);
         }
       }
     })();
@@ -1743,81 +1863,81 @@ class UseBOCR {
   }
   __changeStage(val) {
     var _arguments4 = arguments,
-      _this17 = this;
+      _this18 = this;
     return _asyncToGenerator(function* () {
       var forceUpdate = _arguments4.length > 1 && _arguments4[1] !== undefined ? _arguments4[1] : false;
       var recognizedImage = _arguments4.length > 2 && _arguments4[2] !== undefined ? _arguments4[2] : null;
-      if (_this17.__previousInProgressStep === val && forceUpdate === false) {
+      if (_this18.__previousInProgressStep === val && forceUpdate === false) {
         return;
       }
-      _this17.__changeOCRStatus(val);
-      _this17.__previousInProgressStep = val;
-      _this17.__inProgressStep = val;
+      _this18.__changeOCRStatus(val);
+      _this18.__previousInProgressStep = val;
+      _this18.__inProgressStep = val;
       var {
         guideBox,
         maskBoxWrap,
         captureButton
       } = detector.getOCRElements();
       var style = {
-        borderWidth: _this17.__options.frameBorderStyle.width + 'px',
-        borderStyle: _this17.__options.frameBorderStyle.style,
-        borderRadius: _this17.__options.frameBorderStyle.radius + 'px',
-        borderColor: _this17.__options.frameBorderStyle[val]
+        borderWidth: _this18.__options.frameBorderStyle.width + 'px',
+        borderStyle: _this18.__options.frameBorderStyle.style,
+        borderRadius: _this18.__options.frameBorderStyle.radius + 'px',
+        borderColor: _this18.__options.frameBorderStyle[val]
       };
       if (guideBox) {
-        _this17.__setStyle(guideBox, style);
+        _this18.__setStyle(guideBox, style);
       }
-      if (_this17.__options.useMaskFrameColorChange) {
-        if (!!_this17.__options.showClipFrame) {
+      if (_this18.__options.useMaskFrameColorChange) {
+        if (!!_this18.__options.showClipFrame) {
           void 0;
         } else {
           var _maskBoxWrap$querySel;
-          maskBoxWrap === null || maskBoxWrap === void 0 ? void 0 : (_maskBoxWrap$querySel = maskBoxWrap.querySelector('#maskBoxOuter')) === null || _maskBoxWrap$querySel === void 0 ? void 0 : _maskBoxWrap$querySel.setAttribute('fill', _this17.__options.maskFrameStyle[val]);
+          maskBoxWrap === null || maskBoxWrap === void 0 ? void 0 : (_maskBoxWrap$querySel = maskBoxWrap.querySelector('#maskBoxOuter')) === null || _maskBoxWrap$querySel === void 0 ? void 0 : _maskBoxWrap$querySel.setAttribute('fill', _this18.__options.maskFrameStyle[val]);
         }
       }
-      if (_this17.__options.useCaptureUI) {
+      if (_this18.__options.useCaptureUI) {
         var _captureButton$queryS;
-        captureButton === null || captureButton === void 0 ? void 0 : (_captureButton$queryS = captureButton.querySelector('#captureButton')) === null || _captureButton$queryS === void 0 ? void 0 : _captureButton$queryS.setAttribute('fill', _this17.__options.captureButtonStyle['base_color']);
+        captureButton === null || captureButton === void 0 ? void 0 : (_captureButton$queryS = captureButton.querySelector('#captureButton')) === null || _captureButton$queryS === void 0 ? void 0 : _captureButton$queryS.setAttribute('fill', _this18.__options.captureButtonStyle['base_color']);
       }
-      var ocrMode = _this17.__isSwitchToServerMode ? 'server' : 'wasm';
-      if (_this17.__onInProgressChange) {
-        if (_this17.__options.useTopUI || _this17.__options.useTopUITextMsg) {
-          _this17.__onInProgressChange.call(_this17, ocrMode, _this17.__ocrType, _this17.__inProgressStep, _this17.__topUI, 'top', _this17.__options.useTopUITextMsg, _this17.__options.useCaptureUI, _this17.__options.usePreviewUI, recognizedImage);
+      var ocrMode = _this18.__isSwitchToServerMode ? 'server' : 'wasm';
+      if (_this18.__onInProgressChange) {
+        if (_this18.__options.useTopUI || _this18.__options.useTopUITextMsg) {
+          _this18.__onInProgressChange.call(_this18, ocrMode, _this18.__ocrType, _this18.__inProgressStep, _this18.__topUI, 'top', _this18.__options.useTopUITextMsg, _this18.__options.useCaptureUI, _this18.__options.usePreviewUI, recognizedImage);
         }
-        if (_this17.__options.useMiddleUI || _this17.__options.useMiddleUITextMsg) {
-          _this17.__onInProgressChange.call(_this17, ocrMode, _this17.__ocrType, _this17.__inProgressStep, _this17.__middleUI, 'middle', _this17.__options.useMiddleUITextMsg, _this17.__options.useCaptureUI, _this17.__options.usePreviewUI, recognizedImage);
+        if (_this18.__options.useMiddleUI || _this18.__options.useMiddleUITextMsg) {
+          _this18.__onInProgressChange.call(_this18, ocrMode, _this18.__ocrType, _this18.__inProgressStep, _this18.__middleUI, 'middle', _this18.__options.useMiddleUITextMsg, _this18.__options.useCaptureUI, _this18.__options.usePreviewUI, recognizedImage);
         }
-        if (_this17.__options.useBottomUI || _this17.__options.useBottomUITextMsg) {
-          _this17.__onInProgressChange.call(_this17, ocrMode, _this17.__ocrType, _this17.__inProgressStep, _this17.__bottomUI, 'bottom', _this17.__options.useBottomUITextMsg, _this17.__options.useCaptureUI, _this17.__options.usePreviewUI, recognizedImage);
+        if (_this18.__options.useBottomUI || _this18.__options.useBottomUITextMsg) {
+          _this18.__onInProgressChange.call(_this18, ocrMode, _this18.__ocrType, _this18.__inProgressStep, _this18.__bottomUI, 'bottom', _this18.__options.useBottomUITextMsg, _this18.__options.useCaptureUI, _this18.__options.usePreviewUI, recognizedImage);
         }
       }
-      if (val === _this17.IN_PROGRESS.MANUAL_CAPTURE_SUCCESS || val === _this17.IN_PROGRESS.MANUAL_CAPTURE_FAILED) {
-        if (_this17.__options.usePreviewUI) {
-          _this17.__updatePreviewUI(recognizedImage);
+      if (val === _this18.IN_PROGRESS.MANUAL_CAPTURE_SUCCESS || val === _this18.IN_PROGRESS.MANUAL_CAPTURE_FAILED) {
+        if (_this18.__options.usePreviewUI) {
+          _this18.__updatePreviewUI(recognizedImage);
 
           // FAIL인 경우 5초후 자동을 창닫음
-          if (val === _this17.IN_PROGRESS.MANUAL_CAPTURE_FAILED) {
-            setTimeout(_this17.__hidePreviewUI, 3000, _this17);
+          if (val === _this18.IN_PROGRESS.MANUAL_CAPTURE_FAILED) {
+            setTimeout(_this18.__hidePreviewUI, 3000, _this18);
           }
         }
       }
-      if (val === _this17.IN_PROGRESS.OCR_RECOGNIZED_WITH_SSA) {
+      if (val === _this18.IN_PROGRESS.OCR_RECOGNIZED_WITH_SSA) {
         var {
           video
         } = detector.getOCRElements();
-        _this17.__setStyle(video, {
+        _this18.__setStyle(video, {
           display: 'none'
         });
-        if (_this17.__options.usePreviewUI) {
-          _this17.__updatePreviewUI(recognizedImage);
+        if (_this18.__options.usePreviewUI) {
+          _this18.__updatePreviewUI(recognizedImage);
         }
       }
-      if (val === _this17.IN_PROGRESS.OCR_SUCCESS_WITH_SSA) {
-        if (_this17.__options.usePreviewUI) {
-          _this17.__hidePreviewUI();
+      if (val === _this18.IN_PROGRESS.OCR_SUCCESS_WITH_SSA) {
+        if (_this18.__options.usePreviewUI) {
+          _this18.__hidePreviewUI();
         }
       }
-      yield _this17.__sleep(1); // for UI update
+      yield _this18.__sleep(1); // for UI update
     })();
   }
 
@@ -1863,7 +1983,7 @@ class UseBOCR {
     this.__resolutionHeight = height;
   }
   __getInputDevices() {
-    var _this18 = this;
+    var _this19 = this;
     return _asyncToGenerator(function* () {
       // throw error if navigator.mediaDevices is not supported
       if (!navigator.mediaDevices) {
@@ -1880,7 +2000,7 @@ class UseBOCR {
               if (device.getCapabilities) {
                 var _cap$facingMode;
                 var cap = device.getCapabilities();
-                if (cap !== null && cap !== void 0 && (_cap$facingMode = cap.facingMode) !== null && _cap$facingMode !== void 0 && _cap$facingMode.includes(_this18.__facingModeConstraint)) {
+                if (cap !== null && cap !== void 0 && (_cap$facingMode = cap.facingMode) !== null && _cap$facingMode !== void 0 && _cap$facingMode.includes(_this19.__facingModeConstraint)) {
                   var _device$label;
                   var isUltraCameraReg = /ultra|울트라/gi;
                   if (isUltraCameraReg.test((_device$label = device.label) === null || _device$label === void 0 ? void 0 : _device$label.toLowerCase())) continue;
@@ -1902,7 +2022,7 @@ class UseBOCR {
           }
         }
       }
-      _this18.__debug("camera = ".concat(camera, ", camera.length = ").concat(camera.length));
+      _this19.__debug("camera = ".concat(camera, ", camera.length = ").concat(camera.length));
       return camera;
     })();
   }
@@ -1928,7 +2048,7 @@ class UseBOCR {
     });
   }
   __setupDomElements() {
-    var _this19 = this;
+    var _this20 = this;
     return _asyncToGenerator(function* () {
       var {
         ocr,
@@ -1966,26 +2086,26 @@ class UseBOCR {
       if (preventToFreezeVideo) preventToFreezeVideo.remove();
       if (customUIWrap) customUIWrap.remove();
       // 각 top, middle, bottom UI를 미사용일 경우 안의 내용을 삭제
-      if (topUI && !_this19.__options.useTopUI) _this19.__clearCustomUI(topUI);
-      if (middleUI && !_this19.__options.useMiddleUI) _this19.__clearCustomUI(middleUI);
-      if (bottomUI && !_this19.__options.useBottomUI) _this19.__clearCustomUI(bottomUI);
+      if (topUI && !_this20.__options.useTopUI) _this20.__clearCustomUI(topUI);
+      if (middleUI && !_this20.__options.useMiddleUI) _this20.__clearCustomUI(middleUI);
+      if (bottomUI && !_this20.__options.useBottomUI) _this20.__clearCustomUI(bottomUI);
       if (captureUIWrap) captureUIWrap.remove();
       // capture UI를 미사용일 경우 안의 내용을 삭제
-      if (captureUI && !_this19.__options.useCaptureUI) _this19.__clearCustomUI(captureUI);
+      if (captureUI && !_this20.__options.useCaptureUI) _this20.__clearCustomUI(captureUI);
       if (previewUIWrap) previewUIWrap.remove();
       // preview UI를 미사용일 경우 안의 내용을 삭제
-      if (previewUI && !_this19.__options.usePreviewUI) _this19.__clearCustomUI(previewUI);
+      if (previewUI && !_this20.__options.usePreviewUI) _this20.__clearCustomUI(previewUI);
       if (switchUIWrap) switchUIWrap.remove();
       // switch UI를 미사용일 경우 안의 내용을 삭제
-      if (switchUI && !_this19.__options.useManualSwitchToServerMode) _this19.__clearCustomUI(switchUI);
+      if (switchUI && !_this20.__options.useManualSwitchToServerMode) _this20.__clearCustomUI(switchUI);
       if (preloadingUIWrap) preloadingUIWrap.remove();
-      var rotationDegree = _this19.__getRotationDegree();
-      _this19.__isRotated90or270 = [90, 270].includes(rotationDegree);
+      var rotationDegree = _this20.__getRotationDegree();
+      _this20.__isRotated90or270 = [90, 270].includes(rotationDegree);
       var ocrStyle = {
         width: '100%',
         height: '100%'
       };
-      _this19.__setStyle(ocr, ocrStyle);
+      _this20.__setStyle(ocr, ocrStyle);
       var wrapStyle = {
         position: 'absolute',
         display: 'flex',
@@ -2003,17 +2123,17 @@ class UseBOCR {
         while (videoWrap.firstChild) {
           videoWrap.removeChild(videoWrap.lastChild);
         }
-        _this19.__setStyle(videoWrap, wrapStyle);
+        _this20.__setStyle(videoWrap, wrapStyle);
       }
       ocr.appendChild(videoWrap);
       maskBoxWrap = document.createElement('svg');
       maskBoxWrap.setAttribute('data-useb-ocr', 'maskBoxWrap');
       maskBoxWrap.setAttribute('fill', 'none');
       maskBoxWrap.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-      _this19.__setStyle(maskBoxWrap, wrapStyle);
-      var mask_frame = _this19.__options.maskFrameStyle.base_color + 'ff';
-      if (!!_this19.__options.showClipFrame) {
-        mask_frame = _this19.__options.maskFrameStyle.clip_frame + '55';
+      _this20.__setStyle(maskBoxWrap, wrapStyle);
+      var mask_frame = _this20.__options.maskFrameStyle.base_color + 'ff';
+      if (!!_this20.__options.showClipFrame) {
+        mask_frame = _this20.__options.maskFrameStyle.clip_frame + '55';
       }
       maskBoxWrap.innerHTML = '' + "  <svg id='maskBoxContainer' width='100%' height='100%' fill='none' xmlns='http://www.w3.org/2000/svg'>\n" + "    <mask id='mask-rect'>\n" + "      <rect width='100%' height='100%' fill='white'></rect>\n" + "      <svg x='50%' y='50%' overflow='visible'>\n" + "          <rect id='maskBoxInner'\n" + "            width='400' height='260'\n" + "            x='-200' y='-130'\n" + "            rx='10' ry='10'\n" + "            fill='black' stroke='black'></rect>\n" + '      </svg>\n' + '    </mask>\n' + "    <rect id='maskBoxOuter'\n" + "          x='0' y='0' width='100%' height='100%'\n" + "          fill='" + mask_frame + "' mask='url(#mask-rect)'></rect>\n" + '  </svg>';
       ocr.appendChild(maskBoxWrap);
@@ -2029,8 +2149,8 @@ class UseBOCR {
       var rotateCss = 'rotate(' + rotationDegree + 'deg)';
       var mirrorCss = 'rotateY(180deg)';
       var rotateAndMirrorCss = mirrorCss + ' ' + rotateCss;
-      if (_this19.__isRotated90or270) {
-        if (_this19.__getMirrorMode()) {
+      if (_this20.__isRotated90or270) {
+        if (_this20.__getMirrorMode()) {
           videoStyle = _objectSpread(_objectSpread({}, videoStyle), {}, {
             '-webkit-transform': rotateAndMirrorCss,
             '-moz-transform': rotateAndMirrorCss,
@@ -2048,7 +2168,7 @@ class UseBOCR {
           });
         }
       } else {
-        if (_this19.__getMirrorMode()) {
+        if (_this20.__getMirrorMode()) {
           videoStyle = _objectSpread(_objectSpread({}, videoStyle), {}, {
             '-webkit-transform': mirrorCss,
             '-moz-transform': mirrorCss,
@@ -2058,17 +2178,17 @@ class UseBOCR {
           });
         }
       }
-      _this19.__setStyle(video, videoStyle);
+      _this20.__setStyle(video, videoStyle);
       videoWrap.appendChild(video);
       guideBoxWrap = document.createElement('div');
       guideBoxWrap.setAttribute('data-useb-ocr', 'guideBoxWrap');
-      _this19.__setStyle(guideBoxWrap, wrapStyle);
+      _this20.__setStyle(guideBoxWrap, wrapStyle);
       ocr.appendChild(guideBoxWrap);
       guideBox = document.createElement('svg');
       guideBox.setAttribute('data-useb-ocr', 'guideBox');
       guideBox.setAttribute('fill', 'none');
       guideBox.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-      _this19.__setStyle(guideBox, {
+      _this20.__setStyle(guideBox, {
         width: '100%',
         margin: '0 auto',
         position: 'absolute'
@@ -2077,19 +2197,19 @@ class UseBOCR {
       canvas = document.createElement('canvas');
       canvas.setAttribute('data-useb-ocr', 'canvas');
       var canvasStyle = {
-        display: _this19.__options.showCanvasPreview ? _this19.__isRotated90or270 ? 'none' : 'display' : 'none',
+        display: _this20.__options.showCanvasPreview ? _this20.__isRotated90or270 ? 'none' : 'display' : 'none',
         width: '25%',
         position: 'absolute',
         left: '0px',
         top: '30px',
         border: 'green 2px solid'
       };
-      _this19.__setStyle(canvas, canvasStyle);
+      _this20.__setStyle(canvas, canvasStyle);
       ocr.appendChild(canvas);
       rotationCanvas = document.createElement('canvas');
       rotationCanvas.setAttribute('data-useb-ocr', 'rotationCanvas');
-      _this19.__setStyle(rotationCanvas, {
-        display: _this19.__options.showCanvasPreview ? _this19.__isRotated90or270 ? 'display' : 'none' : 'none',
+      _this20.__setStyle(rotationCanvas, {
+        display: _this20.__options.showCanvasPreview ? _this20.__isRotated90or270 ? 'display' : 'none' : 'none',
         height: '25%',
         position: 'absolute',
         right: '0px',
@@ -2099,7 +2219,7 @@ class UseBOCR {
       ocr.appendChild(rotationCanvas);
       preventToFreezeVideo = document.createElement('div');
       preventToFreezeVideo.setAttribute('data-useb-ocr', 'preventToFreezeVideo');
-      _this19.__setStyle(preventToFreezeVideo, {
+      _this20.__setStyle(preventToFreezeVideo, {
         position: 'absolute',
         bottom: '10',
         right: '10'
@@ -2111,7 +2231,7 @@ class UseBOCR {
       var customUIWrapStyle = _objectSpread(_objectSpread({}, wrapStyle), {}, {
         'flex-direction': 'column'
       });
-      _this19.__setStyle(customUIWrap, customUIWrapStyle);
+      _this20.__setStyle(customUIWrap, customUIWrapStyle);
       ocr.appendChild(customUIWrap);
 
       // 각 top, middle, bottom UI 사용(use)여부와 관계없이 영역을 잡기 위해, div가 없으면 생성
@@ -2136,14 +2256,14 @@ class UseBOCR {
       var captureUIWrapStyle = _objectSpread(_objectSpread({}, wrapStyle), {}, {
         'flex-direction': 'center'
       });
-      _this19.__setStyle(captureUIWrap, captureUIWrapStyle);
+      _this20.__setStyle(captureUIWrap, captureUIWrapStyle);
       ocr.appendChild(captureUIWrap);
-      if (_this19.__options.useCaptureUI) {
-        if (_this19.__isSwitchToServerMode || _this19.__options.useForceCompleteUI) {
+      if (_this20.__options.useCaptureUI) {
+        if (_this20.__isSwitchToServerMode || _this20.__options.useForceCompleteUI) {
           if (!captureUI) {
             captureUI = document.createElement('div');
             captureUI.setAttribute('data-useb-ocr', 'captureUI');
-            _this19.__setStyle(captureUI, {
+            _this20.__setStyle(captureUI, {
               display: 'none',
               cursor: 'pointer'
             });
@@ -2159,7 +2279,7 @@ class UseBOCR {
             captureUI.appendChild(captureButton);
           }
           captureUIWrap.appendChild(captureUI);
-          var _this_ = _this19;
+          var _this_ = _this20;
           var __onClickCaptureButton = function __onClickCaptureButton() {
             if (_this_.__isSwitchToServerMode) {
               detector.getOCRElements().captureButton.setAttribute('is-clicked', 'true');
@@ -2181,7 +2301,7 @@ class UseBOCR {
           });
         }
       }
-      if (_this19.__options.usePreviewUI) {
+      if (_this20.__options.usePreviewUI) {
         previewUIWrap = document.createElement('div');
         previewUIWrap.setAttribute('data-useb-ocr', 'previewUIWrap');
         var previewUIWrapStyle = _objectSpread(_objectSpread({}, wrapStyle), {}, {
@@ -2189,13 +2309,13 @@ class UseBOCR {
           display: 'none',
           'background-color': '#000000aa'
         });
-        _this19.__setStyle(previewUIWrap, previewUIWrapStyle);
+        _this20.__setStyle(previewUIWrap, previewUIWrapStyle);
         ocr.appendChild(previewUIWrap);
         if (!previewUI) {
           previewUI = document.createElement('div');
           previewUI.setAttribute('data-useb-ocr', 'previewUI');
         }
-        _this19.__setStyle(previewUI, _objectSpread(_objectSpread({}, wrapStyle), {}, {
+        _this20.__setStyle(previewUI, _objectSpread(_objectSpread({}, wrapStyle), {}, {
           'flex-direction': 'column',
           width: '',
           height: '',
@@ -2209,7 +2329,7 @@ class UseBOCR {
           previewUI.appendChild(previewImage);
         }
       }
-      if (_this19.__options.useManualSwitchToServerMode) {
+      if (_this20.__options.useManualSwitchToServerMode) {
         switchUIWrap = document.createElement('div');
         switchUIWrap.setAttribute('data-useb-ocr', 'switchUIWrap');
         var switchUIWrapStyle = _objectSpread(_objectSpread({}, wrapStyle), {}, {
@@ -2220,7 +2340,7 @@ class UseBOCR {
           'flex-direction': 'column-reverse',
           'z-index': 1
         });
-        _this19.__setStyle(switchUIWrap, switchUIWrapStyle);
+        _this20.__setStyle(switchUIWrap, switchUIWrapStyle);
         ocr.appendChild(switchUIWrap);
         if (!switchUI) {
           switchUI = document.createElement('div');
@@ -2236,12 +2356,12 @@ class UseBOCR {
           switchHTML += "</div>";
           switchUI.innerHTML = switchHTML;
         }
-        _this19.__setStyle(switchUI, {
+        _this20.__setStyle(switchUI, {
           overflow: 'hidden'
         });
         switchUIWrap.appendChild(switchUI);
         var switchCheckbox = switchUI.getElementsByTagName('input')[0];
-        var _this_2 = _this19;
+        var _this_2 = _this20;
         var __onClickSwitchUI = /*#__PURE__*/function () {
           var _ref10 = _asyncToGenerator(function* (event) {
             _this_2.__isSwitchToServerMode = event.target.checked;
@@ -2263,50 +2383,50 @@ class UseBOCR {
         display: 'none',
         'background-color': '#000000ff'
       });
-      _this19.__setStyle(preloadingUIWrap, preloadingUIWrapStyle);
+      _this20.__setStyle(preloadingUIWrap, preloadingUIWrapStyle);
       ocr.appendChild(preloadingUIWrap);
       if (!preloadingUI) {
         preloadingUI = document.createElement('div');
         preloadingUI.setAttribute('data-useb-ocr', 'preloadingUI');
         preloadingUI.setAttribute('class', 'text-info');
         preloadingUI.innerHTML = '' + '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="background: none; display: block; shape-rendering: auto;" width="32px" height="32px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">\n' + '  <circle cx="84" cy="50" r="10" fill="#ffffffff">\n' + '    <animate attributeName="r" repeatCount="indefinite" dur="0.5555555555555556s" calcMode="spline" keyTimes="0;1" values="10;0" keySplines="0 0.5 0.5 1" begin="0s"></animate>\n' + '    <animate attributeName="fill" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="discrete" keyTimes="0;0.25;0.5;0.75;1" values="#86868600;#86868600;#86868600;#86868600;#86868600" begin="0s"></animate>\n' + '  </circle>' + '  <circle cx="16" cy="50" r="10" fill="#ffffffff">\n' + '    <animate attributeName="r" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;0;10;10;10" keySplines="0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1" begin="0s"></animate>\n' + '    <animate attributeName="cx" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="16;16;16;50;84" keySplines="0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1" begin="0s"></animate>\n' + '  </circle>' + '  <circle cx="50" cy="50" r="10" fill="#ffffffff">\n' + '    <animate attributeName="r" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;0;10;10;10" keySplines="0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1" begin="-0.5555555555555556s"></animate>\n' + '    <animate attributeName="cx" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="16;16;16;50;84" keySplines="0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1" begin="-0.5555555555555556s"></animate>\n' + '  </circle>' + '  <circle cx="84" cy="50" r="10" fill="#ffffffff">\n' + '    <animate attributeName="r" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;0;10;10;10" keySplines="0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1" begin="-1.1111111111111112s"></animate>\n' + '    <animate attributeName="cx" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="16;16;16;50;84" keySplines="0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1" begin="-1.1111111111111112s"></animate>\n' + '  </circle>' + '  <circle cx="16" cy="50" r="10" fill="#ffffffff">\n' + '    <animate attributeName="r" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;0;10;10;10" keySplines="0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1" begin="-1.6666666666666665s"></animate>\n' + '    <animate attributeName="cx" repeatCount="indefinite" dur="2.2222222222222223s" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="16;16;16;50;84" keySplines="0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1;0 0.5 0.5 1" begin="-1.6666666666666665s"></animate>\n' + '  </circle>' + '</svg>';
-        if (_this19.__options.preloadingUITextMsg === '' || _this19.__options.preloadingUITextMsg) {
-          preloadingUI.innerHTML += _this19.__options.preloadingUITextMsg;
+        if (_this20.__options.preloadingUITextMsg === '' || _this20.__options.preloadingUITextMsg) {
+          preloadingUI.innerHTML += _this20.__options.preloadingUITextMsg;
         }
       }
-      _this19.__setStyle(preloadingUI, _objectSpread(_objectSpread({}, wrapStyle), {}, {
+      _this20.__setStyle(preloadingUI, _objectSpread(_objectSpread({}, wrapStyle), {}, {
         'flex-direction': 'column'
       }));
       preloadingUIWrap.appendChild(preloadingUI);
 
       // loading UI 위치 자리잡게 하기 위해
-      yield _this19.__initStyle();
+      yield _this20.__initStyle();
 
       // 화면과도 현상 해결
-      _this19.__setStyle(ocr, {
+      _this20.__setStyle(ocr, {
         display: ''
       });
-      _this19.__ocr = ocr;
-      _this19.__canvas = canvas;
-      _this19.__rotationCanvas = rotationCanvas;
-      _this19.__video = video;
-      _this19.__videoWrap = videoWrap;
-      _this19.__guideBox = guideBox;
-      _this19.__guideBoxWrap = guideBoxWrap;
-      _this19.__maskBoxWrap = maskBoxWrap;
-      _this19.__preventToFreezeVideo = preventToFreezeVideo;
-      _this19.__customUIWrap = customUIWrap;
-      _this19.__topUI = topUI;
-      _this19.__middleUI = middleUI;
-      _this19.__bottomUI = bottomUI;
-      _this19.__captureUIWrap = captureUIWrap;
-      _this19.__captureUI = captureUI;
-      _this19.__captureButton = captureButton;
-      _this19.__previewUIWrap = previewUIWrap;
-      _this19.__previewUI = previewUI;
-      _this19.__previewImage = previewImage;
-      _this19.__switchUIWrap = switchUIWrap;
-      _this19.__switchUI = switchUI;
+      _this20.__ocr = ocr;
+      _this20.__canvas = canvas;
+      _this20.__rotationCanvas = rotationCanvas;
+      _this20.__video = video;
+      _this20.__videoWrap = videoWrap;
+      _this20.__guideBox = guideBox;
+      _this20.__guideBoxWrap = guideBoxWrap;
+      _this20.__maskBoxWrap = maskBoxWrap;
+      _this20.__preventToFreezeVideo = preventToFreezeVideo;
+      _this20.__customUIWrap = customUIWrap;
+      _this20.__topUI = topUI;
+      _this20.__middleUI = middleUI;
+      _this20.__bottomUI = bottomUI;
+      _this20.__captureUIWrap = captureUIWrap;
+      _this20.__captureUI = captureUI;
+      _this20.__captureButton = captureButton;
+      _this20.__previewUIWrap = previewUIWrap;
+      _this20.__previewUI = previewUI;
+      _this20.__previewImage = previewImage;
+      _this20.__switchUIWrap = switchUIWrap;
+      _this20.__switchUI = switchUI;
       return {
         ocr,
         canvas,
@@ -2365,40 +2485,40 @@ class UseBOCR {
     }
   }
   __setupVideo(isPassport) {
-    var _this20 = this;
+    var _this21 = this;
     return _asyncToGenerator(function* () {
       // wasm 인식성능 최적화된 해상도 (1080 x 720)
       // 원본이미지 정방형 비율 사용시 1080 x 1080
-      var resolution = _this20.__options.useOriginImageSquareRatio ? {
+      var resolution = _this21.__options.useOriginImageSquareRatio ? {
         width: 1080,
         height: 1080
       } : {
         width: 1080,
         height: 720
       };
-      _this20.__setResolution(resolution);
-      _this20.__camSetComplete = false;
+      _this21.__setResolution(resolution);
+      _this21.__camSetComplete = false;
       var {
         video,
         canvas,
         rotationCanvas
       } = detector.getOCRElements();
-      var camera = yield _this20.__getInputDevices();
+      var camera = yield _this21.__getInputDevices();
       // console.log('videoDevices :: ', camera)
 
-      _this20.checkUIOrientation();
+      _this21.checkUIOrientation();
       var constraintWidth, constraintHeight;
-      if (_this20.__options.cameraResolutionCriteria === 'highQuality') {
+      if (_this21.__options.cameraResolutionCriteria === 'highQuality') {
         // 카메라 해상도 설정 : 화질 우선
         // 1920 x 1080이 가능한경우 사용 아니면 1280 x 720 사용
-        constraintWidth = _this20.__options.useOriginImageSquareRatio ? {
+        constraintWidth = _this21.__options.useOriginImageSquareRatio ? {
           ideal: 1080,
           min: 720
         } : {
           ideal: 1920,
           min: 1280
         };
-        constraintHeight = _this20.__options.useOriginImageSquareRatio ? {
+        constraintHeight = _this21.__options.useOriginImageSquareRatio ? {
           ideal: 1080,
           min: 720
         } : {
@@ -2412,12 +2532,12 @@ class UseBOCR {
         // 사유 : 갤럭시 entry 모델(A시리즈 / Wide 모델 등)에서 1920 x 1080 처리시 비율이 이상해짐(홀쭉이됨)
         // 항상 1280 x 720을 사용하도록 변경
         // 원본이미지 정방형 비율 사용하면 720 x 720을 사용하도록 함
-        constraintWidth = _this20.__options.useOriginImageSquareRatio ? {
+        constraintWidth = _this21.__options.useOriginImageSquareRatio ? {
           ideal: 1080
         } : {
           ideal: 1280
         };
-        constraintHeight = _this20.__options.useOriginImageSquareRatio ? {
+        constraintHeight = _this21.__options.useOriginImageSquareRatio ? {
           ideal: 1080
         } : {
           ideal: 720
@@ -2430,7 +2550,7 @@ class UseBOCR {
             ideal: 1
           },
           facingMode: {
-            ideal: _this20.__facingModeConstraint
+            ideal: _this21.__facingModeConstraint
           },
           focusMode: {
             ideal: 'continuous'
@@ -2449,11 +2569,11 @@ class UseBOCR {
       // 최초 진입 이어서 videoDeivce 리스트를 가져올 수 없으면,
       // getUserMedia를 임의 호출하여 권한을 받은뒤 다시 가져옴
       if (camera.length === 0) {
-        _this20.__debug('cannot to get camera devices. so, try to get camera devices again');
-        _this20.__debug("constraints : ".concat(JSON.stringify(constraints)));
-        _this20.__stream = yield navigator.mediaDevices.getUserMedia(constraints);
-        _this20.stopStream();
-        camera = yield _this20.__getInputDevices();
+        _this21.__debug('cannot to get camera devices. so, try to get camera devices again');
+        _this21.__debug("constraints : ".concat(JSON.stringify(constraints)));
+        _this21.__stream = yield navigator.mediaDevices.getUserMedia(constraints);
+        _this21.stopStream();
+        camera = yield _this21.__getInputDevices();
         constraints.video.deviceId = camera.length ? {
           ideal: camera[camera.length - 1]
         } : null;
@@ -2462,13 +2582,13 @@ class UseBOCR {
       // 갤럭시 wide 등 저사양 기기에서 FHD 해상도 카메라 사용시 홀쭉이되는 현상 방지
       // 저사양 기기 판단기준 : 후면카메라의 개수가 1개라는 가정
       if (camera.length <= 1) {
-        _this20.__debug('maybe device is entry model such as galaxy wide');
-        constraints.video.width = _this20.__options.useOriginImageSquareRatio ? {
+        _this21.__debug('maybe device is entry model such as galaxy wide');
+        constraints.video.width = _this21.__options.useOriginImageSquareRatio ? {
           ideal: 720
         } : {
           ideal: 1280
         };
-        constraints.video.height = _this20.__options.useOriginImageSquareRatio ? {
+        constraints.video.height = _this21.__options.useOriginImageSquareRatio ? {
           ideal: 720
         } : {
           ideal: 720
@@ -2479,7 +2599,7 @@ class UseBOCR {
         //   `${a}${track.kind == 'video' ? 'Camera' : 'Microphone'} (${track.readyState}): ${track.label}${b}`;
 
         var stream = yield navigator.mediaDevices.getUserMedia(constraints);
-        _this20.__debug("constraints : ".concat(JSON.stringify(constraints)));
+        _this21.__debug("constraints : ".concat(JSON.stringify(constraints)));
         // this.__debug('videoTracks :: ', stream.getVideoTracks());
         var streamSettings = stream.getVideoTracks()[0].getSettings();
         // this.__debug(
@@ -2488,16 +2608,16 @@ class UseBOCR {
         // );
         // this.__debug('stream :: ', stream.getVideoTracks()[0].getConstraints());
         // this.__debug('streamSettings :: ', streamSettings);
-        _this20.__debug("stream width * height :: ".concat(streamSettings.width, " * ").concat(streamSettings.height));
-        _this20.__debug('stream width / height :: ' + streamSettings.width / streamSettings.height);
-        _this20.__debug('stream aspectRatio :: ' + streamSettings.aspectRatio);
-        _this20.__debug('stream facingMode :: ' + streamSettings.facingMode);
-        [canvas.width, canvas.height] = [_this20.__resolutionWidth, _this20.__resolutionHeight];
-        if (_this20.__isRotated90or270) {
-          [rotationCanvas.width, rotationCanvas.height] = [_this20.__resolutionHeight, _this20.__resolutionWidth];
+        _this21.__debug("stream width * height :: ".concat(streamSettings.width, " * ").concat(streamSettings.height));
+        _this21.__debug('stream width / height :: ' + streamSettings.width / streamSettings.height);
+        _this21.__debug('stream aspectRatio :: ' + streamSettings.aspectRatio);
+        _this21.__debug('stream facingMode :: ' + streamSettings.facingMode);
+        [canvas.width, canvas.height] = [_this21.__resolutionWidth, _this21.__resolutionHeight];
+        if (_this21.__isRotated90or270) {
+          [rotationCanvas.width, rotationCanvas.height] = [_this21.__resolutionHeight, _this21.__resolutionWidth];
         }
         video.srcObject = stream;
-        _this20.__stream = stream;
+        _this21.__stream = stream;
       } catch (e) {
         void 0;
         throw e;
@@ -2505,7 +2625,7 @@ class UseBOCR {
     })();
   }
   __initStyle() {
-    var _this21 = this;
+    var _this22 = this;
     return _asyncToGenerator(function* () {
       void 0;
       var {
@@ -2517,10 +2637,10 @@ class UseBOCR {
         bottomUI,
         captureUI
       } = detector.getOCRElements();
-      _this21.__setStyle(captureUI, {
+      _this22.__setStyle(captureUI, {
         display: 'none'
       });
-      _this21.checkUIOrientation();
+      _this22.checkUIOrientation();
 
       // 기준정보
       var baseWidth = 400;
@@ -2530,11 +2650,11 @@ class UseBOCR {
       var guideBoxWidth, guideBoxHeight;
       var calcOcrClientWidth = ocr.clientWidth;
       var calcOcrClientHeight = ocr.clientHeight;
-      var borderWidth = _this21.__options.frameBorderStyle.width;
-      var borderRadius = _this21.__options.frameBorderStyle.radius;
-      var guideBoxRatioByWidth = _this21.__guideBoxRatioByWidth;
-      var videoRatioByHeight = _this21.__videoRatioByHeight;
-      if (_this21.__uiOrientation === 'portrait') {
+      var borderWidth = _this22.__options.frameBorderStyle.width;
+      var borderRadius = _this22.__options.frameBorderStyle.radius;
+      var guideBoxRatioByWidth = _this22.__guideBoxRatioByWidth;
+      var videoRatioByHeight = _this22.__videoRatioByHeight;
+      if (_this22.__uiOrientation === 'portrait') {
         // 세로 UI && 세로 비디오로 간주
         // 가로 기준으로 가이드박스 계산
         guideBoxWidth = calcOcrClientWidth * guideBoxRatioByWidth;
@@ -2548,10 +2668,10 @@ class UseBOCR {
       }
       var guideBoxWidthIncludeBorder = guideBoxWidth + borderWidth * 2;
       var guideBoxHeightIncludeBorder = guideBoxHeight + borderWidth * 2;
-      var reducedGuideBoxWidth = guideBoxWidthIncludeBorder * _this21.__guideBoxReduceRatio;
-      var reducedGuideBoxHeight = guideBoxHeightIncludeBorder * _this21.__guideBoxReduceRatio;
+      var reducedGuideBoxWidth = guideBoxWidthIncludeBorder * _this22.__guideBoxReduceRatio;
+      var reducedGuideBoxHeight = guideBoxHeightIncludeBorder * _this22.__guideBoxReduceRatio;
       if (topUI) {
-        _this21.__setStyle(topUI, {
+        _this22.__setStyle(topUI, {
           'padding-bottom': '10px',
           height: (calcOcrClientHeight - guideBoxHeightIncludeBorder) / 2 + 'px',
           display: 'flex',
@@ -2559,7 +2679,7 @@ class UseBOCR {
         });
       }
       if (middleUI) {
-        _this21.__setStyle(middleUI, {
+        _this22.__setStyle(middleUI, {
           width: reducedGuideBoxWidth - borderWidth * 2 + 'px',
           height: reducedGuideBoxHeight - borderWidth * 2 + 'px',
           display: 'flex',
@@ -2569,7 +2689,7 @@ class UseBOCR {
         });
       }
       if (bottomUI) {
-        _this21.__setStyle(bottomUI, {
+        _this22.__setStyle(bottomUI, {
           'padding-top': '10px',
           height: (calcOcrClientHeight - guideBoxHeightIncludeBorder) / 2 + 'px',
           display: 'flex',
@@ -2577,7 +2697,7 @@ class UseBOCR {
         });
       }
       var videoInnerGap = 2; // 미세하게 maskBoxInner보다 guideBox가 작은것 보정
-      _this21.__setStyle(guideBox, {
+      _this22.__setStyle(guideBox, {
         width: reducedGuideBoxWidth - videoInnerGap + 'px',
         height: reducedGuideBoxHeight - videoInnerGap + 'px',
         backgroundColor: 'transparent'
@@ -2598,12 +2718,12 @@ class UseBOCR {
     })();
   }
   __adjustStyle() {
-    var _this22 = this;
+    var _this23 = this;
     return _asyncToGenerator(function* () {
       var __calcGuideBoxCriteria = (a, b) => {
-        if (_this22.__options.calcGuideBoxCriteria === 'cameraResolution') {
+        if (_this23.__options.calcGuideBoxCriteria === 'cameraResolution') {
           return Math.min(a, b);
-        } else if (_this22.__options.calcGuideBoxCriteria === 'ocrViewSize') {
+        } else if (_this23.__options.calcGuideBoxCriteria === 'ocrViewSize') {
           return Math.max(a, b);
         } else {
           return Math.min(a, b); // default : cameraResolution
@@ -2623,10 +2743,10 @@ class UseBOCR {
         captureUI,
         captureButton
       } = detector.getOCRElements();
-      _this22.__setStyle(captureUI, {
+      _this23.__setStyle(captureUI, {
         display: 'none'
       });
-      var isAlienBack = _this22.__ocrType === 'alien-back';
+      var isAlienBack = _this23.__ocrType === 'alien-back';
 
       // 기준정보
       var baseWidth = isAlienBack ? 260 : 400;
@@ -2640,35 +2760,35 @@ class UseBOCR {
       var calcVideoHeight = video.videoHeight;
       var calcVideoClientWidth = video.clientWidth;
       var calcVideoClientHeight = video.clientHeight;
-      var calcVideoOrientation = _this22.__videoOrientation;
+      var calcVideoOrientation = _this23.__videoOrientation;
       if (calcVideoWidth === 0 || calcVideoHeight === 0 || calcVideoClientWidth === 0 || calcVideoClientHeight === 0) {
         return;
       }
-      var borderWidth = _this22.__options.frameBorderStyle.width;
-      var borderRadius = _this22.__options.frameBorderStyle.radius;
-      if (_this22.__isRotated90or270) {
+      var borderWidth = _this23.__options.frameBorderStyle.width;
+      var borderRadius = _this23.__options.frameBorderStyle.radius;
+      if (_this23.__isRotated90or270) {
         [calcVideoWidth, calcVideoHeight] = [calcVideoHeight, calcVideoWidth];
         [calcVideoClientWidth, calcVideoClientHeight] = [calcVideoClientHeight, calcVideoClientWidth];
-        calcVideoOrientation = _this22.__videoOrientation === 'portrait' ? 'landscape' : 'portrait';
+        calcVideoOrientation = _this23.__videoOrientation === 'portrait' ? 'landscape' : 'portrait';
       }
       var newVideoWidth = calcVideoClientWidth;
       var newVideoHeight = calcVideoClientHeight;
-      var guideBoxRatioByWidth = _this22.__guideBoxRatioByWidth; // 너비에 따른 가이드박스 비율, 1
-      var videoRatioByHeight = _this22.__videoRatioByHeight; // 높이에 따른 비디오 비율, 0.9
+      var guideBoxRatioByWidth = _this23.__guideBoxRatioByWidth; // 너비에 따른 가이드박스 비율, 1
+      var videoRatioByHeight = _this23.__videoRatioByHeight; // 높이에 따른 비디오 비율, 0.9
       var newVideoRatioByWidth = calcVideoClientHeight / calcVideoClientWidth; // 비디오 UI 높이/너비
       var newVideoRatioByHeight = calcVideoClientWidth / calcVideoClientHeight; // 비디오 UI 너비/높이
 
-      if (_this22.__uiOrientation === 'portrait') {
+      if (_this23.__uiOrientation === 'portrait') {
         // 세로 UI
-        _this22.__setStyle(captureUIWrap, {
+        _this23.__setStyle(captureUIWrap, {
           'justify-content': 'center',
           'align-items': 'flex-end'
         });
         // video 가로 기준 100% 유지 (변경없음)
-        if (calcVideoOrientation === _this22.__uiOrientation) {
+        if (calcVideoOrientation === _this23.__uiOrientation) {
           // 카메라도 세로
           // 세로 UI && 세로 비디오
-          if (_this22.__options.useOriginImageSquareRatio) {
+          if (_this23.__options.useOriginImageSquareRatio) {
             // 신분증 원본이미지 정방형 옵션 사용 시
             // 비디오 너비를 기준으로 가이드박스 너비를 먼저 계산
             if (isAlienBack) {
@@ -2691,7 +2811,7 @@ class UseBOCR {
         } else {
           // 카메라는 가로
           // 세로 UI && 가로 비디오
-          if (_this22.__options.useOriginImageSquareRatio) {
+          if (_this23.__options.useOriginImageSquareRatio) {
             // 신분증 원본이미지 정방형 옵션 사용 시
             // 비디오 높이를 기준으로 가이드박스 너비를 먼저 계산
             if (isAlienBack) {
@@ -2711,16 +2831,16 @@ class UseBOCR {
         }
       } else {
         // 가로 UI
-        _this22.__setStyle(captureUIWrap, {
+        _this23.__setStyle(captureUIWrap, {
           'justify-content': 'end',
           'align-items': 'center'
         });
-        if (calcVideoOrientation === _this22.__uiOrientation) {
+        if (calcVideoOrientation === _this23.__uiOrientation) {
           // 가로 UI && 가로 비디오
           // 비디오를 가로 UI의 height 기준으로 줄이고
           // 가로 UI height 기준으로 비디오의 width 계산
 
-          if (_this22.__options.useOriginImageSquareRatio) {
+          if (_this23.__options.useOriginImageSquareRatio) {
             // 신분증 원본이미지 정방형 옵션 사용 시
             // UI높이를 기준으로 가이드박스 너비를 먼저 계산
             if (isAlienBack) {
@@ -2762,7 +2882,7 @@ class UseBOCR {
         } else {
           // 가로 UI && 세로 비디오
           // 가로 기준으로 가이드박스 계산
-          if (_this22.__options.useOriginImageSquareRatio) {
+          if (_this23.__options.useOriginImageSquareRatio) {
             // 신분증 원본이미지 정방형 옵션 사용 시
             // UI높이를 기준으로 가이드박스 너비를 먼저 계산
             guideBoxWidth = __calcGuideBoxCriteria(calcOcrClientHeight, calcVideoHeight);
@@ -2792,12 +2912,12 @@ class UseBOCR {
       }
 
       // calcGuideBoxCriteria(카메라 해상도 설정 기준)가 ocrViewSize(화면 크기) 기준일때
-      if (_this22.__options.calcGuideBoxCriteria === 'ocrViewSize') {
+      if (_this23.__options.calcGuideBoxCriteria === 'ocrViewSize') {
         // guideBoxHeight 이 calcOcrClientHeight 보다 큰경우(가이드박스가 화면을 넘어가는 경우) 다시 계산
         if (guideBoxHeight > calcOcrClientHeight) {
-          if (_this22.__options.useOriginImageSquareRatio) {
+          if (_this23.__options.useOriginImageSquareRatio) {
             if (isAlienBack) {
-              guideBoxHeight = Math.min(_this22.__uiOrientation === 'portrait' ? calcVideoClientHeight : calcOcrClientHeight, calcVideoHeight); // prettier-ignore
+              guideBoxHeight = Math.min(_this23.__uiOrientation === 'portrait' ? calcVideoClientHeight : calcOcrClientHeight, calcVideoHeight); // prettier-ignore
               guideBoxWidth = guideBoxHeight / scannerFrameRatio;
               newVideoWidth = guideBoxHeight;
               newVideoHeight = newVideoWidth * newVideoRatioByWidth;
@@ -2823,17 +2943,17 @@ class UseBOCR {
           newVideoHeight = newVideoWidth * newVideoRatioByWidth;
         }
       }
-      _this22.__cropImageSizeWidth = Math.min(guideBoxWidth, newVideoWidth);
-      _this22.__cropImageSizeHeight = Math.min(guideBoxHeight, newVideoHeight);
-      if (_this22.__isRotated90or270) {
+      _this23.__cropImageSizeWidth = Math.min(guideBoxWidth, newVideoWidth);
+      _this23.__cropImageSizeHeight = Math.min(guideBoxHeight, newVideoHeight);
+      if (_this23.__isRotated90or270) {
         [newVideoWidth, newVideoHeight] = [newVideoHeight, newVideoWidth];
       }
       var guideBoxWidthIncludeBorder = guideBoxWidth + borderWidth * 2;
       var guideBoxHeightIncludeBorder = guideBoxHeight + borderWidth * 2;
-      var reducedGuideBoxWidth = guideBoxWidthIncludeBorder * _this22.__guideBoxReduceRatio;
-      var reducedGuideBoxHeight = guideBoxHeightIncludeBorder * _this22.__guideBoxReduceRatio;
+      var reducedGuideBoxWidth = guideBoxWidthIncludeBorder * _this23.__guideBoxReduceRatio;
+      var reducedGuideBoxHeight = guideBoxHeightIncludeBorder * _this23.__guideBoxReduceRatio;
       if (topUI) {
-        _this22.__setStyle(topUI, {
+        _this23.__setStyle(topUI, {
           'padding-bottom': '10px',
           height: (calcOcrClientHeight - guideBoxHeightIncludeBorder) / 2 + 'px',
           display: 'flex',
@@ -2841,7 +2961,7 @@ class UseBOCR {
         });
       }
       if (middleUI) {
-        _this22.__setStyle(middleUI, {
+        _this23.__setStyle(middleUI, {
           width: reducedGuideBoxWidth - borderWidth * 2 + 'px',
           height: reducedGuideBoxHeight - borderWidth * 2 + 'px',
           display: 'flex',
@@ -2851,21 +2971,21 @@ class UseBOCR {
         });
       }
       if (bottomUI) {
-        _this22.__setStyle(bottomUI, {
+        _this23.__setStyle(bottomUI, {
           'padding-top': '10px',
           height: (calcOcrClientHeight - guideBoxHeightIncludeBorder) / 2 + 'px',
           display: 'flex',
           'flex-direction': 'column'
         });
       }
-      _this22.__setStyle(video, {
+      _this23.__setStyle(video, {
         width: newVideoWidth + 'px'
       });
-      _this22.__setStyle(video, {
+      _this23.__setStyle(video, {
         height: newVideoHeight + 'px'
       });
       var videoInnerGap = 2; // 미세하게 maskBoxInner보다 guideBox가 작은것 보정
-      _this22.__setStyle(guideBox, {
+      _this23.__setStyle(guideBox, {
         width: reducedGuideBoxWidth - videoInnerGap + 'px',
         height: reducedGuideBoxHeight - videoInnerGap + 'px',
         backgroundColor: 'transparent'
@@ -2886,12 +3006,12 @@ class UseBOCR {
 
       // 수동 촬영 UI 사용
       // firstCalled인 경우 아직 captureUI가 그려지지 않아 무의미
-      if (_this22.__options.useCaptureUI) {
-        _this22.__setStyle(captureUI, {
+      if (_this23.__options.useCaptureUI) {
+        _this23.__setStyle(captureUI, {
           display: ''
         });
-        if (_this22.__uiOrientation === 'portrait' && bottomUI && captureUI) {
-          var calcSumOfHeightBottomUIChildNodes = _this22.__calcSumOfHeightChildNodes(bottomUI);
+        if (_this23.__uiOrientation === 'portrait' && bottomUI && captureUI) {
+          var calcSumOfHeightBottomUIChildNodes = _this23.__calcSumOfHeightChildNodes(bottomUI);
           var calcCaptureButtonHeight = captureButton.querySelector('svg').getAttribute('height');
           calcCaptureButtonHeight = calcCaptureButtonHeight === 0 ? 80 : calcCaptureButtonHeight;
           var captureUIPaddingBottom = bottomUI.clientHeight;
@@ -2900,19 +3020,19 @@ class UseBOCR {
           captureUIPaddingBottom -= calcCaptureButtonHeight;
           var baseline = calcOcrClientHeight - (calcOcrClientHeight / 2 + guideBoxHeightIncludeBorder / 2);
           if (captureUIPaddingBottom > 0 && captureUIPaddingBottom < baseline) {
-            _this22.__setStyle(captureUI, {
+            _this23.__setStyle(captureUI, {
               'padding-right': '',
               'padding-bottom': captureUIPaddingBottom + 'px'
             });
           }
         } else {
-          _this22.__setStyle(captureUI, {
+          _this23.__setStyle(captureUI, {
             'padding-right': '10px',
             'padding-bottom': ''
           });
         }
       }
-      yield _this22.__changeStage(_this22.__inProgressStep, true);
+      yield _this23.__changeStage(_this23.__inProgressStep, true);
       void 0;
     })();
   }
@@ -2929,29 +3049,29 @@ class UseBOCR {
     this.stopStream();
   }
   __loadResources() {
-    var _this23 = this;
+    var _this24 = this;
     return _asyncToGenerator(function* () {
       void 0;
-      if (_this23.__resourcesLoaded) {
+      if (_this24.__resourcesLoaded) {
         void 0;
         return;
       }
-      _this23.__isSupportSimd = yield simd();
+      _this24.__isSupportSimd = yield simd();
       var envInfo = '';
-      envInfo += "os : ".concat(_this23.__deviceInfo.os, "\n");
-      envInfo += "osSimple : ".concat(_this23.__deviceInfo.osSimple, "\n");
-      envInfo += "isSupportWasm: ".concat(_this23.__isSupportWasm, "\n");
-      envInfo += "simd(wasm-feature-detect) : ".concat(_this23.__isSupportSimd, "\n");
-      if (_this23.__deviceInfo.osSimple === 'IOS' || _this23.__deviceInfo.osSimple === 'MAC') {
-        _this23.__isSupportSimd = false;
+      envInfo += "os : ".concat(_this24.__deviceInfo.os, "\n");
+      envInfo += "osSimple : ".concat(_this24.__deviceInfo.osSimple, "\n");
+      envInfo += "isSupportWasm: ".concat(_this24.__isSupportWasm, "\n");
+      envInfo += "simd(wasm-feature-detect) : ".concat(_this24.__isSupportSimd, "\n");
+      if (_this24.__deviceInfo.osSimple === 'IOS' || _this24.__deviceInfo.osSimple === 'MAC') {
+        _this24.__isSupportSimd = false;
       }
-      envInfo += "isSupportSimd(final) : ".concat(_this23.__isSupportSimd, "\n");
+      envInfo += "isSupportSimd(final) : ".concat(_this24.__isSupportSimd, "\n");
       envInfo += "UserAgent : ".concat(navigator.userAgent, "\n");
       void 0;
-      _this23.__debug(envInfo);
+      _this24.__debug(envInfo);
       window.usebOCREnvInfo = envInfo;
       var sdkSupportEnv = 'quram';
-      if (_this23.__isSupportSimd) {
+      if (_this24.__isSupportSimd) {
         void 0;
         sdkSupportEnv += '_simd';
       } else {
@@ -2961,11 +3081,11 @@ class UseBOCR {
       window.usebOCREnvInfo = envInfo;
       void 0;
       var postfix = '';
-      if (_this23.__options.force_wasm_reload) {
+      if (_this24.__options.force_wasm_reload) {
         // 옵션이 활성화 되면 새로운 WASM 리소스를 요청함.
-        postfix = '?ver=' + _this23.__options.force_wasm_reload_flag;
+        postfix = '?ver=' + _this24.__options.force_wasm_reload_flag;
       }
-      var url = new URL(sdkSupportEnv + '.js' + postfix, _this23.__options.resourceBaseUrl);
+      var url = new URL(sdkSupportEnv + '.js' + postfix, _this24.__options.resourceBaseUrl);
       var src = yield fetch(url.href).then(res => res.text()).then(text => {
         var regex = /(.*) = Module.cwrap/gm;
         var source = text.replace(regex, 'Module.$1 = Module.cwrap');
@@ -2977,8 +3097,8 @@ class UseBOCR {
         source = source.replace(/^\}\)\(\);/m, '\n })\n' + '};');
 
         // wasm
-        source = source.replace(sdkSupportEnv + '.wasm', new URL(sdkSupportEnv + '.wasm' + postfix, _this23.__options.resourceBaseUrl).href);
-        source = source.replace(new RegExp("REMOTE_PACKAGE_BASE = ['\"]".concat(sdkSupportEnv, "\\.data[\"']"), 'gm'), "REMOTE_PACKAGE_BASE = \"".concat(new URL(sdkSupportEnv + '.data' + postfix, _this23.__options.resourceBaseUrl).href, "\""));
+        source = source.replace(sdkSupportEnv + '.wasm', new URL(sdkSupportEnv + '.wasm' + postfix, _this24.__options.resourceBaseUrl).href);
+        source = source.replace(new RegExp("REMOTE_PACKAGE_BASE = ['\"]".concat(sdkSupportEnv, "\\.data[\"']"), 'gm'), "REMOTE_PACKAGE_BASE = \"".concat(new URL(sdkSupportEnv + '.data' + postfix, _this24.__options.resourceBaseUrl).href, "\""));
         source = source.replace('function createWasm', 'async function createWasm');
         source = source.replace('instantiateAsync();', 'await instantiateAsync();');
 
@@ -2988,11 +3108,11 @@ class UseBOCR {
       });
       src = "\n    return (async function() {\n      ".concat(src, "\n      Module.lengthBytesUTF8 = lengthBytesUTF8\n      Module.stringToUTF8 = stringToUTF8\n      return Module\n    })()\n        ");
       var initializeOCREngine = new Function(src)();
-      var useLoadResourceTimeout = _this23.__options.useAutoSwitchToServerMode && _this23.__options.wasmResourceTimeout > 0;
-      _this23.__wasmResourceTimeoutFn = _this23.__wasmResourceTimeoutFn ? _this23.__wasmResourceTimeoutFn : _this23.__wasmResourceTimer();
+      var useLoadResourceTimeout = _this24.__options.useAutoSwitchToServerMode && _this24.__options.wasmResourceTimeout > 0;
+      _this24.__wasmResourceTimeoutFn = _this24.__wasmResourceTimeoutFn ? _this24.__wasmResourceTimeoutFn : _this24.__wasmResourceTimer();
       try {
-        _this23.__OCREngine = useLoadResourceTimeout ? yield Promise.race([initializeOCREngine, _this23.__wasmResourceTimeoutFn]) : yield Promise.resolve(initializeOCREngine);
-        _this23.__OCREngine.onRuntimeInitialized = /*#__PURE__*/function () {
+        _this24.__OCREngine = useLoadResourceTimeout ? yield Promise.race([initializeOCREngine, _this24.__wasmResourceTimeoutFn]) : yield Promise.resolve(initializeOCREngine);
+        _this24.__OCREngine.onRuntimeInitialized = /*#__PURE__*/function () {
           var _ref11 = _asyncToGenerator(function* (_) {
             void 0;
           });
@@ -3000,13 +3120,13 @@ class UseBOCR {
             return _ref11.apply(this, arguments);
           };
         }();
-        yield _this23.__OCREngine.onRuntimeInitialized();
-        _this23.__resourcesLoaded = true;
+        yield _this24.__OCREngine.onRuntimeInitialized();
+        _this24.__resourcesLoaded = true;
         void 0;
       } catch (e) {
         if (e.errorCode === 'SE001') {
           void 0;
-          _this23.__isResourceTimeout = true;
+          _this24.__isResourceTimeout = true;
         } else {
           void 0;
         }
@@ -3015,10 +3135,10 @@ class UseBOCR {
     })();
   }
   __loadEncryptResource() {
-    var _this24 = this;
+    var _this25 = this;
     return _asyncToGenerator(function* () {
-      var resourceBaseUrl = _this24.__options.resourceBaseUrl;
-      _this24.__EncryptModule = new AlcheraAES256SDK(resourceBaseUrl);
+      var resourceBaseUrl = _this25.__options.resourceBaseUrl;
+      _this25.__EncryptModule = new AlcheraAES256SDK(resourceBaseUrl);
     })();
   }
 
@@ -3032,7 +3152,7 @@ class UseBOCR {
     }
   }
   __startScanWasmImpl() {
-    var _this25 = this;
+    var _this26 = this;
     return new Promise((resolve, reject) => {
       this.__detected = false;
       this.setIgnoreComplete(false);
@@ -3055,57 +3175,57 @@ class UseBOCR {
               maskInfo = null;
 
             // await this.__changeStage(IN_PROGRESS.READY);
-            if (!_this25.__OCREngine['asm']) return;
+            if (!_this26.__OCREngine['asm']) return;
 
             // TODO : 설정할수 있게 변경  default 값도 제공
-            var [resolution_w, resolution_h] = [_this25.__resolutionWidth, _this25.__resolutionHeight];
+            var [resolution_w, resolution_h] = [_this26.__resolutionWidth, _this26.__resolutionHeight];
             var {
               video
             } = detector.getOCRElements();
             if (resolution_w === 0 || resolution_h === 0) return;
-            if (_this25.__detected) {
-              yield _this25.__sleep(100);
+            if (_this26.__detected) {
+              yield _this26.__sleep(100);
               return;
             }
             // console.log('address before ---------', address);
-            if (_this25.__address === 0 && !_this25.__pageEnd && (yield _this25.__isVideoResolutionCompatible(video))) {
-              [_this25.__address, _this25.__destroyScannerCallback] = _this25.__getScannerAddress(_this25.__ocrType);
+            if (_this26.__address === 0 && !_this26.__pageEnd && (yield _this26.__isVideoResolutionCompatible(video))) {
+              [_this26.__address, _this26.__destroyScannerCallback] = _this26.__getScannerAddress(_this26.__ocrType);
             }
-            if (!_this25.__address || _this25.__pageEnd) {
-              yield _this25.__sleep(100);
+            if (!_this26.__address || _this26.__pageEnd) {
+              yield _this26.__sleep(100);
               return;
             }
             // console.log('address after ---------', address);
 
-            if (_this25.__ocrStatus < _this25.OCR_STATUS.OCR_SUCCESS) {
+            if (_this26.__ocrStatus < _this26.OCR_STATUS.OCR_SUCCESS) {
               // OCR 완료 이전 상태
 
               // card not detected
-              [isDetectedCard, imgData, imgDataUrl] = yield _this25.__isCardboxDetected(_this25.__address, 0);
+              [isDetectedCard, imgData, imgDataUrl] = yield _this26.__isCardboxDetected(_this26.__address, 0);
               if (!isDetectedCard) {
-                if (_this25.__inProgressStep !== _this25.IN_PROGRESS.READY) {
-                  yield _this25.__changeStage(_this25.IN_PROGRESS.CARD_DETECT_FAILED);
+                if (_this26.__inProgressStep !== _this26.IN_PROGRESS.READY) {
+                  yield _this26.__changeStage(_this26.IN_PROGRESS.CARD_DETECT_FAILED);
                 }
-                if (_this25.__isClickedCaptureButton()) {
-                  yield _this25.__changeStage(_this25.IN_PROGRESS.MANUAL_CAPTURE_FAILED, false, imgDataUrl);
-                  _this25.__blurCaptureButton();
-                  _this25.setIgnoreComplete(false); // 필요한가?
+                if (_this26.__isClickedCaptureButton()) {
+                  yield _this26.__changeStage(_this26.IN_PROGRESS.MANUAL_CAPTURE_FAILED, false, imgDataUrl);
+                  _this26.__blurCaptureButton();
+                  _this26.setIgnoreComplete(false); // 필요한가?
                 }
 
                 return;
               }
 
               // card is detected
-              yield _this25.__changeStage(_this25.IN_PROGRESS.CARD_DETECT_SUCCESS);
-              _this25.__setValidation(_this25.__options.useIDNumberValidation);
+              yield _this26.__changeStage(_this26.IN_PROGRESS.CARD_DETECT_SUCCESS);
+              _this26.__setValidation(_this26.__options.useIDNumberValidation);
 
               // ssa retry 설정이 되어 있으거나, 수동촬영UI를 사용하는 경우, card detect 성공시 이미지 저장
-              _this25.__enqueueDetectedCardQueue(imgData);
-              if (_this25.__isClickedCaptureButton()) {
-                _this25.setIgnoreComplete(true);
-                yield _this25.__changeStage(_this25.IN_PROGRESS.MANUAL_CAPTURE_SUCCESS, false, imgDataUrl);
+              _this26.__enqueueDetectedCardQueue(imgData);
+              if (_this26.__isClickedCaptureButton()) {
+                _this26.setIgnoreComplete(true);
+                yield _this26.__changeStage(_this26.IN_PROGRESS.MANUAL_CAPTURE_SUCCESS, false, imgDataUrl);
               }
-              ocrResult = yield _this25.__startRecognition(_this25.__address, _this25.__ocrType, _this25.__ssaMode, _this25.__isClickedCaptureButton(), imgData, imgDataUrl);
+              ocrResult = yield _this26.__startRecognition(_this26.__address, _this26.__ocrType, _this26.__ssaMode, _this26.__isClickedCaptureButton(), imgData, imgDataUrl);
 
               // if (this.__isClickedCaptureButton()) {
               //   this.__blurCaptureButton();
@@ -3113,31 +3233,31 @@ class UseBOCR {
               // }
             }
 
-            if (_this25.__ocrStatus >= _this25.OCR_STATUS.OCR_SUCCESS) {
+            if (_this26.__ocrStatus >= _this26.OCR_STATUS.OCR_SUCCESS) {
               // ocr 완료 이후 상태
 
               // failure case
               if (ocrResult === false) {
-                throw new Error("OCR Status is ".concat(_this25.__ocrStatus, ", but ocrResult is false")); // prettier-ignore
+                throw new Error("OCR Status is ".concat(_this26.__ocrStatus, ", but ocrResult is false")); // prettier-ignore
               }
 
               // success case
-              _this25.__setStyle(video, {
+              _this26.__setStyle(video, {
                 display: 'none'
               }); // OCR 완료 시점에 camera preview off
 
-              if (_this25.__ssaMode) {
+              if (_this26.__ssaMode) {
                 void 0;
                 // 최초 시도
-                ssaResult = yield _this25.__startTruth(_this25.__ocrType, _this25.__address); // prettier-ignore
+                ssaResult = yield _this26.__startTruth(_this26.__ocrType, _this26.__address); // prettier-ignore
                 if (ssaResult === null) throw new Error('[ERR] SSA MODE is true. but, ssaResult is null'); // prettier-ignore
 
                 ssaResultList.push(ssaResult);
-                if (_this25.__options.ssaMaxRetryCount > 0) {
+                if (_this26.__options.ssaMaxRetryCount > 0) {
                   var retryStartDate = new Date();
-                  var FAKE = _this25.__options.ssaRetryType === 'FAKE';
-                  var REAL = _this25.__options.ssaRetryType === 'REAL';
-                  var ENSEMBLE = _this25.__options.ssaRetryType === 'ENSEMBLE';
+                  var FAKE = _this26.__options.ssaRetryType === 'FAKE';
+                  var REAL = _this26.__options.ssaRetryType === 'REAL';
+                  var ENSEMBLE = _this26.__options.ssaRetryType === 'ENSEMBLE';
                   var isCompleted = false; // 비동기 for 문 때문에 break가 안걸리는 이슈로 넣음
                   var _loop = function* _loop(item) {
                     if (isCompleted) {
@@ -3145,15 +3265,15 @@ class UseBOCR {
                       return "break";
                     }
                     // prettier-ignore
-                    if (_this25.__ssaRetryCount === _this25.__options.ssaMaxRetryCount) {
+                    if (_this26.__ssaRetryCount === _this26.__options.ssaMaxRetryCount) {
                       void 0;
                       return "break";
                     }
                     var execute = /*#__PURE__*/function () {
                       var _ref13 = _asyncToGenerator(function* () {
-                        _this25.__ssaRetryCount++;
+                        _this26.__ssaRetryCount++;
                         void 0; // prettier-ignore
-                        ssaResult = yield _this25.__startTruthRetry(_this25.__ocrType, _this25.__address, item); // prettier-ignore
+                        ssaResult = yield _this26.__startTruthRetry(_this26.__ocrType, _this26.__address, item); // prettier-ignore
                         if (ssaResult === null) throw new Error('[ERR] SSA MODE is true. but, ssaResult is null'); // prettier-ignore
 
                         ssaResultList.push(ssaResult);
@@ -3180,7 +3300,7 @@ class UseBOCR {
                       yield execute();
                     }
                   };
-                  for (var item of _this25.__detectedCardQueue) {
+                  for (var item of _this26.__detectedCardQueue) {
                     var _ret = yield* _loop(item);
                     if (_ret === "break") break;
                   }
@@ -3190,28 +3310,28 @@ class UseBOCR {
                   void 0;
                 }
               }
-              if (_this25.__options.useMaskInfo) {
-                maskInfo = _this25.__getMaskInfo(_this25.__address);
+              if (_this26.__options.useMaskInfo) {
+                maskInfo = _this26.__getMaskInfo(_this26.__address);
               }
               void 0;
               var {
                 legacyFormat,
                 newFormat
-              } = usebOCRWASMParser.parseOcrResult(_this25.__ocrType, _this25.__ssaMode, ocrResult, ssaResult, _this25.__ssaRetryCount, ssaResultList, _this25.__options.ssaRetryType, _this25.__options.ssaRetryPivot);
+              } = usebOCRWASMParser.parseOcrResult(_this26.__ocrType, _this26.__ssaMode, ocrResult, ssaResult, _this26.__ssaRetryCount, ssaResultList, _this26.__options.ssaRetryType, _this26.__options.ssaRetryPivot);
               var review_result = _objectSpread({
-                ocr_type: _this25.__ocrType
+                ocr_type: _this26.__ocrType
               }, newFormat);
-              if (!_this25.isCreditCard() && !_this25.isBarcode()) {
+              if (!_this26.isCreditCard() && !_this26.isBarcode()) {
                 review_result.maskInfo = maskInfo;
-                review_result.ssa_mode = _this25.__ssaMode;
+                review_result.ssa_mode = _this26.__ssaMode;
               }
-              yield _this25.__compressImages(review_result);
-              if (_this25.__options.useLegacyFormat) {
+              yield _this26.__compressImages(review_result);
+              if (_this26.__options.useLegacyFormat) {
                 review_result.ocr_data = legacyFormat;
               }
-              yield _this25.__onSuccessProcess(review_result);
-              _this25.__closeCamera();
-              _this25.__detected = true;
+              yield _this26.__onSuccessProcess(review_result);
+              _this26.__closeCamera();
+              _this26.__detected = true;
               resolve();
             }
           } catch (e) {
@@ -3225,18 +3345,18 @@ class UseBOCR {
             //   await this.__recoveryScan();
             //   this.__recovered = true;
             // } else {
-            yield _this25.__onFailureProcess('WA001', e, errorMessage);
-            _this25.__closeCamera();
-            _this25.__detected = true;
+            yield _this26.__onFailureProcess('WA001', e, errorMessage);
+            _this26.__closeCamera();
+            _this26.__detected = true;
             reject();
             // }
           } finally {
-            if (_this25.__recovered) {
-              _this25.__recovered = false;
+            if (_this26.__recovered) {
+              _this26.__recovered = false;
               return;
             }
-            if (!_this25.__detected) {
-              _this25.__requestAnimationFrameId = setTimeout(scan, 1); // 재귀
+            if (!_this26.__detected) {
+              _this26.__requestAnimationFrameId = setTimeout(scan, 1); // 재귀
             }
           }
         });
@@ -3249,23 +3369,23 @@ class UseBOCR {
   }
 
   __compressImages(review_result, constantNumber) {
-    var _this26 = this;
+    var _this27 = this;
     return _asyncToGenerator(function* () {
-      if (_this26.isEncryptMode()) {
+      if (_this27.isEncryptMode()) {
         void 0;
         return;
       }
-      if (_this26.__options.useCompressImage) {
-        var resizeRatio = _this26.__cropImageSizeHeight / _this26.__cropImageSizeWidth;
+      if (_this27.__options.useCompressImage) {
+        var resizeRatio = _this27.__cropImageSizeHeight / _this27.__cropImageSizeWidth;
         var defaultOptions = {
-          maxWidth: _this26.__options.useCompressImageMaxWidth,
-          maxHeight: _this26.__options.useCompressImageMaxWidth * resizeRatio,
-          convertSize: _this26.__options.useCompressImageMaxVolume,
-          targetCompressVolume: _this26.__options.useCompressImageMaxVolume // custom option
+          maxWidth: _this27.__options.useCompressImageMaxWidth,
+          maxHeight: _this27.__options.useCompressImageMaxWidth * resizeRatio,
+          convertSize: _this27.__options.useCompressImageMaxVolume,
+          targetCompressVolume: _this27.__options.useCompressImageMaxVolume // custom option
         };
 
         if (review_result.ocr_origin_image) {
-          review_result.ocr_origin_image = yield _this26.__compressBase64Image(review_result.ocr_origin_image, defaultOptions, constantNumber);
+          review_result.ocr_origin_image = yield _this27.__compressBase64Image(review_result.ocr_origin_image, defaultOptions, constantNumber);
         }
         if (review_result.ocr_masking_image) {
           // masking 이미지는 resize 하면, mask 좌표가 어긋나므로 리사이즈 안하고 압축만 진행
@@ -3273,10 +3393,10 @@ class UseBOCR {
             quality: defaultOptions.quality,
             targetCompressVolume: defaultOptions.targetCompressVolume
           };
-          review_result.ocr_masking_image = yield _this26.__compressBase64Image(review_result.ocr_masking_image, maskingImageOptions, constantNumber);
+          review_result.ocr_masking_image = yield _this27.__compressBase64Image(review_result.ocr_masking_image, maskingImageOptions, constantNumber);
         }
         if (review_result.ocr_face_image) {
-          review_result.ocr_face_image = yield _this26.__compressBase64Image(review_result.ocr_face_image, defaultOptions, constantNumber);
+          review_result.ocr_face_image = yield _this27.__compressBase64Image(review_result.ocr_face_image, defaultOptions, constantNumber);
         }
       }
     })();
@@ -3348,9 +3468,16 @@ class UseBOCR {
     }
     return origin + pathname;
   }
-  __createServerOcrParams(ocrType, ssaMode, encryptMode, imgDataUrl) {
-    var _this27 = this;
+  __createServerOcrParams(_ref14) {
+    var _this28 = this;
     return _asyncToGenerator(function* () {
+      var {
+        ocrType,
+        ssaMode,
+        encryptMode,
+        fakeMode,
+        imgDataUrl
+      } = _ref14;
       /**
        * TODO: ServerOCR 방식이 SaaS인지 SDK인지
        * - SaaS이면 quram.useb.co.kr 로 호출
@@ -3361,17 +3488,19 @@ class UseBOCR {
        */
 
       var payload;
-      if (_this27.isUsebServerOCR()) {
-        var apiToken = yield _this27.__requestGetAPIToken();
+      if (_this28.isUsebServerOCR()) {
+        var apiToken = yield _this28.__requestGetAPIToken();
         var myHeaders = new Headers();
         myHeaders.append('Authorization', "Bearer ".concat(apiToken));
-        var param = _objectSpread(_objectSpread({
+        var param = _objectSpread(_objectSpread(_objectSpread({
           ocrType,
           base64jpg: imgDataUrl
         }, ssaMode ? undefined : {
           ssa_mode: 'false'
         }), encryptMode ? {
           useEncryptMode: 'true'
+        } : undefined), fakeMode ? {
+          fake_image: 'true'
         } : undefined);
         payload = JSON.stringify(param);
         var requestOptions = {
@@ -3384,9 +3513,12 @@ class UseBOCR {
       } else {
         var formData = new FormData();
         formData.append('ocrType', ocrType);
-        formData.append('base64jpg', _this27.__removeMimeType(imgDataUrl));
+        formData.append('base64jpg', _this28.__removeMimeType(imgDataUrl));
         if (encryptMode) {
           formData.append('useEncryptMode', true);
+        }
+        if (fakeMode) {
+          formData.append('fake_image', true);
         }
         // formData.append('config', 'org_image');
         // formData.append('config', 'portrait');
@@ -3402,14 +3534,14 @@ class UseBOCR {
       }
     })();
   }
-  __requestServerOCR(ocrType, ssaMode, encryptMode, imgDataUrl) {
-    var _this28 = this;
+  __requestServerOCR(params) {
+    var _this29 = this;
     return _asyncToGenerator(function* () {
       return new Promise( /*#__PURE__*/function () {
-        var _ref14 = _asyncToGenerator(function* (resolve, reject) {
+        var _ref15 = _asyncToGenerator(function* (resolve, reject) {
           try {
-            var baseUrl = _this28.__getOcrServerBaseUrl(ocrType);
-            var requestOptions = yield _this28.__createServerOcrParams(ocrType, ssaMode, encryptMode, imgDataUrl);
+            var baseUrl = _this29.__getOcrServerBaseUrl(params.ocrType);
+            var requestOptions = yield _this29.__createServerOcrParams(params);
             yield fetch(baseUrl, requestOptions).then(res => res.json()).then(result => {
               void 0;
               resolve(result);
@@ -3420,57 +3552,66 @@ class UseBOCR {
           }
         });
         return function (_x5, _x6) {
-          return _ref14.apply(this, arguments);
+          return _ref15.apply(this, arguments);
         };
       }());
     })();
   }
   __startScanServerImpl() {
-    var _this29 = this;
+    var _this30 = this;
     return new Promise( /*#__PURE__*/function () {
-      var _ref15 = _asyncToGenerator(function* (resolve, reject) {
-        var _this29$__captureButt;
+      var _ref16 = _asyncToGenerator(function* (resolve, reject) {
+        var _this30$__captureButt;
         // TODO: 서버 모드일때 암호화 는 어떻게 ? 지우는게 맞는가? js 레벨로하면 메모리에 남음 서버에서 암호화된값을 내려주는 옵션이 있어야함
         // this.__setPiiEncrypt(this.__options.useEncryptMode); // ocr result encrypt
         // TODO: 서버모드일 때 암호화 사용인 경우 base64 image를 useb_aes256.wasm 으로 암호화 (base64 -> encrypted text)
         // 처리 후 ServerOCR로 전송하기.
-        if (_this29.isEncryptMode()) {
-          yield _this29.__loadEncryptResource();
+        if (_this30.isEncryptMode()) {
+          yield _this30.__loadEncryptResource();
         }
-        _this29.__blurCaptureButton();
+        _this30.__blurCaptureButton();
         var __onClickCaptureButton = /*#__PURE__*/function () {
-          var _ref16 = _asyncToGenerator(function* () {
+          var _ref17 = _asyncToGenerator(function* () {
             try {
               var ocrResult = null;
               // 캔버스에서 이미지를 가져옴
-              var [, originImageDataUrl] = yield _this29.__cropImageFromVideo();
-              var imgDataUrl = _this29.isEncryptMode() ? _this29.__encryptBase64(_this29.__removeMimeType(originImageDataUrl)) : originImageDataUrl;
+              var [, originImageDataUrl] = yield _this30.__options.useFakeImage ? _this30.__cropFakeImageFromVideo() : _this30.__cropImageFromVideo();
+              var imgDataUrl = _this30.isEncryptMode() ? _this30.__encryptBase64(_this30.__removeMimeType(originImageDataUrl)) : originImageDataUrl;
               if (1 === true) {
                 // server ocr 실패 (발생 가능성 없음)
               } else {
                 // server ocr 성공
-                yield _this29.__changeStage(_this29.IN_PROGRESS.MANUAL_CAPTURE_SUCCESS, false, imgDataUrl);
-                if (_this29.__options.skipServerModeRequestOCR) {
+                yield _this30.__changeStage(_this30.IN_PROGRESS.MANUAL_CAPTURE_SUCCESS, false, imgDataUrl);
+                if (_this30.__options.skipServerModeRequestOCR) {
                   // Server OCR Request를 skip하는 경우 원본이미지만 반환 후 OCR 종료
                   var _review_result = {
-                    ocr_type: _this29.__ocrType,
+                    ocr_type: _this30.__ocrType,
                     ocr_result: null,
                     ocr_origin_image: imgDataUrl
                   };
-                  yield _this29.__onSuccessProcess(_review_result);
-                  _this29.__closeCamera();
+                  yield _this30.__onSuccessProcess(_review_result);
+                  _this30.__closeCamera();
                   resolve();
                   return;
                 }
                 try {
-                  ocrResult = yield _this29.__requestServerOCR(_this29.__ocrType, _this29.__ssaMode, _this29.isEncryptMode(), imgDataUrl);
+                  var params = {
+                    ocrType: _this30.__ocrType,
+                    ssaMode: _this30.__ssaMode,
+                    encryptMode: _this30.isEncryptMode(),
+                    fakeMode: _this30.__options.useFakeImage,
+                    imgDataUrl
+                  };
+                  ocrResult = yield _this30.__requestServerOCR(params);
 
                   // failure case
                   if (ocrResult === false) {
-                    yield _this29.__changeStage(_this29.IN_PROGRESS.OCR_FAILED);
+                    yield _this30.__changeStage(_this30.IN_PROGRESS.OCR_FAILED);
                   }
                 } catch (e) {
-                  throw new Error("Server OCR is failed");
+                  var error = new Error("An Error occured in request Server OCR");
+                  error.errorCode = 'SE001';
+                  throw error;
                 }
 
                 // ssa 시도?
@@ -3479,62 +3620,83 @@ class UseBOCR {
                 var {
                   video
                 } = detector.getOCRElements();
-                _this29.__setStyle(video, {
+                _this30.__setStyle(video, {
                   display: 'none'
                 }); // OCR 완료 시점에 camera preview off
 
-                _this29.__debug("ocrServerPreprocessor result(before) : ", {
+                _this30.__debug("ocrServerPreprocessor result(before) : ", {
                   ocrResult
                 });
                 try {
-                  ocrResult = _this29.__serverOCRPreprocessor(_.cloneDeep(ocrResult));
+                  ocrResult = _this30.__serverOCRPreprocessor(_.cloneDeep(ocrResult));
                 } catch (e) {
-                  throw new Error("An Error occured in Server OCR Preprocessor");
+                  var _error = new Error("An Error occured in Server OCR Preprocessor");
+                  _error.errorCode = 'SE003';
+                  throw _error;
                 }
-                _this29.__debug("ocrServerPreprocessor result(after) : ", {
+                _this30.__debug("ocrServerPreprocessor result(after) : ", {
                   ocrResult
                 });
+                var parsedOcrResult;
+                try {
+                  parsedOcrResult = usebOCRAPIParser.parseOcrResult(_this30.__ocrType, _this30.__ssaMode, ocrResult, _this30.__options.ocrServerParseKeyList);
+                } catch (e) {
+                  var _error2 = new Error("An Error occured in Server OCR Parser");
+                  _error2.errorCode = 'SE002';
+                  throw _error2;
+                }
                 var {
                   legacyFormat,
                   newFormat,
                   base64ImageResult,
                   maskInfo
-                } = usebOCRAPIParser.parseOcrResult(_this29.__ocrType, _this29.__ssaMode, ocrResult, _this29.__options.ocrServerParseKeyList);
+                } = parsedOcrResult;
                 var review_result = {
-                  ocr_type: _this29.__ocrType,
+                  ocr_type: _this30.__ocrType,
                   ocr_result: newFormat,
                   ocr_origin_image: imgDataUrl,
                   ocr_masking_image: base64ImageResult === null || base64ImageResult === void 0 ? void 0 : base64ImageResult.ocr_masking_image,
                   ocr_face_image: base64ImageResult === null || base64ImageResult === void 0 ? void 0 : base64ImageResult.ocr_face_image
                 };
-                if (!_this29.isCreditCard() && !_this29.isBarcode()) {
+                if (!_this30.isCreditCard() && !_this30.isBarcode()) {
                   review_result.maskInfo = maskInfo;
-                  review_result.ssa_mode = _this29.__ssaMode;
+                  review_result.ssa_mode = _this30.__ssaMode;
                 }
-                if (_this29.__debugMode) {
+                if (_this30.__debugMode) {
                   review_result.ocr_api_response = ocrResult;
                 }
-                yield _this29.__compressImages(review_result, 0.0);
+                try {
+                  yield _this30.__compressImages(review_result, 0.0);
+                } catch (e) {
+                  var _error3 = new Error("An Error occured in compressImages");
+                  _error3.errorCode = 'SE004';
+                  throw _error3;
+                }
 
                 // TODO: 서버 모드일때 암호화 는 어떻게 ? 지우는게 맞는가? js 레벨로하면 메모리에 남음 서버에서 암호화된값을 내려주는 옵션이 있어야함
                 // this.encryptResult(review_result);
 
-                if (_this29.__options.useLegacyFormat) {
+                if (_this30.__options.useLegacyFormat) {
                   review_result.ocr_data = legacyFormat;
                 }
                 if (ocrResult.complete === true) {
-                  yield _this29.__onSuccessProcess(review_result);
-                  _this29.__closeCamera();
+                  yield _this30.__onSuccessProcess(review_result);
+                  _this30.__closeCamera();
                   resolve();
                 } else {
                   var _ocrResult3;
                   var resultCode = 'SF001';
                   var resultMessage = "".concat(ocrResult.scanner_type, ":").concat((_ocrResult3 = ocrResult) === null || _ocrResult3 === void 0 ? void 0 : _ocrResult3.result_code);
                   var resultDetail = JSON.stringify(ocrResult);
-                  yield _this29.__onFailureProcess(resultCode, resultDetail, resultMessage); // QURAM Server OCR 에러
+                  var _error4 = {
+                    errorCode: resultCode,
+                    message: resultMessage,
+                    stack: resultDetail
+                  };
+                  yield _this30.__onFailureProcess(resultCode, resultDetail, resultMessage); // QURAM Server OCR 에러
 
-                  _this29.__closeCamera();
-                  reject();
+                  _this30.__closeCamera();
+                  reject(_error4);
                 }
               }
             } catch (e) {
@@ -3543,21 +3705,22 @@ class UseBOCR {
                 errorMessage += ': ' + e.message;
               }
               void 0;
-              yield _this29.__onFailureProcess('SE001', e, errorMessage); // QURAM Server OCR 에러
-              _this29.__closeCamera();
-              reject();
+              var errorCode = e.errorCode || 'SE001';
+              yield _this30.__onFailureProcess(errorCode, e, errorMessage); // QURAM Server OCR 에러
+              _this30.__closeCamera();
+              reject(e);
             }
           });
           return function __onClickCaptureButton() {
-            return _ref16.apply(this, arguments);
+            return _ref17.apply(this, arguments);
           };
         }();
-        (_this29$__captureButt = _this29.__captureButton) === null || _this29$__captureButt === void 0 ? void 0 : _this29$__captureButt.addEventListener('click', __onClickCaptureButton, {
+        (_this30$__captureButt = _this30.__captureButton) === null || _this30$__captureButt === void 0 ? void 0 : _this30$__captureButt.addEventListener('click', __onClickCaptureButton, {
           once: true
         });
       });
       return function (_x7, _x8) {
-        return _ref15.apply(this, arguments);
+        return _ref16.apply(this, arguments);
       };
     }());
   }
@@ -3574,13 +3737,13 @@ class UseBOCR {
   }
 
   __onSuccessProcess(review_result) {
-    var _this30 = this;
+    var _this31 = this;
     return _asyncToGenerator(function* () {
       // 인식 성공 스캔 루프 종료
       if (review_result.ssa_mode) {
-        yield _this30.__changeStage(_this30.IN_PROGRESS.OCR_SUCCESS_WITH_SSA);
+        yield _this31.__changeStage(_this31.IN_PROGRESS.OCR_SUCCESS_WITH_SSA);
       } else {
-        yield _this30.__changeStage(_this30.IN_PROGRESS.OCR_SUCCESS);
+        yield _this31.__changeStage(_this31.IN_PROGRESS.OCR_SUCCESS);
       }
       var result = {
         api_response: {
@@ -3590,21 +3753,21 @@ class UseBOCR {
         result: 'success',
         review_result: review_result
       };
-      if (_this30.__onSuccess) {
-        _this30.__onSuccess(result);
-        _this30.__onSuccess = null;
+      if (_this31.__onSuccess) {
+        _this31.__onSuccess(result);
+        _this31.__onSuccess = null;
       } else {
         void 0;
       }
     })();
   }
   __onFailureProcess(resultCode, e, errorMessage) {
-    var _this31 = this;
+    var _this32 = this;
     return _asyncToGenerator(function* () {
-      yield _this31.__changeStage(_this31.IN_PROGRESS.OCR_FAILED);
+      yield _this32.__changeStage(_this32.IN_PROGRESS.OCR_FAILED);
       var errorDetail = '';
-      if (e !== null && e !== void 0 && e.toString()) errorDetail += e.toString();
-      if (e !== null && e !== void 0 && e.stack) errorDetail += e.stack;
+      if (e !== null && e !== void 0 && e.toString()) errorDetail += e.toString() + '\n';
+      if (e !== null && e !== void 0 && e.stack) errorDetail += e.stack + '\n';
       var result = {
         api_response: {
           result_code: resultCode,
@@ -3612,37 +3775,37 @@ class UseBOCR {
         },
         result: 'failed',
         review_result: {
-          ocr_type: _this31.__ocrType,
+          ocr_type: _this32.__ocrType,
           error_detail: errorDetail
         }
       };
-      if (_this31.__onFailure) {
-        _this31.__onFailure(result);
-        _this31.__onFailure = null;
+      if (_this32.__onFailure) {
+        _this32.__onFailure(result);
+        _this32.__onFailure = null;
       } else {
         void 0;
       }
     })();
   }
   __preloadingWasm() {
-    var _this32 = this;
+    var _this33 = this;
     return _asyncToGenerator(function* () {
-      if (_this32.isPreloaded()) {
+      if (_this33.isPreloaded()) {
         void 0;
       } else {
         try {
           void 0;
-          _this32.showOCRLoadingUI();
-          _this32.__preloadingStatus = _this32.PRELOADING_STATUS.STARTED;
-          yield _this32.__loadResources();
-          _this32.__preloadingStatus = _this32.PRELOADING_STATUS.DONE;
-          _this32.__preloaded = true;
-          _this32.hideOCRLoadingUI();
+          _this33.showOCRLoadingUI();
+          _this33.__preloadingStatus = _this33.PRELOADING_STATUS.STARTED;
+          yield _this33.__loadResources();
+          _this33.__preloadingStatus = _this33.PRELOADING_STATUS.DONE;
+          _this33.__preloaded = true;
+          _this33.hideOCRLoadingUI();
           void 0;
         } catch (e) {
           if (e.errorCode === 'SE001') {
-            _this32.hideOCRLoadingUI();
-            _this32.__restoreResourceInitialize();
+            _this33.hideOCRLoadingUI();
+            _this33.__restoreResourceInitialize();
           }
           throw e;
         }
@@ -3823,61 +3986,61 @@ class UseBOCR {
   }
   __getImageBase64(address, maskMode, imgMode) {
     var _arguments5 = arguments,
-      _this33 = this;
+      _this34 = this;
     return _asyncToGenerator(function* () {
       var imgType = _arguments5.length > 3 && _arguments5[3] !== undefined ? _arguments5[3] : 'card';
       try {
         if (imgType === 'card') {
-          _this33.__OCREngine.encodeJpgDetectedFrameImage(address, maskMode, imgMode);
+          _this34.__OCREngine.encodeJpgDetectedFrameImage(address, maskMode, imgMode);
         } else if (imgType === 'face') {
-          _this33.__OCREngine.encodeJpgDetectedPhotoImage(address);
+          _this34.__OCREngine.encodeJpgDetectedPhotoImage(address);
         }
-        var jpgSize = _this33.__OCREngine.getEncodedJpgSize();
-        var jpgPointer = _this33.__OCREngine.getEncodedJpgBuffer();
-        var resultView = new Uint8Array(_this33.__OCREngine.HEAP8.buffer, jpgPointer, jpgSize);
+        var jpgSize = _this34.__OCREngine.getEncodedJpgSize();
+        var jpgPointer = _this34.__OCREngine.getEncodedJpgBuffer();
+        var resultView = new Uint8Array(_this34.__OCREngine.HEAP8.buffer, jpgPointer, jpgSize);
         var result = new Uint8Array(resultView);
         var blob = new Blob([result], {
           type: 'image/jpeg'
         });
-        return yield _this33.__blobToBase64(blob);
+        return yield _this34.__blobToBase64(blob);
       } catch (e) {
         void 0;
         throw e;
       } finally {
-        _this33.__OCREngine.destroyEncodedJpg();
+        _this34.__OCREngine.destroyEncodedJpg();
       }
     })();
   }
   // TODO : credit card 에서 사용중이어서 삭제 불가 (wasm 레벨로 변경될 경우 삭제 가능) -- END
 
   __startScanWasm() {
-    var _this34 = this;
+    var _this35 = this;
     return _asyncToGenerator(function* () {
-      _this34.__debug('wasm_mode');
-      yield _this34.cleanup();
-      yield _this34.__proceedCameraPermission();
-      yield _this34.__startScanWasmImpl();
+      _this35.__debug('wasm_mode');
+      yield _this35.cleanup();
+      yield _this35.__proceedCameraPermission();
+      yield _this35.__startScanWasmImpl();
       void 0;
     })();
   }
   __startScanServer() {
-    var _this35 = this;
+    var _this36 = this;
     return _asyncToGenerator(function* () {
-      _this35.__debug('server_mode');
-      if (!!_this35.getOCREngine()) yield _this35.cleanup();
-      _this35.__options.useCaptureUI = true;
-      yield _this35.__proceedCameraPermission();
-      yield _this35.__startScanServerImpl();
+      _this36.__debug('server_mode');
+      if (!!_this36.getOCREngine()) yield _this36.cleanup();
+      _this36.__options.useCaptureUI = true;
+      yield _this36.__proceedCameraPermission();
+      yield _this36.__startScanServerImpl();
       void 0;
     })();
   }
   __recoveryScan() {
-    var _this36 = this;
+    var _this37 = this;
     return _asyncToGenerator(function* () {
       void 0;
-      _this36.__resourcesLoaded = false;
-      _this36.stopScan();
-      yield _this36.__startScanWasm();
+      _this37.__resourcesLoaded = false;
+      _this37.stopScan();
+      yield _this37.__startScanWasm();
     })();
   }
   stopScan() {
@@ -3905,13 +4068,13 @@ class UseBOCR {
     }
   }
   __wasmResourceTimer() {
-    var _this37 = this;
+    var _this38 = this;
     return _asyncToGenerator(function* () {
       return new Promise((_, reject) => {
-        var useLoadResourceTimeout = _this37.__options.useAutoSwitchToServerMode && _this37.__options.wasmResourceTimeout > 0;
-        var wasmResourceTimeout = useLoadResourceTimeout ? _this37.__options.wasmResourceTimeout : _this37.__maxWasmResourceTimeout;
-        if (!_this37.__wasmResourceTimerId) {
-          _this37.__wasmResourceTimerId = setTimeout(() => {
+        var useLoadResourceTimeout = _this38.__options.useAutoSwitchToServerMode && _this38.__options.wasmResourceTimeout > 0;
+        var wasmResourceTimeout = useLoadResourceTimeout ? _this38.__options.wasmResourceTimeout : _this38.__maxWasmResourceTimeout;
+        if (!_this38.__wasmResourceTimerId) {
+          _this38.__wasmResourceTimerId = setTimeout(() => {
             var timeoutError = new Error('[Network Error] Load to WASM Resource failed with timeout');
             timeoutError.errorCode = 'SE001';
             reject(timeoutError);
@@ -3923,14 +4086,14 @@ class UseBOCR {
 
   /** 메모리 allocation free 함수 */
   cleanup() {
-    var _this38 = this;
+    var _this39 = this;
     return _asyncToGenerator(function* () {
-      _this38.__destroyScannerAddress();
-      _this38.__destroyEncryptedScanResult();
-      _this38.__destroyBuffer();
-      _this38.__destroyPrevImage();
-      _this38.__destroyStringOnWasmHeap();
-      _this38.__detectedCardQueue = [];
+      _this39.__destroyScannerAddress();
+      _this39.__destroyEncryptedScanResult();
+      _this39.__destroyBuffer();
+      _this39.__destroyPrevImage();
+      _this39.__destroyStringOnWasmHeap();
+      _this39.__detectedCardQueue = [];
     })();
   }
   restoreInitialize() {
@@ -3949,7 +4112,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.32.2';
+    return 'v1.33.0';
   }
 }
 export default UseBOCR;

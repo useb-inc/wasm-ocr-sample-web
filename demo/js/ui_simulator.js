@@ -415,6 +415,14 @@ class UISimulator {
         if (showServerOcrBaseUrlUI) this.__settings.ocrServerParseKeyList = e.target.value;
         this.__saveSettingsHandler();
       });
+      document.querySelector('#skip-server-mode-request-ocr').addEventListener('change', e => {
+        this.__settings.skipServerModeRequestOCR = e.target.checked;
+        this.__saveSettingsHandler();
+      });
+      document.querySelector('#use-fake-image').addEventListener('change', e => {
+        this.__settings.useFakeImage = e.target.checked;
+        this.__saveSettingsHandler();
+      });
       var setEncryptOptionUI = (showKeylistUI, setKeylist) => {
         if (showKeylistUI) {
           // document.getElementById('use-encrypt-mode-div').style.display = 'none';
