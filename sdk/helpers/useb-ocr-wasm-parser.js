@@ -9,7 +9,7 @@ function _toPrimitive(input, hint) { if (typeof input !== "object" || input === 
 import objectUtil from './object-util.js';
 class OcrResultParser {
   constructor() {
-    _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'alien-back', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'credit-ssa', 'veteran', 'veteran-ssa', 'barcode']);
+    _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'alien-back', 'veteran', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'veteran-ssa', 'credit-ssa', 'barcode']);
   }
   parseOcrResult(ocrType, ssaMode, ocrResult, ssaResult, ssaRetryCount, ssaResultList, ssaRetryType, ssaRetryPivot) {
     if (!this.__ocrTypeList.includes(ocrType)) throw new Error('ResultParser :: Unsupported OCR type');
@@ -38,7 +38,7 @@ class OcrResultParser {
         this.__parseAlien(ocrResult.ocr_result, legacyFormat);
         break;
       case 'alien-back':
-        legacyFormat = _objectSpread({}, ocrResult.ocr_result);
+        this.__parseAlienBack(ocrResult.ocr_result, legacyFormat);
         break;
       case 'veteran':
       case 'veteran-ssa':
@@ -299,6 +299,20 @@ class OcrResultParser {
       id_type: 'result_scan_type'
     };
     this.__convertLegacyFormat(ocrResult, legacyFormat, keyMapAlien);
+  }
+  __parseAlienBack(ocrResult, legacyFormat) {
+    var keyMapAlienBack = {
+      Completed: 'complete',
+      serial: 'serial',
+      confirmation: 'confirmation',
+      permission_date: 'permission_date',
+      expiry_date: 'expiry_date'
+    };
+    this.__convertLegacyFormat(ocrResult, legacyFormat, keyMapAlienBack);
+    var filterEmptyString = str => str.split(',').filter(Boolean);
+    ocrResult.confirmation = filterEmptyString(ocrResult.confirmation).join(',');
+    ocrResult.expiry_date = filterEmptyString(ocrResult.expiry_date).join(',');
+    ocrResult.permission_date = filterEmptyString(ocrResult.permission_date).join(',');
   }
   __parseVeteran(ocrResult, legacyFormat) {
     this.__reformatJumin(ocrResult);

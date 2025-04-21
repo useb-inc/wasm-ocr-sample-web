@@ -8,7 +8,7 @@ import objectUtil from './object-util.js';
 /* global-module */
 class OcrResultParser {
   constructor() {
-    _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'veteran', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'veteran-ssa', 'credit-ssa', 'barcode']);
+    _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'alien-back', 'veteran', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'veteran-ssa', 'credit-ssa', 'barcode']);
     _defineProperty(this, "MASK_INFO", ['rect_id_issue_date', 'rect_id_number', 'rect_kor_personal_number', 'rect_license_number', 'rect_overseas_residents', 'rect_passport_jumin_number', 'rect_passport_number', 'rect_passport_number_mrz']);
     _defineProperty(this, "RESULT_SCAN_TYPE_MAP", {
       RESIDENT_REGISTRATION: '1',
@@ -66,12 +66,17 @@ class OcrResultParser {
         _.assign(maskInfo, passport_result.maskInfo);
         break;
       case 'alien':
-      case 'alien-back':
       case 'alien-ssa':
         var alien_result = this.__parseAlien(ocrResult, parseKeyList); // prettier-ignore
         _.assign(newFormat, alien_result.newFormat);
         _.assign(legacyFormat, alien_result.legacyFormat);
         _.assign(maskInfo, alien_result.maskInfo);
+        break;
+      case 'alien-back':
+        var alien_back_result = this.__parseAlienBack(ocrResult, parseKeyList); // prettier-ignore
+        _.assign(newFormat, alien_back_result.newFormat);
+        _.assign(legacyFormat, alien_back_result.legacyFormat);
+        _.assign(maskInfo, alien_back_result.maskInfo);
         break;
       case 'veteran':
       case 'veteran-ssa':
@@ -310,6 +315,31 @@ class OcrResultParser {
       newFormat,
       legacyFormat,
       maskInfo: this.getMaskInfo(flat, idType)
+    };
+  }
+  __parseAlienBack(ocrResult, parseKeyList) {
+    // TODO wasm에서 지원해주는 idType 값이 없어 임의 매핑 (해외 여권이랑 외국인등록증 구분안되는 문제 있음)
+    var idType = this.RESULT_SCAN_TYPE_MAP[ocrResult.result_scan_type];
+    var defaultObj = {
+      confirmation: [''],
+      expiry_date: [''],
+      permission_date: ['']
+    };
+    var flat = _.assign(defaultObj, this.flatObj(ocrResult));
+
+    // new format ##########################
+    // id 객체에서 flat 하게 만들 대상들
+    var newFormatKeys = ['complete', 'confirmation', 'expiry_date', 'permission_date', 'serial', ...parseKeyList];
+    var newFormat = _.pick(flat, newFormatKeys);
+    newFormat.complete = String(newFormat.complete);
+    newFormat.confirmation = newFormat.confirmation.filter(Boolean).join(',');
+    newFormat.expiry_date = newFormat.expiry_date.filter(Boolean).join(',');
+    newFormat.permission_date = newFormat.permission_date.filter(Boolean).join(',');
+    newFormat.result_scan_type = idType;
+    var legacyFormat = {};
+    return {
+      newFormat,
+      legacyFormat
     };
   }
   __parseVeteran(ocrResult, parseKeyList) {

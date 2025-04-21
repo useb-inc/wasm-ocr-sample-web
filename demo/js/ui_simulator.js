@@ -405,6 +405,11 @@ class UISimulator {
         if (showServerOcrBaseUrlUI) this.__settings.ocrServerUrlAlien = e.target.value;
         this.__saveSettingsHandler();
       });
+      document.querySelector('#ocr-server-url-alien-back').addEventListener('change', e => {
+        var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
+        if (showServerOcrBaseUrlUI) this.__settings.ocrServerUrlAlienBack = e.target.value;
+        this.__saveSettingsHandler();
+      });
       document.querySelector('#ocr-server-url-veteran').addEventListener('change', e => {
         var showServerOcrBaseUrlUI = this.__settings.useAutoSwitchToServerMode || this.__settings.useManualSwitchToServerMode;
         if (showServerOcrBaseUrlUI) this.__settings.ocrServerUrlVeteran = e.target.value;

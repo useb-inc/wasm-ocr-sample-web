@@ -8,11 +8,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.33.0';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.33.0';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.33.0';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.33.0';
-import ImageUtil from './helpers/image-util.js?ver=v1.33.0';
+import detector from './helpers/detector.js?ver=v1.34.0';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.34.0';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.34.0';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.34.0';
+import ImageUtil from './helpers/image-util.js?ver=v1.34.0';
 var instance;
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
@@ -1457,7 +1457,6 @@ class UseBOCR {
         var rawData = null;
         var ocrResult = null;
         if (!_this13.__ocrTypeList.includes(ocrType)) throw new Error('Unsupported OCR type');
-        var [, resultBuffer] = _this13.__getBuffer();
         var recognition = /*#__PURE__*/function () {
           var _ref6 = _asyncToGenerator(function* (isSetIgnoreComplete) {
             var _ocrResult, _ocrResult$ocr_result, _ocrResult2, _ocrResult2$ocr_resul;
@@ -1482,7 +1481,7 @@ class UseBOCR {
                 rawData = _this13.__OCREngine.scanAlien(address, 0);
                 break;
               case 'alien-back':
-                rawData = _this13.__OCREngine.scanAlienBack(address, resultBuffer);
+                rawData = _this13.__OCREngine.scanAlienBack(address, 0);
                 break;
               case 'credit':
                 rawData = _this13.__OCREngine.scanCredit(address, 0);
@@ -4112,7 +4111,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.33.0';
+    return 'v1.34.0';
   }
 }
 export default UseBOCR;
