@@ -8,11 +8,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.34.0';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.34.0';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.34.0';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.34.0';
-import ImageUtil from './helpers/image-util.js?ver=v1.34.0';
+import detector from './helpers/detector.js?ver=v1.34.2';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.34.2';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.34.2';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.34.2';
+import ImageUtil from './helpers/image-util.js?ver=v1.34.2';
 var instance;
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
@@ -47,7 +47,7 @@ var OPTION_TEMPLATE = new Object({
   useCompressImageMaxWidth: 1080,
   // 이미지 리사이징 가로 해상도
   useCompressImageMaxVolume: 1024 * 50,
-  // 이미지 압축 목표 용량
+  // 이미지 압축 목표 용량 (kb)
   ocrResultIdcardKeylist: [],
   // 주민증/면허증 평문 결과 출력 키 목록
   encryptedOcrResultIdcardKeylist: [],
@@ -992,7 +992,6 @@ class UseBOCR {
         this.__setOcrConfig(this.__options.ocr_config);
         void 0;
       }
-      this.__OCREngine._free(stringOnWasmHeap);
       if (address === 0) {
         if (this.__maxRetryCountGetAddress === this.__retryCountGetAddress) {
           throw new Error('Wrong License Key');
@@ -4111,7 +4110,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.34.0';
+    return 'v1.34.2';
   }
 }
 export default UseBOCR;
