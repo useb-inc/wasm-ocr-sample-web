@@ -6,7 +6,7 @@ const ocr = new UseBOCR();
 // const OCR_TARGET_ORIGIN = "*";     // 보안적으로 취약하니 *을 사용하는것은 권장하지 않습니다. (refer : https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage#:~:text=serialize%20them%20yourself.-,targetOrigin,-Specifies%20what%20the)
 const OCR_TARGET_ORIGIN = 'https://ocr.useb.co.kr';
 const OCR_URL = 'https://ocr.useb.co.kr/ocr.html';
-const OCR_LICENSE_KEY = 'FPkTCWqzP92aSVViuJanAxoyTQtMy0ylKAMfPYjo/tQklJu7qypi+cl87Te3MLOJZg2a4qxx2PC+IJmDxfS/EX/UIHnO3V3ytrI87Cubja+tYhhGb0susglgvZ+GP+Z8vp8ED3mVBsbUbVNiFVJWQm2BWknNlK6hnntmzHBC75feBQQ75r95mAfZ8iijXTmSOOPcf31EPMU9G3OJaoo/bGACIGw==';
+const OCR_LICENSE_KEY = 'FPkTD5Ck4+Kic7/654ORkrzD7Jlg1M5qYdn+bV2u7Vz2QKvD8WqC+h6F4yeQAV2Wfdy2miSSTSNwHvbSTQ2o2MGIk44R3l5dJUtimbk06lwgvXxmQ9Hs7g9y9dyTZq+3H/iFVDBn7bFNaio1msqBQmY0IjqNeb4AcY61qyMPDMrZ6HV7cPAWgVWuaIwQmdbqX+09InuIqACJ/5Vb40LS9hD3PAMFIC24G0mabMUUsXz+QC5NnBRB8oF4yudLUqzxinJgcrJFDSGeBTcTJKaeNsRvdot7qZDDBD1BoBYgWmc+ByaIXOeHMrA0magzlPF8mEv0Z';
 const OCR_RESOURCE_BASE_URL = 'https://ocr.useb.co.kr/';
 
 /** localhost에서 'npm run start'로 실행 시 사용 참고 */
@@ -46,6 +46,7 @@ const onClickStartCallback = async (type, settings) => {
     ...settings,
     authServerInfo: AUTH_SERVER_INFO,
     ocrServerBaseUrl: OCR_SERVER_BASE_URL,
+    useRequestCameraBeforeModuleLoad: true,
   };
 
   try {

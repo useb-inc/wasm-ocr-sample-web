@@ -5,11 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>OCR/SSA WebAssembly Sample</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" type="text/css" href="./css/demo.css?ver=v1.34.2" />
+    <link rel="stylesheet" type="text/css" href="./css/demo.css?ver=v1.35.0" />
 
-    <script type="text/javascript" src="./js/util.js?ver=v1.34.2"></script>
-    <script type="text/javascript" src="./lib/lodash.min.js?ver=v1.34.2"></script>
-    <script type="module" src="./js/ui_simulator.js?ver=v1.34.2" async></script>
+    <script type="text/javascript" src="./js/util.js?ver=v1.35.0"></script>
+    <script type="text/javascript" src="./lib/lodash.min.js?ver=v1.35.0"></script>
+    <script type="module" src="./js/ui_simulator.js?ver=v1.35.0" async></script>
     <script src="https://kit.fontawesome.com/71d7c8cd6e.js" crossorigin="anonymous"></script>
   </head>
 
@@ -584,6 +584,13 @@
           </div>
         </fieldset>
         <fieldset>
+          <legend>WASM 모듈 로드 시점 설정</legend>
+          <div>
+            <label for="request_camera_before_module_load">카메라 요청 후 WASM 모듈 로드</label>
+            <input type="checkbox" id="request_camera_before_module_load" name="request_camera_before_module_load" />
+          </div>
+        </fieldset>
+        <fieldset>
           <legend>OCR Config 설정</legend>
           <div>
             <label for="ocr_config">OCR Config</label>
@@ -617,6 +624,6 @@
       <div id="ocr_result" class="custom--section"></div>
     </section>
 
-    <script type="module" src="./demo.js?ver=v1.34.2" async></script>
+    <script type="module" src="./demo.js?ver=v1.35.0" async></script>
   </body>
 </html>

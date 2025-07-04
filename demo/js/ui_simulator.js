@@ -570,6 +570,11 @@ class UISimulator {
         this.__settings.force_wasm_reload_flag = checked ? e.target.value : '';
         this.__saveSettingsHandler();
       });
+      document.getElementById('request_camera_before_module_load').addEventListener('change', e => {
+        var checked = document.querySelector('#request_camera_before_module_load').value;
+        this.__settings.useRequestCameraBeforeModuleLoad = checked ? e.target.value : '';
+        this.__saveSettingsHandler();
+      });
       document.getElementById('ocr_config').addEventListener('change', e => {
         this.__settings.ocr_config = e.target.value;
         this.__saveSettingsHandler();

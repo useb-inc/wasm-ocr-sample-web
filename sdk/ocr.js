@@ -8,11 +8,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.34.2';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.34.2';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.34.2';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.34.2';
-import ImageUtil from './helpers/image-util.js?ver=v1.34.2';
+import detector from './helpers/detector.js?ver=v1.35.0';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.35.0';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.35.0';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.35.0';
+import ImageUtil from './helpers/image-util.js?ver=v1.35.0';
 var instance;
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
@@ -221,7 +221,9 @@ var OPTION_TEMPLATE = new Object({
   ocrServerUrlVeteran: '',
   ocrServerParseKeyList: [],
   // ServerOCR 응답값에서 ocrResult로 추가할 키 목록
-  useFakeImage: false // ServerOCR 신분증 원본이미지 fake 처리 여부
+  useFakeImage: false,
+  // ServerOCR 신분증 원본이미지 fake 처리 여부
+  useRequestCameraBeforeModuleLoad: false // 카메라 권한 요청을 모듈 로드 전에 할지 여부 (기본값 false)
 });
 
 function defaultServerOCRPreprocessor(result) {
@@ -627,17 +629,26 @@ class UseBOCR {
       try {
         _this3.__preprocess();
         yield _this3.__setupDomElements();
-        if (_this3.__isSwitchToServerMode) {
-          // serverMode
-          // TODO : 서버 모드일때 wasm 암호화를 하더라도 JS에서 평문값을 받는순간 메모리에 남기때문의 무의미
-          // if (this.isEncryptMode() && this.__isSupportWasm) {
-          //   await this.__preloadingWasm(); // 서버모드 이지만 암호화 하기위해 wasm을 preloading 함
-          // }
-          yield _this3.__startScanServer();
+
+        // 옵션에 따라 카메라 권한 요청과 모듈 로드 순서 분기
+        if (_this3.__options.useRequestCameraBeforeModuleLoad) {
+          yield _this3.__proceedCameraPermission();
+          if (_this3.__isSwitchToServerMode) {
+            yield _this3.__startScanServer();
+          } else {
+            yield _this3.__startScanWasm();
+          }
         } else {
-          // wasmMode
-          yield _this3.preloading();
-          yield _this3.__startScanWasm();
+          if (_this3.__isSwitchToServerMode) {
+            // serverMode
+            // TODO : 서버 모드일때 wasm 암호화를 하더라도 JS에서 평문값을 받는순간 메모리에 남기때문의 무의미
+            // if (this.isEncryptMode() && this.__isSupportWasm) {
+            //   await this.__preloadingWasm(); // 서버모드 이지만 암호화 하기위해 wasm을 preloading 함
+            // }
+            yield _this3.__startScanServerWithCamera();
+          } else {
+            yield _this3.__startScanWasmWithCamera();
+          }
         }
       } catch (e) {
         if ((e === null || e === void 0 ? void 0 : e.errorCode) === 'SE001') {
@@ -1748,6 +1759,11 @@ class UseBOCR {
     return _asyncToGenerator(function* () {
       try {
         _this17.__clearCameraPermissionTimeoutTimer();
+
+        // useRequestCameraBeforeModuleLoad 기능 사용 시 카메라 요청에서 stage 변경
+        if (_this17.__options.useRequestCameraBeforeModuleLoad) {
+          yield _this17.__changeStage(_this17.IN_PROGRESS.NOT_READY);
+        }
         var isPassport = _this17.__ocrType.includes('passport');
         yield _this17.__setupVideo(isPassport);
         var {
@@ -4016,7 +4032,15 @@ class UseBOCR {
     return _asyncToGenerator(function* () {
       _this35.__debug('wasm_mode');
       yield _this35.cleanup();
-      yield _this35.__proceedCameraPermission();
+
+      // useRequestCameraBeforeModuleLoad 기능 사용 시 preloadingUI 표현
+      if (_this35.__options.useRequestCameraBeforeModuleLoad) {
+        _this35.showOCRLoadingUI();
+        yield _this35.preloading();
+        _this35.hideOCRLoadingUI();
+      } else {
+        yield _this35.preloading();
+      }
       yield _this35.__startScanWasmImpl();
       void 0;
     })();
@@ -4027,7 +4051,6 @@ class UseBOCR {
       _this36.__debug('server_mode');
       if (!!_this36.getOCREngine()) yield _this36.cleanup();
       _this36.__options.useCaptureUI = true;
-      yield _this36.__proceedCameraPermission();
       yield _this36.__startScanServerImpl();
       void 0;
     })();
@@ -4110,7 +4133,31 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.34.2';
+    return 'v1.35.0';
+  }
+
+  // 기존 동작: 모듈 로드 후 카메라 권한 요청
+  __startScanWasmWithCamera() {
+    var _this40 = this;
+    return _asyncToGenerator(function* () {
+      _this40.__debug('wasm_mode');
+      yield _this40.cleanup();
+      yield _this40.preloading();
+      yield _this40.__proceedCameraPermission();
+      yield _this40.__startScanWasmImpl();
+      void 0;
+    })();
+  }
+  __startScanServerWithCamera() {
+    var _this41 = this;
+    return _asyncToGenerator(function* () {
+      _this41.__debug('server_mode');
+      if (!!_this41.getOCREngine()) yield _this41.cleanup();
+      _this41.__options.useCaptureUI = true;
+      yield _this41.__proceedCameraPermission();
+      yield _this41.__startScanServerImpl();
+      void 0;
+    })();
   }
 }
 export default UseBOCR;
