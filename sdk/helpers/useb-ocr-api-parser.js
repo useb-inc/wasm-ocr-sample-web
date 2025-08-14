@@ -4,6 +4,7 @@ function _toPrimitive(input, hint) { if (typeof input !== "object" || input === 
 /* eslint-disable */
 
 import objectUtil from './object-util.js';
+import { OCRError } from '../ocr.js';
 
 /* global-module */
 class OcrResultParser {
@@ -38,7 +39,7 @@ class OcrResultParser {
     });
   }
   parseOcrResult(ocrType, ssaMode, ocrResult, parseKeyList) {
-    if (!this.__ocrTypeList.includes(ocrType)) throw new Error('ResultParser :: Unsupported OCR type');
+    if (!this.__ocrTypeList.includes(ocrType)) throw new OCRError('ResultParser :: Unsupported OCR type', 'SE005');
     var legacyFormat = {},
       newFormat = {},
       maskInfo = {},
@@ -90,7 +91,7 @@ class OcrResultParser {
         this.__parseCredit(ocrResult, legacyFormat, newFormat);
         break;
       default:
-        throw new Error('Unsupported OCR type');
+        throw new OCRError('ResultParser :: Unsupported OCR type', 'SE005');
     }
 
     // SSA 처리

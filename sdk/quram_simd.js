@@ -99,8 +99,8 @@ Module.expectedDataFileDownloads++;
    }
    Module["FS_createPath"]("/", "face_detection", true, true);
    Module["FS_createPath"]("/", "model", true, true);
-   Module["FS_createPath"]("/", "tessdata", true, true);
-   Module["FS_createPath"]("/", "weights_credit", true, true);
+   Module["FS_createPath"]("/", "tessdata_demo", true, true);
+   Module["FS_createPath"]("/", "weights", true, true);
    function DataRequest(start, end, audio) {
     this.start = start;
     this.end = end;
@@ -169,7 +169,7 @@ Module.expectedDataFileDownloads++;
    "start": 353617,
    "end": 1054676
   }, {
-   "filename": "/model/qr_ssa_v3_r7_506_17B0.model",
+   "filename": "/model/qr_ssa_v3_r4_507_06B0.model",
    "start": 1054676,
    "end": 9119448
   }, {
@@ -177,119 +177,119 @@ Module.expectedDataFileDownloads++;
    "start": 9119448,
    "end": 9119448
   }, {
-   "filename": "/tessdata/alien.traineddata",
+   "filename": "/tessdata_demo/alien.traineddata",
    "start": 9119448,
    "end": 11087035
   }, {
-   "filename": "/tessdata/ar_num.traineddata",
+   "filename": "/tessdata_demo/ar_num.traineddata",
    "start": 11087035,
    "end": 11116985
   }, {
-   "filename": "/tessdata/card.traineddata",
+   "filename": "/tessdata_demo/card.traineddata",
    "start": 11116985,
    "end": 11146367
   }, {
-   "filename": "/tessdata/driver_num.traineddata",
+   "filename": "/tessdata_demo/driver_num.traineddata",
    "start": 11146367,
    "end": 11168689
   }, {
-   "filename": "/tessdata/eng.traineddata",
+   "filename": "/tessdata_demo/eng.traineddata",
    "start": 11168689,
    "end": 11248746
   }, {
-   "filename": "/tessdata/juminnum.traineddata",
+   "filename": "/tessdata_demo/juminnum.traineddata",
    "start": 11248746,
    "end": 11270669
   }, {
-   "filename": "/tessdata/kor.traineddata",
+   "filename": "/tessdata_demo/kor.traineddata",
    "start": 11270669,
    "end": 12377578
   }, {
-   "filename": "/tessdata/mrz.dat",
+   "filename": "/tessdata_demo/mrz.dat",
    "start": 12377578,
    "end": 12529170
   }, {
-   "filename": "/tessdata/name.traineddata",
+   "filename": "/tessdata_demo/name.traineddata",
    "start": 12529170,
    "end": 12575740
   }, {
-   "filename": "/tessdata/number.dat",
+   "filename": "/tessdata_demo/number.dat",
    "start": 12575740,
    "end": 12725353
   }, {
-   "filename": "/tessdata/number.traineddata",
+   "filename": "/tessdata_demo/number.traineddata",
    "start": 12725353,
    "end": 12749465
   }, {
-   "filename": "/tessdata/ocr.traineddata",
+   "filename": "/tessdata_demo/ocr.traineddata",
    "start": 12749465,
    "end": 12767675
   }, {
-   "filename": "/tessdata/pass2.traineddata",
+   "filename": "/tessdata_demo/pass2.traineddata",
    "start": 12767675,
    "end": 12789319
   }, {
-   "filename": "/tessdata/passport.traineddata",
+   "filename": "/tessdata_demo/passport.traineddata",
    "start": 12789319,
    "end": 12856228
   }, {
-   "filename": "/tessdata/qocrkor.dat",
+   "filename": "/tessdata_demo/qocrkor.dat",
    "start": 12856228,
    "end": 13336155
   }, {
-   "filename": "/tessdata/serial.dat",
+   "filename": "/tessdata_demo/serial.dat",
    "start": 13336155,
    "end": 13487314
   }, {
-   "filename": "/weights_credit/apo_0",
+   "filename": "/weights/apo_0",
    "start": 13487314,
    "end": 13668250
   }, {
-   "filename": "/weights_credit/dash_0",
+   "filename": "/weights/dash_0",
    "start": 13668250,
    "end": 13849186
   }, {
-   "filename": "/weights_credit/expr_0",
+   "filename": "/weights/expr_0",
    "start": 13849186,
    "end": 14031178
   }, {
-   "filename": "/weights_credit/expr_1",
+   "filename": "/weights/expr_1",
    "start": 14031178,
    "end": 14213170
   }, {
-   "filename": "/weights_credit/number_0",
+   "filename": "/weights/number_0",
    "start": 14213170,
    "end": 14313242
   }, {
-   "filename": "/weights_credit/number_1",
+   "filename": "/weights/number_1",
    "start": 14313242,
    "end": 14413314
   }, {
-   "filename": "/weights_credit/number_2",
+   "filename": "/weights/number_2",
    "start": 14413314,
    "end": 14513386
   }, {
-   "filename": "/weights_credit/number_3",
+   "filename": "/weights/number_3",
    "start": 14513386,
    "end": 14613458
   }, {
-   "filename": "/weights_credit/slash_0",
+   "filename": "/weights/slash_0",
    "start": 14613458,
    "end": 14794394
   }, {
-   "filename": "/weights_credit/slash_1",
+   "filename": "/weights/slash_1",
    "start": 14794394,
    "end": 14975330
   }, {
-   "filename": "/weights_credit/slash_2",
+   "filename": "/weights/slash_2",
    "start": 14975330,
    "end": 15156266
   }, {
-   "filename": "/weights_credit/vseg_0",
+   "filename": "/weights/vseg_0",
    "start": 15156266,
    "end": 15197878
   }, {
-   "filename": "/weights_credit/vseg_1",
+   "filename": "/weights/vseg_1",
    "start": 15197878,
    "end": 15239490
   } ],

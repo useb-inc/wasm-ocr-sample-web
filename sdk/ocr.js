@@ -8,11 +8,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.35.0';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.35.0';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.35.0';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.35.0';
-import ImageUtil from './helpers/image-util.js?ver=v1.35.0';
+import detector from './helpers/detector.js?ver=v1.36.0';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.36.0';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.36.0';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.36.0';
+import ImageUtil from './helpers/image-util.js?ver=v1.36.0';
 var instance;
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
@@ -228,6 +228,15 @@ var OPTION_TEMPLATE = new Object({
 
 function defaultServerOCRPreprocessor(result) {
   return result;
+}
+export class OCRError extends Error {
+  constructor(e, errorCode) {
+    super(e);
+    _defineProperty(this, "errorCode", void 0);
+    _defineProperty(this, "name", void 0);
+    this.errorCode = errorCode;
+    this.name = (e === null || e === void 0 ? void 0 : e.name) || 'Error';
+  }
 }
 class UseBOCR {
   /** public properties */
@@ -517,7 +526,7 @@ class UseBOCR {
   }
   init(settings) {
     var _settings = _.cloneDeep(settings);
-    if (!!!_settings.licenseKey) throw new Error('License key is empty');
+    if (!!!_settings.licenseKey) throw new OCRError('License key is empty', 'WA001');
     this.__license = _settings.licenseKey;
     this.__setOptionResultKeyList(_settings);
     this.__setOptionServerOcrResultKeyList(_settings);
@@ -530,7 +539,7 @@ class UseBOCR {
       void 0;
       this.__isSupportWasm = isSupportWasm();
       if (!this.__isSupportWasm) {
-        throw new Error('WebAssembly is not supported. in this browser.');
+        throw new OCRError('WebAssembly is not supported. in this browser.', 'WA005');
       }
       this.__initialized = true;
     }
@@ -624,7 +633,7 @@ class UseBOCR {
       }
       yield _this3.__changeStage(_this3.IN_PROGRESS.NOT_READY);
       if (!_this3.isInitialized()) {
-        throw new Error('Not initialized!');
+        throw new OCRError('Not initialized!', 'WA011');
       }
       try {
         _this3.__preprocess();
@@ -890,7 +899,7 @@ class UseBOCR {
   /** 라이센스 키를 heap 에 allocation */
   __getStringOnWasmHeap() {
     if (!!!this.__license) {
-      throw new Error('License Key is empty');
+      throw new OCRError('License Key is empty', 'WA001');
     }
     var lengthBytes = this.__OCREngine.lengthBytesUTF8(this.__license) + 1;
     this.__stringOnWasmHeap = this.__OCREngine._malloc(lengthBytes);
@@ -959,7 +968,7 @@ class UseBOCR {
     })();
   }
   __getScannerAddress(ocrType) {
-    if (!this.__ocrTypeList.includes(ocrType)) throw new Error('Unsupported OCR type');
+    if (!this.__ocrTypeList.includes(ocrType)) throw new OCRError('Unsupported OCR type', 'WA003');
     try {
       var address = 0;
       var destroyCallback = null;
@@ -997,7 +1006,7 @@ class UseBOCR {
           destroyCallback = () => this.__OCREngine.destroyCreditScanner(address);
           break;
         default:
-          throw new Error('Scanner does not exists');
+          throw new OCRError('Scanner does not exists', 'WA002');
       }
       if (this.__options.ocr_config !== '') {
         this.__setOcrConfig(this.__options.ocr_config);
@@ -1005,7 +1014,7 @@ class UseBOCR {
       }
       if (address === 0) {
         if (this.__maxRetryCountGetAddress === this.__retryCountGetAddress) {
-          throw new Error('Wrong License Key');
+          throw new OCRError('Wrong License Key', 'WA001');
         }
         this.__retryCountGetAddress++;
       }
@@ -1013,8 +1022,10 @@ class UseBOCR {
     } catch (e) {
       // TODO : License Issue인 경우 에러 값을 받아서 error 로그를 찍을 수 있게 요청필요 (임시 N번 이상 address를 못받으면 강제 에러)
       void 0;
-      void 0;
-      throw e;
+      if (e.errorCode) {
+        throw e;
+      }
+      throw new OCRError('Cannot find Scanner address : ' + e, 'WA004');
     }
   }
   __getBuffer() {
@@ -1129,6 +1140,10 @@ class UseBOCR {
         canvas,
         rotationCanvas
       } = detector.getOCRElements();
+      if (!video) {
+        void 0;
+        return [null, null, null];
+      }
 
       // source image (or video)
       // ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -1154,10 +1169,14 @@ class UseBOCR {
       // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
 
       var calcCanvas = canvas;
-      var calcVideoWidth = video.videoWidth;
-      var calcVideoHeight = video.videoHeight;
-      var calcVideoClientWidth = video.clientWidth;
-      var calcVideoClientHeight = video.clientHeight;
+      var calcVideoWidth = video.videoWidth || 0;
+      var calcVideoHeight = video.videoHeight || 0;
+      var calcVideoClientWidth = video.clientWidth || 0;
+      var calcVideoClientHeight = video.clientHeight || 0;
+      if (calcVideoWidth === 0 || calcVideoHeight === 0) {
+        void 0;
+        return [null, null, null];
+      }
       var calcCropImageSizeWidth = _this10.__cropImageSizeWidth;
       var calcCropImageSizeHeight = _this10.__cropImageSizeHeight;
       var calcVideoOrientation = _this10.__videoOrientation;
@@ -1243,6 +1262,10 @@ class UseBOCR {
         canvas,
         rotationCanvas
       } = detector.getOCRElements();
+      if (!video) {
+        void 0;
+        return [null, null, null];
+      }
 
       // source image (or video)
       // ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -1268,10 +1291,14 @@ class UseBOCR {
       // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
 
       var calcCanvas = canvas;
-      var calcVideoWidth = video.videoWidth;
-      var calcVideoHeight = video.videoHeight;
-      var calcVideoClientWidth = video.clientWidth;
-      var calcVideoClientHeight = video.clientHeight;
+      var calcVideoWidth = video.videoWidth || 0;
+      var calcVideoHeight = video.videoHeight || 0;
+      var calcVideoClientWidth = video.clientWidth || 0;
+      var calcVideoClientHeight = video.clientHeight || 0;
+      if (calcVideoWidth === 0 || calcVideoHeight === 0) {
+        void 0;
+        return [null, null, null];
+      }
       var calcCropImageSizeWidth = _this11.__cropImageSizeWidth;
       var calcCropImageSizeHeight = _this11.__cropImageSizeHeight;
       var calcVideoOrientation = _this11.__videoOrientation;
@@ -1431,7 +1458,7 @@ class UseBOCR {
             barcode = true;
             break;
           default:
-            throw new Error('Unsupported OCR type');
+            throw new OCRError('Unsupported OCR type', 'WA003');
         }
         var result = null;
         if (kor || passport || alien) {
@@ -1450,7 +1477,10 @@ class UseBOCR {
           void 0;
         } else {
           void 0;
-          throw e;
+          if (e.errorCode) {
+            throw e;
+          }
+          throw new OCRError(message, '');
         }
       }
     })();
@@ -1466,7 +1496,7 @@ class UseBOCR {
         }
         var rawData = null;
         var ocrResult = null;
-        if (!_this13.__ocrTypeList.includes(ocrType)) throw new Error('Unsupported OCR type');
+        if (!_this13.__ocrTypeList.includes(ocrType)) throw new OCRError('Unsupported OCR type', 'WA003');
         var recognition = /*#__PURE__*/function () {
           var _ref6 = _asyncToGenerator(function* (isSetIgnoreComplete) {
             var _ocrResult, _ocrResult$ocr_result, _ocrResult2, _ocrResult2$ocr_resul;
@@ -1504,7 +1534,7 @@ class UseBOCR {
                 rawData = _this13.__OCREngine.scanBarcode(address, 0);
                 break;
               default:
-                throw new Error('Scanner does not exists');
+                throw new OCRError('Scanner does not exists', 'WA002');
             }
 
             // TODO: 신용카드는 아직 key:value 형태로 변환 안되어 있음
@@ -1630,7 +1660,10 @@ class UseBOCR {
         }
       } catch (e) {
         void 0;
-        throw e;
+        if (e.errorCode) {
+          throw e;
+        }
+        throw new OCRError('Recognition error : ' + e, 'WA006');
       }
     })();
   }
@@ -2003,7 +2036,7 @@ class UseBOCR {
       if (!navigator.mediaDevices) {
         var error = new Error('navigator.mediaDevices is not supported');
         error.name = 'UnsupportedError';
-        throw error;
+        throw new OCRError(error, 'E400');
       }
       var devices = yield navigator.mediaDevices.enumerateDevices();
       var camera = [];
@@ -2089,7 +2122,7 @@ class UseBOCR {
         preloadingUIWrap,
         preloadingUI
       } = detector.getOCRElements();
-      if (!ocr) throw new Error('ocr div element is not exist');
+      if (!ocr) throw new OCRError('ocr div element is not exist', 'WA007');
       if (videoWrap) videoWrap.remove();
       if (guideBoxWrap) guideBoxWrap.remove();
       if (video) video.remove();
@@ -2770,10 +2803,10 @@ class UseBOCR {
       var guideBoxWidth, guideBoxHeight;
       var calcOcrClientWidth = ocr.clientWidth;
       var calcOcrClientHeight = ocr.clientHeight;
-      var calcVideoWidth = video.videoWidth;
-      var calcVideoHeight = video.videoHeight;
-      var calcVideoClientWidth = video.clientWidth;
-      var calcVideoClientHeight = video.clientHeight;
+      var calcVideoWidth = video.videoWidth || 0;
+      var calcVideoHeight = video.videoHeight || 0;
+      var calcVideoClientWidth = video.clientWidth || 0;
+      var calcVideoClientHeight = video.clientHeight || 0;
       var calcVideoOrientation = _this23.__videoOrientation;
       if (calcVideoWidth === 0 || calcVideoHeight === 0 || calcVideoClientWidth === 0 || calcVideoClientHeight === 0) {
         return;
@@ -3252,7 +3285,7 @@ class UseBOCR {
 
               // failure case
               if (ocrResult === false) {
-                throw new Error("OCR Status is ".concat(_this26.__ocrStatus, ", but ocrResult is false")); // prettier-ignore
+                throw new OCRError("OCR Status is ".concat(_this26.__ocrStatus, ", but ocrResult is false"), 'WA008'); // prettier-ignore
               }
 
               // success case
@@ -3264,7 +3297,7 @@ class UseBOCR {
                 void 0;
                 // 최초 시도
                 ssaResult = yield _this26.__startTruth(_this26.__ocrType, _this26.__address); // prettier-ignore
-                if (ssaResult === null) throw new Error('[ERR] SSA MODE is true. but, ssaResult is null'); // prettier-ignore
+                if (ssaResult === null) throw new OCRError('SSA MODE is true. but, ssaResult is null', 'WA009'); // prettier-ignore
 
                 ssaResultList.push(ssaResult);
                 if (_this26.__options.ssaMaxRetryCount > 0) {
@@ -3349,7 +3382,7 @@ class UseBOCR {
               resolve();
             }
           } catch (e) {
-            var errorMessage = 'Card detection error';
+            var errorMessage = 'Card scan error';
             if (e.message) {
               errorMessage += ': ' + e.message;
             }
@@ -3359,7 +3392,8 @@ class UseBOCR {
             //   await this.__recoveryScan();
             //   this.__recovered = true;
             // } else {
-            yield _this26.__onFailureProcess('WA001', e, errorMessage);
+            var errorCode = e.errorCode || 'WA001';
+            yield _this26.__onFailureProcess(errorCode, e, errorMessage);
             _this26.__closeCamera();
             _this26.__detected = true;
             reject();
@@ -3476,9 +3510,9 @@ class UseBOCR {
         pathname += this.isUsebServerOCR() ? 'ocr/veteran' : __makePathname(this.__options.ocrServerUrlVeteran);
         break;
       case 'credit':
-        throw new Error('Credit card is not Supported Server OCR type');
+        throw new OCRError('Credit card is not Supported Server OCR type', 'SE005');
       default:
-        throw new Error("Unsupported OCR type: ".concat(ocrType));
+        throw new OCRError("Unsupported OCR type: ".concat(ocrType), 'SE005');
     }
     return origin + pathname;
   }
@@ -3623,9 +3657,7 @@ class UseBOCR {
                     yield _this30.__changeStage(_this30.IN_PROGRESS.OCR_FAILED);
                   }
                 } catch (e) {
-                  var error = new Error("An Error occured in request Server OCR");
-                  error.errorCode = 'SE001';
-                  throw error;
+                  throw new OCRError("An Error occured in request Server OCR", 'SE001');
                 }
 
                 // ssa 시도?
@@ -3644,9 +3676,7 @@ class UseBOCR {
                 try {
                   ocrResult = _this30.__serverOCRPreprocessor(_.cloneDeep(ocrResult));
                 } catch (e) {
-                  var _error = new Error("An Error occured in Server OCR Preprocessor");
-                  _error.errorCode = 'SE003';
-                  throw _error;
+                  throw new OCRError("An Error occured in Server OCR Preprocessor", 'SE003');
                 }
                 _this30.__debug("ocrServerPreprocessor result(after) : ", {
                   ocrResult
@@ -3655,9 +3685,7 @@ class UseBOCR {
                 try {
                   parsedOcrResult = usebOCRAPIParser.parseOcrResult(_this30.__ocrType, _this30.__ssaMode, ocrResult, _this30.__options.ocrServerParseKeyList);
                 } catch (e) {
-                  var _error2 = new Error("An Error occured in Server OCR Parser");
-                  _error2.errorCode = 'SE002';
-                  throw _error2;
+                  throw new OCRError("An Error occured in Server OCR Parser", 'SE002');
                 }
                 var {
                   legacyFormat,
@@ -3682,9 +3710,7 @@ class UseBOCR {
                 try {
                   yield _this30.__compressImages(review_result, 0.0);
                 } catch (e) {
-                  var _error3 = new Error("An Error occured in compressImages");
-                  _error3.errorCode = 'SE004';
-                  throw _error3;
+                  throw new OCRError("An Error occured in compressImages", 'SE004');
                 }
 
                 // TODO: 서버 모드일때 암호화 는 어떻게 ? 지우는게 맞는가? js 레벨로하면 메모리에 남음 서버에서 암호화된값을 내려주는 옵션이 있어야함
@@ -3702,7 +3728,7 @@ class UseBOCR {
                   var resultCode = 'SF001';
                   var resultMessage = "".concat(ocrResult.scanner_type, ":").concat((_ocrResult3 = ocrResult) === null || _ocrResult3 === void 0 ? void 0 : _ocrResult3.result_code);
                   var resultDetail = JSON.stringify(ocrResult);
-                  var _error4 = {
+                  var error = {
                     errorCode: resultCode,
                     message: resultMessage,
                     stack: resultDetail
@@ -3710,7 +3736,7 @@ class UseBOCR {
                   yield _this30.__onFailureProcess(resultCode, resultDetail, resultMessage); // QURAM Server OCR 에러
 
                   _this30.__closeCamera();
-                  reject(_error4);
+                  reject(error);
                 }
               }
             } catch (e) {
@@ -4019,7 +4045,7 @@ class UseBOCR {
         return yield _this34.__blobToBase64(blob);
       } catch (e) {
         void 0;
-        throw e;
+        throw new OCRError(e, 'WA010');
       } finally {
         _this34.__OCREngine.destroyEncodedJpg();
       }
@@ -4133,7 +4159,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.35.0';
+    return 'v1.36.0';
   }
 
   // 기존 동작: 모듈 로드 후 카메라 권한 요청

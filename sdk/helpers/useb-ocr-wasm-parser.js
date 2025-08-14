@@ -7,12 +7,13 @@ function _toPrimitive(input, hint) { if (typeof input !== "object" || input === 
 
 /* global-module */
 import objectUtil from './object-util.js';
+import { OCRError } from '../ocr.js';
 class OcrResultParser {
   constructor() {
     _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'alien-back', 'veteran', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'veteran-ssa', 'credit-ssa', 'barcode']);
   }
   parseOcrResult(ocrType, ssaMode, ocrResult, ssaResult, ssaRetryCount, ssaResultList, ssaRetryType, ssaRetryPivot) {
-    if (!this.__ocrTypeList.includes(ocrType)) throw new Error('ResultParser :: Unsupported OCR type');
+    if (!this.__ocrTypeList.includes(ocrType)) throw new OCRError('ResultParser :: Unsupported OCR type', 'WA003');
     var legacyFormat = {};
     var newFormat = {};
 
@@ -53,7 +54,7 @@ class OcrResultParser {
         ocrResult.ocr_result = newFormat;
         break;
       default:
-        throw new Error('Unsupported OCR type');
+        throw new OCRError('ResultParser :: Unsupported OCR type', 'WA003');
     }
     return {
       legacyFormat,
