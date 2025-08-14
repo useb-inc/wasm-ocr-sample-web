@@ -359,3 +359,29 @@ function endOCR() {
   hideLoadingUI();
 }
 ```
+
+### OCR SDK 에러코드 
+| 에러코드 | 메시지                                                 | 설명                               |
+| -------- | ------------------------------------------------------ | ----------------------------- |
+| WA001    | License key is empty                                   | 라이센스 키 누락                  |
+| WA001    | Wrong License Key                                      | 잘못된 라이센스 키                |
+| WA002    | Scanner does not exists                                | WASM OCR 스캐너를 찾을 수 없음     |
+| WA003    | Unsupported OCR type                                   | 지원하지 않는 OCR 타입            |
+| WA003    | ResultParser :: Unsupported OCR type                   | WASM OCR Result Parser 에러    |
+| WA004    | Cannot find Scanner address                            | WASM OCR 스캐너 주소를 찾을 수 없음 |
+| WA005    | WebAssembly is not supported. in this browser.         | WebAssembly 미지원 브라우저       |
+| WA006    | Recognition error                                      | 인식 에러                        |
+| WA007    | ocr div element is not exist                           | data-useb-ocr div가 없음        |
+| WA008    | OCR Status is ${\_\_ocrStatus}, but ocrResult is false | ocr 완료되었으나 ocrResult가 없음  |
+| WA009    | SSA Mode is true. but, ocrType is invalid              | 잘못된 SSA 모드 타입              |
+| WA011    | Not initialized!                                       | WASM 모듈이 초기화되지 않음        |
+| E403     | Camera Access Permission is not allowed                | 카메라 권한 거부                  |
+| E404     | Camera Resource is not found                           | 카메라 리소스 없음                |
+| E400     | Camera Resource Request Retry Limit Exceeded           | 재시도 한도 초과                  |
+| E999     | Unknown Camera Error                                   | 알 수 없는 카메라 에러             |
+| SE001    | WASM Resource load timeout                             | WASM 리소스 로드 타임아웃          |
+| SE001    | An Error occured in request Server OCR                 | Server OCR 요청 에러            |
+| SE003    | An Error occured in Server OCR Preprocessor            | Server OCR 전처리 에러           |
+| SE002    | An Error occured in Server OCR Parser                  | Server OCR 파싱 에러            |
+| SE004    | An Error occured in compressImages                     | 이미지 압축 에러                  |
+| SE005    | ResultParser :: Unsupported OCR type                   | Server OCR Result Parser 에러  |
