@@ -193,38 +193,31 @@ class OcrResultParser {
     }
   }
   __addBirth(ocrResult) {
-    if (ocrResult.masked_jumin) {
-      // 암호화 된 경우 대응
-      ocrResult.birth = ocrResult.masked_jumin.slice(0, 6);
-    } else {
-      // 일반(평문) 시나리오
-      ocrResult.birth = ocrResult.jumin.slice(0, 6);
-    }
+    var toBirth = ocrResult.masked_jumin /* 암호화 */ || ocrResult.jumin; /* 일반(평문) */
+    ocrResult.birth = toBirth.slice(0, 6); // 기존 생년월일
+    ocrResult.birthday = toBirth.slice(0, 6); // 생년월일. (여권값과 키 이름을 맞추기 위해 추가)
   }
+
   __addIsOldFormatDriverNumber(ocrResult) {
     if (ocrResult.masked_jumin) {
       // 암호화 된 경우 대응
-      if (ocrResult.result_scan_type === '2') {
-        // 구형 면허증 포멧 판정 (ex: 제주 13-001234-12 -> true)
-        var regex = /[가-힣]/g;
-        ocrResult.is_old_format_driver_number = !!ocrResult.masked_driver_number.match(regex);
+      // 구형 면허증 포멧 판정 (ex: 제주 13-001234-12 -> true)
+      var regex = /[가-힣]/g;
+      ocrResult.is_old_format_driver_number = !!ocrResult.masked_driver_number.match(regex);
 
-        // TODO : 암호화 된값에서는 처리할 수 없고, 마스킹된 운전면허번호에 ' '가 없어 처리 할 수 없음.
-        // if (ocrResult.is_old_format_driver_number) {
-        //   // useb api 포멧에 맞게 변경 (to: 제주-13-001234-12)
-        //   ocrResult.masked_driver_number = ocrResult.masked_driver_number.replace(' ', '-');
-        // }
-      }
+      // TODO : 암호화 된값에서는 처리할 수 없고, 마스킹된 운전면허번호에 ' '가 없어 처리 할 수 없음.
+      // if (ocrResult.is_old_format_driver_number) {
+      //   // useb api 포멧에 맞게 변경 (to: 제주-13-001234-12)
+      //   ocrResult.masked_driver_number = ocrResult.masked_driver_number.replace(' ', '-');
+      // }
     } else {
       // 일반(평문) 시나리오
-      if (ocrResult.result_scan_type === '2') {
-        // 구형 면허증 포멧 판정 (ex: 제주 13-001234-12 -> true)
-        var _regex = /[가-힣]/g;
-        ocrResult.is_old_format_driver_number = !!ocrResult.driver_number.match(_regex);
-        if (ocrResult.is_old_format_driver_number) {
-          // useb api 포멧에 맞게 변경 (to: 제주-13-001234-12)
-          ocrResult.driver_number = ocrResult.driver_number.replace(' ', '-');
-        }
+      // 구형 면허증 포멧 판정 (ex: 제주 13-001234-12 -> true)
+      var _regex = /[가-힣]/g;
+      ocrResult.is_old_format_driver_number = !!ocrResult.driver_number.match(_regex);
+      if (ocrResult.is_old_format_driver_number) {
+        // useb api 포멧에 맞게 변경 (to: 제주-13-001234-12)
+        ocrResult.driver_number = ocrResult.driver_number.replace(' ', '-');
       }
     }
   }
@@ -232,7 +225,7 @@ class OcrResultParser {
     // 주민번호 형식 리턴값 형식 변경
     this.__reformatJumin(ocrResult);
     this.__addBirth(ocrResult);
-    this.__addIsOldFormatDriverNumber(ocrResult);
+    if (ocrResult.result_scan_type === '2') this.__addIsOldFormatDriverNumber(ocrResult);
     var keyMapIdDriver = {
       Completed: 'complete',
       type: 'result_scan_type',
@@ -284,6 +277,7 @@ class OcrResultParser {
   }
   __parseAlien(ocrResult, legacyFormat) {
     this.__reformatJumin(ocrResult);
+    this.__addBirth(ocrResult);
     var keyMapAlien = {
       Completed: 'complete',
       name: 'name',
@@ -317,6 +311,7 @@ class OcrResultParser {
   }
   __parseVeteran(ocrResult, legacyFormat) {
     this.__reformatJumin(ocrResult);
+    this.__addBirth(ocrResult);
     var keyMapAlien = {
       Completed: 'complete',
       name: 'name',

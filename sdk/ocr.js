@@ -8,12 +8,22 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.36.0';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.36.0';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.36.0';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.36.0';
-import ImageUtil from './helpers/image-util.js?ver=v1.36.0';
+import detector from './helpers/detector.js?ver=v1.37.0';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.37.0';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.37.0';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.37.0';
+import ImageUtil from './helpers/image-util.js?ver=v1.37.0';
 var instance;
+var OCRRESULT_KEY_SET = new Object({
+  IDCARD: new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'region', 'overseas_resident', 'driver_number', 'driver_serial', 'driver_type', 'aptitude_test_date_start', 'aptitude_test_date_end',
+  // 'is_old_format_driver_number',
+  // 'birth',
+
+  'color_point', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image']),
+  PASSPORT: new Set(['result_scan_type', 'name', 'sur_name', 'given_name', 'passport_type', 'issuing_country', 'passport_number', 'nationality', 'issued_date', 'sex', 'expiry_date', 'personal_number', 'jumin', 'birthday', 'name_kor', 'mrz1', 'mrz2', 'color_point', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image']),
+  ALIEN: new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'nationality', 'visa_type', 'name_kor', 'color_point', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image']),
+  VETERAN: new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'masked_veterans_number', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image'])
+});
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
   showClipFrame: false,
@@ -315,14 +325,10 @@ class UseBOCR {
     _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'alien-back', 'veteran', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'veteran-ssa', 'barcode']);
     _defineProperty(this, "__ocrTypeNumberToString", new Map([['1', 'idcard'], ['2', 'driver'], ['3', 'passport'], ['4', 'foreign-passport'], ['5', 'alien'], ['5-1', 'alien'], ['5-2', 'alien'], ['5-3', 'alien'], ['13', 'veteran']]));
     _defineProperty(this, "__ocrStringToTypeNumber", new Map([['idcard', '1'], ['driver', '2'], ['passport', '3'], ['foreign-passport', '4'], ['alien', '5'], ['alien', '5-1'], ['alien', '5-2'], ['alien', '5-3'], ['veteran', '13']]));
-    _defineProperty(this, "__ocrResultIdcardKeySet", new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'region', 'overseas_resident', 'driver_number', 'driver_serial', 'driver_type', 'aptitude_test_date_start', 'aptitude_test_date_end',
-    // 'is_old_format_driver_number',
-    // 'birth',
-
-    'color_point', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image']));
-    _defineProperty(this, "__ocrResultPassportKeySet", new Set(['result_scan_type', 'name', 'sur_name', 'given_name', 'passport_type', 'issuing_country', 'passport_number', 'nationality', 'issued_date', 'sex', 'expiry_date', 'personal_number', 'jumin', 'birthday', 'name_kor', 'mrz1', 'mrz2', 'color_point', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image']));
-    _defineProperty(this, "__ocrResultAlienKeySet", new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'nationality', 'visa_type', 'name_kor', 'color_point', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image']));
-    _defineProperty(this, "__ocrResultVeteranKeySet", new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'masked_veterans_number', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image']));
+    _defineProperty(this, "__ocrResultIdcardKeySet", _.cloneDeep(OCRRESULT_KEY_SET.IDCARD));
+    _defineProperty(this, "__ocrResultPassportKeySet", _.cloneDeep(OCRRESULT_KEY_SET.PASSPORT));
+    _defineProperty(this, "__ocrResultAlienKeySet", _.cloneDeep(OCRRESULT_KEY_SET.ALIEN));
+    _defineProperty(this, "__ocrResultVeteranKeySet", _.cloneDeep(OCRRESULT_KEY_SET.VETERAN));
     _defineProperty(this, "__ocrResultTruthKeySet", new Set(['truth', 'conf']));
     _defineProperty(this, "__pageEnd", false);
     _defineProperty(this, "__ocr", void 0);
@@ -585,19 +591,24 @@ class UseBOCR {
     })();
   }
   __setOptionResultKeyList(settings) {
-    if (!!settings.ocrResultIdcardKeylist || !!settings.encryptedOcrResultIdcardKeylist || !!settings.ocrResultPassportKeylist || !!settings.encryptedOcrResultPassportKeylist || !!settings.ocrResultAlienKeylist || !!settings.encryptedOcrResultAlienKeylist || !!settings.ocrResultVeteranKeylist || !!settings.encryptedOcrResultVeteranKeylist) {
-      var ocrResultKeylistStringToIter = (str, keyIter) => str.toLowerCase().replace(/\s/g, '').split(',').filter(k => keyIter.has(k));
-      if (settings.ocrResultIdcardKeylist) settings.ocrResultIdcardKeylist = ocrResultKeylistStringToIter(settings.ocrResultIdcardKeylist, this.__ocrResultIdcardKeySet); // prettier-ignore
-      if (settings.encryptedOcrResultIdcardKeylist) settings.encryptedOcrResultIdcardKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultIdcardKeylist, this.__ocrResultIdcardKeySet); // prettier-ignore
-      if (settings.ocrResultPassportKeylist) settings.ocrResultPassportKeylist = ocrResultKeylistStringToIter(settings.ocrResultPassportKeylist, this.__ocrResultPassportKeySet); // prettier-ignore
-      if (settings.encryptedOcrResultPassportKeylist) settings.encryptedOcrResultPassportKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultPassportKeylist, this.__ocrResultPassportKeySet); // prettier-ignore
-      if (settings.ocrResultAlienKeylist) settings.ocrResultAlienKeylist = ocrResultKeylistStringToIter(settings.ocrResultAlienKeylist, this.__ocrResultAlienKeySet); // prettier-ignore
-      if (settings.encryptedOcrResultAlienKeylist) settings.encryptedOcrResultAlienKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultAlienKeylist, this.__ocrResultAlienKeySet); // prettier-ignore
-      if (settings.ocrResultVeteranKeylist) settings.ocrResultVeteranKeylist = ocrResultKeylistStringToIter(settings.ocrResultVeteranKeylist, this.__ocrResultVeteranKeySet); // prettier-ignore
-      if (settings.encryptedOcrResultVeteranKeylist) settings.encryptedOcrResultVeteranKeylist = ocrResultKeylistStringToIter(settings.encryptedOcrResultVeteranKeylist, this.__ocrResultVeteranKeySet); // prettier-ignore
-    }
+    var ocrResultKeylistStringToIter = (str, keyIter) => str.toLowerCase().replace(/\s/g, '').split(',').filter(k => keyIter.has(k));
+    var ocrResultIdcardKeylist = typeof settings.ocrResultIdcardKeylist === 'string' ? ocrResultKeylistStringToIter(settings.ocrResultIdcardKeylist, this.__ocrResultIdcardKeySet) : [...this.__ocrResultIdcardKeySet];
+    var encryptedOcrResultIdcardKeylist = typeof settings.encryptedOcrResultIdcardKeylist === 'string' ? ocrResultKeylistStringToIter(settings.encryptedOcrResultIdcardKeylist, this.__ocrResultIdcardKeySet) : [...this.__ocrResultIdcardKeySet];
+    var ocrResultPassportKeylist = typeof settings.ocrResultPassportKeylist === 'string' ? ocrResultKeylistStringToIter(settings.ocrResultPassportKeylist, this.__ocrResultPassportKeySet) : [...this.__ocrResultPassportKeySet];
+    var encryptedOcrResultPassportKeylist = typeof settings.encryptedOcrResultPassportKeylist === 'string' ? ocrResultKeylistStringToIter(settings.encryptedOcrResultPassportKeylist, this.__ocrResultPassportKeySet) : [...this.__ocrResultPassportKeySet];
+    var ocrResultAlienKeylist = typeof settings.ocrResultAlienKeylist === 'string' ? ocrResultKeylistStringToIter(settings.ocrResultAlienKeylist, this.__ocrResultAlienKeySet) : [...this.__ocrResultAlienKeySet];
+    var encryptedOcrResultAlienKeylist = typeof settings.encryptedOcrResultAlienKeylist === 'string' ? ocrResultKeylistStringToIter(settings.encryptedOcrResultAlienKeylist, this.__ocrResultAlienKeySet) : [...this.__ocrResultAlienKeySet];
+    var ocrResultVeteranKeylist = typeof settings.ocrResultVeteranKeylist === 'string' ? ocrResultKeylistStringToIter(settings.ocrResultVeteranKeylist, this.__ocrResultVeteranKeySet) : [...this.__ocrResultVeteranKeySet];
+    var encryptedOcrResultVeteranKeylist = typeof settings.encryptedOcrResultVeteranKeylist === 'string' ? ocrResultKeylistStringToIter(settings.encryptedOcrResultVeteranKeylist, this.__ocrResultVeteranKeySet) : [...this.__ocrResultVeteranKeySet];
+    settings.ocrResultIdcardKeylist = ocrResultIdcardKeylist;
+    settings.encryptedOcrResultIdcardKeylist = encryptedOcrResultIdcardKeylist;
+    settings.ocrResultPassportKeylist = ocrResultPassportKeylist;
+    settings.encryptedOcrResultPassportKeylist = encryptedOcrResultPassportKeylist;
+    settings.ocrResultAlienKeylist = ocrResultAlienKeylist;
+    settings.encryptedOcrResultAlienKeylist = encryptedOcrResultAlienKeylist;
+    settings.ocrResultVeteranKeylist = ocrResultVeteranKeylist;
+    settings.encryptedOcrResultVeteranKeylist = encryptedOcrResultVeteranKeylist;
   }
-
   __setOptionServerOcrResultKeyList(settings) {
     if (!!settings.ocrServerParseKeyList) {
       settings.ocrServerParseKeyList = settings.ocrServerParseKeyList.replace(/\s/g, '').split(',');
@@ -1618,26 +1629,23 @@ class UseBOCR {
             if (((_ocrResult = ocrResult) === null || _ocrResult === void 0 ? void 0 : (_ocrResult$ocr_result = _ocrResult.ocr_result) === null || _ocrResult$ocr_result === void 0 ? void 0 : _ocrResult$ocr_result.complete) !== 'undefined' && ((_ocrResult2 = ocrResult) === null || _ocrResult2 === void 0 ? void 0 : (_ocrResult2$ocr_resul = _ocrResult2.ocr_result) === null || _ocrResult2$ocr_resul === void 0 ? void 0 : _ocrResult2$ocr_resul.complete) === 'true') {
               return true;
             } else {
-              if (isSetIgnoreComplete) {
-                if (_this13.__manualOCRRetryCount < _this13.__manualOCRMaxRetryCount) {
-                  // detectedCardQueue에서 한장을 꺼내서 갱신한다.
-                  // 저장되어있는 이미지의 숫자가 retry 보다 작은경우 대비하여 %를 사용함
-                  var queueIdx = _this13.__manualOCRRetryCount % _this13.__detectedCardQueue.length;
-                  imgData = _this13.__detectedCardQueue[queueIdx];
-                  _this13.__manualOCRRetryCount++;
-                  return yield recognition(isSetIgnoreComplete);
-                } else {
-                  // 사진 한장으로 OCR 실패 (popup 내리고 setIgnoreComplete(false) 처리?
-                  _this13.__manualOCRRetryCount = 0;
-                  _this13.setIgnoreComplete(false);
-                  _this13.__blurCaptureButton(); // 팝업이 내려갈때 처리되지만 미리 처리
-                  yield _this13.__changeStage(_this13.IN_PROGRESS.MANUAL_CAPTURE_FAILED, false, imgDataUrl);
-                  _this13.__setStyle(detector.getOCRElements().video, {
-                    display: ''
-                  });
-                  return false;
-                }
+              if (!isSetIgnoreComplete) return false;
+              if (_this13.__manualOCRRetryCount < _this13.__manualOCRMaxRetryCount) {
+                // detectedCardQueue에서 한장을 꺼내서 갱신한다.
+                // 저장되어있는 이미지의 숫자가 retry 보다 작은경우 대비하여 %를 사용함
+                var queueIdx = _this13.__manualOCRRetryCount % _this13.__detectedCardQueue.length;
+                imgData = _this13.__detectedCardQueue[queueIdx];
+                _this13.__manualOCRRetryCount++;
+                return yield recognition(isSetIgnoreComplete);
               } else {
+                // 사진 한장으로 OCR 실패 (popup 내리고 setIgnoreComplete(false) 처리?
+                _this13.__manualOCRRetryCount = 0;
+                _this13.setIgnoreComplete(false);
+                _this13.__blurCaptureButton(); // 팝업이 내려갈때 처리되지만 미리 처리
+                yield _this13.__changeStage(_this13.IN_PROGRESS.MANUAL_CAPTURE_FAILED, false, imgDataUrl);
+                _this13.__setStyle(detector.getOCRElements().video, {
+                  display: ''
+                });
                 return false;
               }
             }
@@ -1719,8 +1727,12 @@ class UseBOCR {
         // TODO: worker를 사용하여 메인(UI 랜더링) 스레드가 멈추지 않도록 처리 필요 (현재 loading UI 띄우면 애니메이션 멈춤)
         // TODO: setTimeout 으로 나누더라도 효과 없음 setTimeout 지우고, worker로 변경 필요
         setTimeout(() => {
-          resolve(this.__OCREngine.scanTruth(address, resultBuffer));
+          var ssaResult = this.__OCREngine.scanTruth(address, resultBuffer);
+          resolve(ssaResult);
         }, 500);
+        // const ssaResult = this.__OCREngine.scanTruth(address, resultBuffer);
+        // console.log('__startTruth', { ssaResult });
+        // resolve(ssaResult);
       } else {
         reject(new Error('SSA Mode is true. but, ocrType is invalid : ' + ocrType));
       }
@@ -3204,6 +3216,7 @@ class UseBOCR {
       this.__detected = false;
       this.setIgnoreComplete(false);
       this.__setupEncryptMode();
+      this.__setupResultKeylist();
       this.__setupImageMode();
       this.__blurCaptureButton();
       this.__address = 0;
@@ -3451,6 +3464,9 @@ class UseBOCR {
   }
   __requestGetAPIToken() {
     return new Promise((resolve, reject) => {
+      if (!this.__options.authServerInfo) {
+        throw new OCRError('ServerOCR credential is empty', 'SE001');
+      }
       var credential = this.__options.authServerInfo.credential;
       var baseUrl = this.__options.authServerInfo.baseUrl;
       fetch("".concat(baseUrl, "/sign-in"), {
@@ -3860,49 +3876,37 @@ class UseBOCR {
         // TODO: ssa 에 대한 암호화 값 제공은 별도 처리하지 않음
         //       추후 id_truth 와 fd_confidence 값 암호화 요청이 있을 경우 대응
       } else if (this.__options.useEncryptOverallMode) {
-        this.__resultIdcardInfo(this.__options.ocrResultIdcardKeylist);
-        this.__resultPassportInfo(this.__options.ocrResultPassportKeylist);
-        this.__resultAlienInfo(this.__options.ocrResultAlienKeylist);
-        this.__encryptIdcardInfo(this.__options.encryptedOcrResultIdcardKeylist);
-        this.__encryptPassportInfo(this.__options.encryptedOcrResultPassportKeylist);
-        this.__encryptAlienInfo(this.__options.encryptedOcrResultAlienKeylist);
         this.__setOverallEncrypt(true);
         this.__setPiiEncrypt(false);
-        if (this.__ssaMode) {
-          this.__resultTruthInfo([...this.__ocrResultTruthKeySet]);
-          if (this.isEncryptMode()) {
-            this.__encryptTruthInfo([...this.__ocrResultTruthKeySet]);
-          }
-        }
       } else if (this.__options.useEncryptValueMode) {
-        this.__resultIdcardInfo(this.__options.ocrResultIdcardKeylist);
-        this.__resultPassportInfo(this.__options.ocrResultPassportKeylist);
-        this.__resultAlienInfo(this.__options.ocrResultAlienKeylist);
-        this.__encryptIdcardInfo(this.__options.encryptedOcrResultIdcardKeylist);
-        this.__encryptPassportInfo(this.__options.encryptedOcrResultPassportKeylist);
-        this.__encryptAlienInfo(this.__options.encryptedOcrResultAlienKeylist);
         this.__setOverallEncrypt(false);
         this.__setPiiEncrypt(false);
-        if (this.__ssaMode) {
-          this.__resultTruthInfo([...this.__ocrResultTruthKeySet]);
-          if (this.isEncryptMode()) {
-            this.__encryptTruthInfo([...this.__ocrResultTruthKeySet]);
-          }
-        }
       }
     } else {
-      this.__resultIdcardInfo([...this.__ocrResultIdcardKeySet]);
-      this.__resultPassportInfo([...this.__ocrResultPassportKeySet]);
-      this.__resultAlienInfo([...this.__ocrResultAlienKeySet]);
-      this.__encryptIdcardInfo('');
-      this.__encryptPassportInfo('');
-      this.__encryptAlienInfo('');
       this.__setOverallEncrypt(false);
       this.__setPiiEncrypt(false);
-      if (this.__ssaMode) {
-        this.__resultTruthInfo([...this.__ocrResultTruthKeySet]);
-        this.__encryptTruthInfo('');
-      }
+    }
+  }
+  __setupPlainResultKeylist() {
+    this.__resultIdcardInfo(this.__options.ocrResultIdcardKeylist);
+    this.__resultPassportInfo(this.__options.ocrResultPassportKeylist);
+    this.__resultAlienInfo(this.__options.ocrResultAlienKeylist);
+    if (this.__ssaMode) {
+      this.__resultTruthInfo([...this.__ocrResultTruthKeySet]);
+    }
+  }
+  __setupEncryptResultKeylist() {
+    this.__encryptIdcardInfo(this.__options.encryptedOcrResultIdcardKeylist);
+    this.__encryptPassportInfo(this.__options.encryptedOcrResultPassportKeylist);
+    this.__encryptAlienInfo(this.__options.encryptedOcrResultAlienKeylist);
+    if (this.__ssaMode) {
+      this.__encryptTruthInfo([...this.__ocrResultTruthKeySet]);
+    }
+  }
+  __setupResultKeylist() {
+    this.__setupPlainResultKeylist();
+    if (this.isEncryptMode() && !this.__options.useEncryptMode) {
+      this.__setupEncryptResultKeylist();
     }
   }
   __setupImageMode() {
@@ -4159,7 +4163,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.36.0';
+    return 'v1.37.0';
   }
 
   // 기존 동작: 모듈 로드 후 카메라 권한 요청
