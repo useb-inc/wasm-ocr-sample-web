@@ -193,9 +193,13 @@ class OcrResultParser {
     }
   }
   __addBirth(ocrResult) {
-    var toBirth = ocrResult.masked_jumin /* 암호화 */ || ocrResult.jumin; /* 일반(평문) */
-    ocrResult.birth = toBirth.slice(0, 6); // 기존 생년월일
-    ocrResult.birthday = toBirth.slice(0, 6); // 생년월일. (여권값과 키 이름을 맞추기 위해 추가)
+    if (ocrResult.birthday) {
+      // 여권
+      ocrResult.birth = ocrResult.birthday;
+    } else {
+      var toBirth = ocrResult.masked_jumin /* 암호화 */ || ocrResult.jumin; /* 일반(평문) */
+      ocrResult.birth = toBirth.slice(0, 6); // 생년월일
+    }
   }
 
   __addIsOldFormatDriverNumber(ocrResult) {
@@ -248,6 +252,7 @@ class OcrResultParser {
   }
   __parsePassport(ocrResult, legacyFormat) {
     this.__reformatJumin(ocrResult);
+    this.__addBirth(ocrResult);
     var keyMapPassport = {
       Completed: 'complete',
       name: 'name',
