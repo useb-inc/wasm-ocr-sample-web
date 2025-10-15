@@ -353,7 +353,7 @@ class UISimulator {
         this.__saveSettingsHandler();
       });
       document.getElementById('wasm-resource-timeout').addEventListener('change', e => {
-        this.__settings.wasmResourceTimeout = Number(e.target.value) > 0 ? Number(e.target.value) : -1;
+        this.__settings.wasmResourceTimeout = Number(e.target.value) > -1 ? Number(e.target.value) : -1;
         this.__saveSettingsHandler();
       });
       document.getElementById('use-auto-switch').addEventListener('change', e => {

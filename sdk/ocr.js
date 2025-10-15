@@ -8,11 +8,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.37.1';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.37.1';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.37.1';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.37.1';
-import ImageUtil from './helpers/image-util.js?ver=v1.37.1';
+import detector from './helpers/detector.js?ver=v1.37.2';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.37.2';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.37.2';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.37.2';
+import ImageUtil from './helpers/image-util.js?ver=v1.37.2';
 var instance;
 var OCRRESULT_KEY_SET = new Object({
   IDCARD: new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'region', 'overseas_resident', 'driver_number', 'driver_serial', 'driver_type', 'aptitude_test_date_start', 'aptitude_test_date_end',
@@ -323,8 +323,8 @@ class UseBOCR {
     _defineProperty(this, "__onInProgressChange", null);
     _defineProperty(this, "__serverOCRPreprocessor", defaultServerOCRPreprocessor.bind(this));
     _defineProperty(this, "__ocrTypeList", ['idcard', 'driver', 'passport', 'foreign-passport', 'alien', 'alien-back', 'veteran', 'credit', 'idcard-ssa', 'driver-ssa', 'passport-ssa', 'foreign-passport-ssa', 'alien-ssa', 'veteran-ssa', 'barcode']);
-    _defineProperty(this, "__ocrTypeNumberToString", new Map([['1', 'idcard'], ['2', 'driver'], ['3', 'passport'], ['4', 'foreign-passport'], ['5', 'alien'], ['5-1', 'alien'], ['5-2', 'alien'], ['5-3', 'alien'], ['13', 'veteran']]));
-    _defineProperty(this, "__ocrStringToTypeNumber", new Map([['idcard', '1'], ['driver', '2'], ['passport', '3'], ['foreign-passport', '4'], ['alien', '5'], ['alien', '5-1'], ['alien', '5-2'], ['alien', '5-3'], ['veteran', '13']]));
+    _defineProperty(this, "__ocrTypeNumberToString", new Map([['1', 'idcard'], ['2', 'driver'], ['3', 'passport'], ['4', 'foreign-passport'], ['5', 'alien'], ['5-1', 'alien'], ['5-2', 'alien'], ['5-3', 'alien'], ['6', 'alien-back'], ['13', 'veteran']]));
+    _defineProperty(this, "__ocrStringToTypeNumber", new Map([['idcard', '1'], ['driver', '2'], ['passport', '3'], ['foreign-passport', '4'], ['alien', '5'], ['alien', '5-1'], ['alien', '5-2'], ['alien', '5-3'], ['alien-back', '6'], ['veteran', '13']]));
     _defineProperty(this, "__ocrResultIdcardKeySet", _.cloneDeep(OCRRESULT_KEY_SET.IDCARD));
     _defineProperty(this, "__ocrResultPassportKeySet", _.cloneDeep(OCRRESULT_KEY_SET.PASSPORT));
     _defineProperty(this, "__ocrResultAlienKeySet", _.cloneDeep(OCRRESULT_KEY_SET.ALIEN));
@@ -730,11 +730,14 @@ class UseBOCR {
     var _this6 = this;
     return _asyncToGenerator(function* () {
       var waitingRetryCount = 0;
-      return new Promise(resolve => {
+      return new Promise((resolve, reject) => {
         var check = () => {
+          var preloadingStatus = _this6.getPreloadingStatus();
           setTimeout( /*#__PURE__*/_asyncToGenerator(function* () {
             if (_this6.isPreloaded()) {
               resolve();
+            } else if (!_this6.isPreloaded() && preloadingStatus === _this6.PRELOADING_STATUS.NOT_STARTED) {
+              reject(new OCRError('[Network Error] Load to WASM Resource failed with timeout', 'SE001'));
             } else {
               waitingRetryCount++;
               void 0;
@@ -1734,7 +1737,7 @@ class UseBOCR {
         // console.log('__startTruth', { ssaResult });
         // resolve(ssaResult);
       } else {
-        reject(new Error('SSA Mode is true. but, ocrType is invalid : ' + ocrType));
+        reject(new OCRError("SSA Mode is true. but, ocrType is invalid : ".concat(ocrType), 'SE001'));
       }
     });
   }
@@ -3167,7 +3170,7 @@ class UseBOCR {
       });
       src = "\n    return (async function() {\n      ".concat(src, "\n      Module.lengthBytesUTF8 = lengthBytesUTF8\n      Module.stringToUTF8 = stringToUTF8\n      return Module\n    })()\n        ");
       var initializeOCREngine = new Function(src)();
-      var useLoadResourceTimeout = _this24.__options.useAutoSwitchToServerMode && _this24.__options.wasmResourceTimeout > 0;
+      var useLoadResourceTimeout = _this24.__options.useAutoSwitchToServerMode && _this24.__options.wasmResourceTimeout > -1;
       _this24.__wasmResourceTimeoutFn = _this24.__wasmResourceTimeoutFn ? _this24.__wasmResourceTimeoutFn : _this24.__wasmResourceTimer();
       try {
         _this24.__OCREngine = useLoadResourceTimeout ? yield Promise.race([initializeOCREngine, _this24.__wasmResourceTimeoutFn]) : yield Promise.resolve(initializeOCREngine);
@@ -3334,7 +3337,7 @@ class UseBOCR {
                         _this26.__ssaRetryCount++;
                         void 0; // prettier-ignore
                         ssaResult = yield _this26.__startTruthRetry(_this26.__ocrType, _this26.__address, item); // prettier-ignore
-                        if (ssaResult === null) throw new Error('[ERR] SSA MODE is true. but, ssaResult is null'); // prettier-ignore
+                        if (ssaResult === null) throw new OCRError('SSA MODE is true. but, ssaResult is null', 'WA009'); // prettier-ignore
 
                         ssaResultList.push(ssaResult);
                       });
@@ -3551,7 +3554,6 @@ class UseBOCR {
        * - useb token 발급 불필요
        */
 
-      var payload;
       if (_this28.isUsebServerOCR()) {
         var apiToken = yield _this28.__requestGetAPIToken();
         var myHeaders = new Headers();
@@ -3566,7 +3568,7 @@ class UseBOCR {
         } : undefined), fakeMode ? {
           fake_image: 'true'
         } : undefined);
-        payload = JSON.stringify(param);
+        var payload = JSON.stringify(param);
         var requestOptions = {
           method: 'POST',
           headers: myHeaders,
@@ -4122,13 +4124,11 @@ class UseBOCR {
     var _this38 = this;
     return _asyncToGenerator(function* () {
       return new Promise((_, reject) => {
-        var useLoadResourceTimeout = _this38.__options.useAutoSwitchToServerMode && _this38.__options.wasmResourceTimeout > 0;
+        var useLoadResourceTimeout = _this38.__options.useAutoSwitchToServerMode && _this38.__options.wasmResourceTimeout > -1;
         var wasmResourceTimeout = useLoadResourceTimeout ? _this38.__options.wasmResourceTimeout : _this38.__maxWasmResourceTimeout;
         if (!_this38.__wasmResourceTimerId) {
           _this38.__wasmResourceTimerId = setTimeout(() => {
-            var timeoutError = new Error('[Network Error] Load to WASM Resource failed with timeout');
-            timeoutError.errorCode = 'SE001';
-            reject(timeoutError);
+            reject(new OCRError('[Network Error] Load to WASM Resource failed with timeout', 'SE001'));
           }, wasmResourceTimeout);
         }
       });
@@ -4163,7 +4163,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.37.1';
+    return 'v1.37.2';
   }
 
   // 기존 동작: 모듈 로드 후 카메라 권한 요청
