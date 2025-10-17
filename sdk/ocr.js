@@ -8,11 +8,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.37.2';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.37.2';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.37.2';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.37.2';
-import ImageUtil from './helpers/image-util.js?ver=v1.37.2';
+import detector from './helpers/detector.js?ver=v1.37.3';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.37.3';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.37.3';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.37.3';
+import ImageUtil from './helpers/image-util.js?ver=v1.37.3';
 var instance;
 var OCRRESULT_KEY_SET = new Object({
   IDCARD: new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'region', 'overseas_resident', 'driver_number', 'driver_serial', 'driver_type', 'aptitude_test_date_start', 'aptitude_test_date_end',
@@ -579,6 +579,10 @@ class UseBOCR {
         if (_this2.__options.useAutoSwitchToServerMode) {
           // 자동전환 on일때
           if (_this2.__isResourceTimeout) return true;
+
+          // threshold를 0으로 사용할 때 즉시 전환
+          if (parseFloat(_this2.__options.switchToServerThreshold) === 0) return true;
+
           // 성능 측정값을 기준으로 WASM or Server
           var [latencyPer100ms, measureReport] = yield measure();
           _this2.__debug(measureReport);
@@ -4163,7 +4167,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.37.2';
+    return 'v1.37.3';
   }
 
   // 기존 동작: 모듈 로드 후 카메라 권한 요청
