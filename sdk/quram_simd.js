@@ -99,7 +99,8 @@ Module.expectedDataFileDownloads++;
    }
    Module["FS_createPath"]("/", "face_detection", true, true);
    Module["FS_createPath"]("/", "model", true, true);
-   Module["FS_createPath"]("/", "tessdata", true, true);
+   Module["FS_createPath"]("/", "tessdata_demo", true, true);
+   Module["FS_createPath"]("/", "weights", true, true);
    function DataRequest(start, end, audio) {
     this.start = start;
     this.end = end;
@@ -168,7 +169,7 @@ Module.expectedDataFileDownloads++;
    "start": 353617,
    "end": 1054676
   }, {
-   "filename": "/model/qr_ssa_v3_r5_508_22.model",
+   "filename": "/model/qr_ssa_v3_r5_510_10.model",
    "start": 1054676,
    "end": 9119465
   }, {
@@ -176,72 +177,142 @@ Module.expectedDataFileDownloads++;
    "start": 9119465,
    "end": 9119465
   }, {
-   "filename": "/tessdata/alien.traineddata",
+   "filename": "/tessdata_demo/alien.traineddata",
    "start": 9119465,
    "end": 11087052
   }, {
-   "filename": "/tessdata/ar_num.traineddata",
+   "filename": "/tessdata_demo/ar_num.traineddata",
    "start": 11087052,
    "end": 11117002
   }, {
-   "filename": "/tessdata/card.traineddata",
+   "filename": "/tessdata_demo/card.traineddata",
    "start": 11117002,
    "end": 11146384
   }, {
-   "filename": "/tessdata/driver_num.traineddata",
+   "filename": "/tessdata_demo/driver_num.traineddata",
    "start": 11146384,
    "end": 11168706
   }, {
-   "filename": "/tessdata/eng.traineddata",
+   "filename": "/tessdata_demo/eng.traineddata",
    "start": 11168706,
    "end": 11248763
   }, {
-   "filename": "/tessdata/juminnum.traineddata",
+   "filename": "/tessdata_demo/juminnum.traineddata",
    "start": 11248763,
    "end": 11270686
   }, {
-   "filename": "/tessdata/kor.traineddata",
+   "filename": "/tessdata_demo/kor.traineddata",
    "start": 11270686,
    "end": 12377595
   }, {
-   "filename": "/tessdata/mrz.dat",
+   "filename": "/tessdata_demo/mrz.dat",
    "start": 12377595,
    "end": 12529187
   }, {
-   "filename": "/tessdata/name.traineddata",
+   "filename": "/tessdata_demo/name.traineddata",
    "start": 12529187,
    "end": 12575757
   }, {
-   "filename": "/tessdata/number.dat",
+   "filename": "/tessdata_demo/number.dat",
    "start": 12575757,
    "end": 12725370
   }, {
-   "filename": "/tessdata/number.traineddata",
+   "filename": "/tessdata_demo/number.traineddata",
    "start": 12725370,
    "end": 12749482
   }, {
-   "filename": "/tessdata/ocr.traineddata",
+   "filename": "/tessdata_demo/ocr.traineddata",
    "start": 12749482,
    "end": 12767692
   }, {
-   "filename": "/tessdata/pass2.traineddata",
+   "filename": "/tessdata_demo/pass2.traineddata",
    "start": 12767692,
    "end": 12789336
   }, {
-   "filename": "/tessdata/passport.traineddata",
+   "filename": "/tessdata_demo/passport.traineddata",
    "start": 12789336,
    "end": 12856245
   }, {
-   "filename": "/tessdata/qocrkor.dat",
+   "filename": "/tessdata_demo/qocrkor.dat",
    "start": 12856245,
    "end": 13336172
   }, {
-   "filename": "/tessdata/serial.dat",
+   "filename": "/tessdata_demo/serial.dat",
    "start": 13336172,
    "end": 13487331
+  }, {
+   "filename": "/weights/apo_0",
+   "start": 13487331,
+   "end": 13668267
+  }, {
+   "filename": "/weights/dash_0",
+   "start": 13668267,
+   "end": 13849203
+  }, {
+   "filename": "/weights/expr_0",
+   "start": 13849203,
+   "end": 14031195
+  }, {
+   "filename": "/weights/expr_1",
+   "start": 14031195,
+   "end": 14213187
+  }, {
+   "filename": "/weights/number_0",
+   "start": 14213187,
+   "end": 14313259
+  }, {
+   "filename": "/weights/number_1",
+   "start": 14313259,
+   "end": 14413331
+  }, {
+   "filename": "/weights/number_2",
+   "start": 14413331,
+   "end": 14513403
+  }, {
+   "filename": "/weights/number_3",
+   "start": 14513403,
+   "end": 14613475
+  }, {
+   "filename": "/weights/slash_0",
+   "start": 14613475,
+   "end": 14794411
+  }, {
+   "filename": "/weights/slash_1",
+   "start": 14794411,
+   "end": 14975347
+  }, {
+   "filename": "/weights/slash_2",
+   "start": 14975347,
+   "end": 15156283
+  }, {
+   "filename": "/weights/vseg_0",
+   "start": 15156283,
+   "end": 15197895
+  }, {
+   "filename": "/weights/vseg_1",
+   "start": 15197895,
+   "end": 15239507
   } ],
-  "remote_package_size": 13487331
+  "remote_package_size": 15239507
  });
+})();
+
+(function() {
+ var g = typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : this;
+ var Module = g.Module = g.Module || {};
+ try {
+  WebAssembly.instantiateStreaming = undefined;
+ } catch (e) {}
+ if ("instantiateWasm" in Module) delete Module.instantiateWasm;
+ if (!g.__fetchLoggerInstalled) {
+  g.__fetchLoggerInstalled = true;
+  const _fetch = g.fetch;
+  g.fetch = function() {
+   console.debug("[pre.simple] fetch ->", arguments[0]);
+   return _fetch.apply(this, arguments);
+  };
+ }
+ console.debug("[pre.simple] active, letting glue handle wasmBinaryFile:", Module.wasmBinaryFile);
 })();
 
 var moduleOverrides = Object.assign({}, Module);
@@ -5152,60 +5223,64 @@ var _setMaskingImageAddress = Module["_setMaskingImageAddress"] = function() {
  return (_setMaskingImageAddress = Module["_setMaskingImageAddress"] = Module["asm"]["Lb"]).apply(null, arguments);
 };
 
+var _setMaskingImageIssueDate = Module["_setMaskingImageIssueDate"] = function() {
+ return (_setMaskingImageIssueDate = Module["_setMaskingImageIssueDate"] = Module["asm"]["Mb"]).apply(null, arguments);
+};
+
 var _setConfig = Module["_setConfig"] = function() {
- return (_setConfig = Module["_setConfig"] = Module["asm"]["Mb"]).apply(null, arguments);
+ return (_setConfig = Module["_setConfig"] = Module["asm"]["Nb"]).apply(null, arguments);
 };
 
 var _getConfig = Module["_getConfig"] = function() {
- return (_getConfig = Module["_getConfig"] = Module["asm"]["Nb"]).apply(null, arguments);
+ return (_getConfig = Module["_getConfig"] = Module["asm"]["Ob"]).apply(null, arguments);
 };
 
 var ___errno_location = Module["___errno_location"] = function() {
- return (___errno_location = Module["___errno_location"] = Module["asm"]["Ob"]).apply(null, arguments);
+ return (___errno_location = Module["___errno_location"] = Module["asm"]["Pb"]).apply(null, arguments);
 };
 
 var ___getTypeName = Module["___getTypeName"] = function() {
- return (___getTypeName = Module["___getTypeName"] = Module["asm"]["Pb"]).apply(null, arguments);
+ return (___getTypeName = Module["___getTypeName"] = Module["asm"]["Qb"]).apply(null, arguments);
 };
 
 var __embind_initialize_bindings = Module["__embind_initialize_bindings"] = function() {
- return (__embind_initialize_bindings = Module["__embind_initialize_bindings"] = Module["asm"]["Qb"]).apply(null, arguments);
+ return (__embind_initialize_bindings = Module["__embind_initialize_bindings"] = Module["asm"]["Rb"]).apply(null, arguments);
 };
 
 var _setThrew = Module["_setThrew"] = function() {
- return (_setThrew = Module["_setThrew"] = Module["asm"]["Rb"]).apply(null, arguments);
+ return (_setThrew = Module["_setThrew"] = Module["asm"]["Sb"]).apply(null, arguments);
 };
 
 var stackSave = Module["stackSave"] = function() {
- return (stackSave = Module["stackSave"] = Module["asm"]["Sb"]).apply(null, arguments);
+ return (stackSave = Module["stackSave"] = Module["asm"]["Tb"]).apply(null, arguments);
 };
 
 var stackRestore = Module["stackRestore"] = function() {
- return (stackRestore = Module["stackRestore"] = Module["asm"]["Tb"]).apply(null, arguments);
+ return (stackRestore = Module["stackRestore"] = Module["asm"]["Ub"]).apply(null, arguments);
 };
 
 var stackAlloc = Module["stackAlloc"] = function() {
- return (stackAlloc = Module["stackAlloc"] = Module["asm"]["Ub"]).apply(null, arguments);
+ return (stackAlloc = Module["stackAlloc"] = Module["asm"]["Vb"]).apply(null, arguments);
 };
 
 var ___cxa_can_catch = Module["___cxa_can_catch"] = function() {
- return (___cxa_can_catch = Module["___cxa_can_catch"] = Module["asm"]["Vb"]).apply(null, arguments);
+ return (___cxa_can_catch = Module["___cxa_can_catch"] = Module["asm"]["Wb"]).apply(null, arguments);
 };
 
 var ___cxa_is_pointer_type = Module["___cxa_is_pointer_type"] = function() {
- return (___cxa_is_pointer_type = Module["___cxa_is_pointer_type"] = Module["asm"]["Wb"]).apply(null, arguments);
+ return (___cxa_is_pointer_type = Module["___cxa_is_pointer_type"] = Module["asm"]["Xb"]).apply(null, arguments);
 };
 
 var dynCall_j = Module["dynCall_j"] = function() {
- return (dynCall_j = Module["dynCall_j"] = Module["asm"]["Xb"]).apply(null, arguments);
+ return (dynCall_j = Module["dynCall_j"] = Module["asm"]["Yb"]).apply(null, arguments);
 };
 
 var dynCall_iiiiij = Module["dynCall_iiiiij"] = function() {
- return (dynCall_iiiiij = Module["dynCall_iiiiij"] = Module["asm"]["Yb"]).apply(null, arguments);
+ return (dynCall_iiiiij = Module["dynCall_iiiiij"] = Module["asm"]["Zb"]).apply(null, arguments);
 };
 
 var dynCall_jiiii = Module["dynCall_jiiii"] = function() {
- return (dynCall_jiiii = Module["dynCall_jiiii"] = Module["asm"]["Zb"]).apply(null, arguments);
+ return (dynCall_jiiii = Module["dynCall_jiiii"] = Module["asm"]["_b"]).apply(null, arguments);
 };
 
 function invoke_vii(index, a1, a2) {
@@ -5704,6 +5779,8 @@ setTruthEncrypt = Module.cwrap("setTruthEncrypt", "", [ "string" ]);
 setNumberValidation = Module.cwrap("setNumberValidation", "", [ "bool" ]);
 
 setMaskingImageAddress = Module.cwrap("setMaskingImageAddress", "", [ "bool" ]);
+
+setMaskingImageIssueDate = Module.cwrap("setMaskingImageIssueDate", "", [ "bool" ]);
 
 setConfig = Module.cwrap("setConfig", "", [ "string" ]);
 
