@@ -322,6 +322,7 @@ class OcrResultParser {
       name: 'name',
       number: 'jumin',
       Date: 'issued_date',
+      veterans_number: 'veterans_number',
       masked_veterans_number: 'masked_veterans_number',
       color_point: 'color_point',
       face_score: 'found_face',

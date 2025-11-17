@@ -8,21 +8,25 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.37.4';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.37.4';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.37.4';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.37.4';
-import ImageUtil from './helpers/image-util.js?ver=v1.37.4';
+import detector from './helpers/detector.js?ver=v1.37.5';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.37.5';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.37.5';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.37.5';
+import ImageUtil from './helpers/image-util.js?ver=v1.37.5';
 var instance;
 var OCRRESULT_KEY_SET = new Object({
   IDCARD: new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'region', 'overseas_resident', 'driver_number', 'driver_serial', 'driver_type', 'aptitude_test_date_start', 'aptitude_test_date_end',
   // 'is_old_format_driver_number',
   // 'birth',
+  'veterans_number',
+  // 국가보훈증
+  'masked_veterans_number',
+  // 국가보훈증
 
   'color_point', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image']),
   PASSPORT: new Set(['result_scan_type', 'name', 'sur_name', 'given_name', 'passport_type', 'issuing_country', 'passport_number', 'nationality', 'issued_date', 'sex', 'expiry_date', 'personal_number', 'jumin', 'birthday', 'name_kor', 'mrz1', 'mrz2', 'color_point', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image']),
   ALIEN: new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'nationality', 'visa_type', 'name_kor', 'color_point', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image']),
-  VETERAN: new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'masked_veterans_number', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image'])
+  VETERAN: new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'veterans_number', 'masked_veterans_number', 'found_face', 'found_eye', 'specular_ratio', 'start_time', 'end_time', 'ocr_origin_image', 'ocr_masking_image', 'ocr_face_image'])
 });
 var OPTION_TEMPLATE = new Object({
   // 디버깅 옵션
@@ -3953,6 +3957,9 @@ class UseBOCR {
   __resultAlienInfo(optAlien) {
     this.__OCREngine.setAlienResult(this.__stringArrayToString(optAlien));
   }
+  __resultVeteransInfo(optVeterans) {
+    this.__OCREngine.setVeteransResult(this.__stringArrayToString(optVeterans));
+  }
   __resultTruthInfo(optTruth) {
     this.__OCREngine.setTruthResult(this.__stringArrayToString(optTruth));
   }
@@ -4167,7 +4174,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.37.4';
+    return 'v1.37.5';
   }
 
   // 기존 동작: 모듈 로드 후 카메라 권한 요청

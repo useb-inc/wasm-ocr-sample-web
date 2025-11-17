@@ -139,7 +139,7 @@ export var bigInt = () => function () {
         }
         latency = performanceList[0] - SLEEP;
         durationAvg = durationSum / TRY_COUNT;
-        latencyPer100ms = parseFloat((durationSum / TRY_COUNT - 100).toFixed(5));
+        latencyPer100ms = parseFloat((durationAvg - 100).toFixed(5));
         measureReport += "==============================\n";
         measureReport += "- latency : ".concat(latency, "\n");
         measureReport += "- latencyPer100ms: ".concat(latencyPer100ms, "\n");
