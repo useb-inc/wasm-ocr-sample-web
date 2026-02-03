@@ -2154,8 +2154,9 @@ class UseBOCR {
         }
       }
       if (_this20.__options.useCaptureUI) {
-        var _captureButton$queryS;
+        var _captureButton$queryS, _captureButton$queryS2;
         captureButton === null || captureButton === void 0 ? void 0 : (_captureButton$queryS = captureButton.querySelector('#captureButton')) === null || _captureButton$queryS === void 0 ? void 0 : _captureButton$queryS.setAttribute('fill', _this20.__options.captureButtonStyle['base_color']);
+        captureButton === null || captureButton === void 0 ? void 0 : (_captureButton$queryS2 = captureButton.querySelector('#captureButton')) === null || _captureButton$queryS2 === void 0 ? void 0 : _captureButton$queryS2.setAttribute('stroke', _this20.__options.captureButtonStyle['stroke_color']);
       }
       var ocrMode = _this20.__isSwitchToServerMode ? 'server' : 'wasm';
       if (_this20.__onInProgressChange) {
