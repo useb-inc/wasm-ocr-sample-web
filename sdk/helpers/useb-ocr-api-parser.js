@@ -25,7 +25,13 @@ class OcrResultParser {
       ALIEN_REGISTRATION_3: '5-3',
       // TODO 현재 SERVER SDK 구분안함
       VETERAN: '13',
-      BARCODE: '8'
+      BARCODE: '8',
+      // alien_type 매핑 추가
+      'ALIEN REGISTRATION CARD': '5-1',
+      // 등록증
+      'OVERSEAS KOREAN RESIDENT CARD': '5-2',
+      // 거소증
+      'PERMANENT RESIDENT CARD': '5-3' // 영주증
     });
     _defineProperty(this, "RESULT_MASKING_TYPE_MAP", {
       1: 'kor',
@@ -34,6 +40,9 @@ class OcrResultParser {
       4: 'passport-oversea',
       // TODO 현재 SERVER SDK 구분안함
       5: 'alien',
+      '5-1': 'alien',
+      '5-2': 'alien',
+      '5-3': 'alien',
       13: 'veteran',
       8: 'barcode'
     });
@@ -273,9 +282,9 @@ class OcrResultParser {
     };
   }
   __parseAlien(ocrResult, parseKeyList) {
-    var _ref3, _flat$fd_confidence3, _flat$nationality, _flat$visa_type, _flat$name_kor;
+    var _ref3, _flat$fd_confidence3, _flat$name_kor;
     // TODO wasm에서 지원해주는 idType 값이 없어 임의 매핑 (해외 여권이랑 외국인등록증 구분안되는 문제 있음)
-    var idType = this.RESULT_SCAN_TYPE_MAP[ocrResult.result_scan_type];
+    // const idType = this.RESULT_SCAN_TYPE_MAP[ocrResult.result_scan_type];
     var defaultObj = {
       nationality: '',
       visa_type: '',
@@ -283,15 +292,25 @@ class OcrResultParser {
     };
     var flat = _.assign(defaultObj, this.flatObj(ocrResult));
 
+    // alien_type 추출 및 idType 결정
+    var alienType = flat.alien_type || '';
+    var idType = this.RESULT_SCAN_TYPE_MAP[alienType] || this.RESULT_SCAN_TYPE_MAP[ocrResult.result_scan_type] || '5';
+
     // 주민번호 형식 000000-0000000
     var jumin = this.getIdNumberFormat(flat.jumin);
 
+    // 국가명, 비자 server OCR 최신 매핑
+    var nationality = flat.id_nation || flat.nationality || '';
+    var visaType = flat.id_visa_type || flat.visa_type || '';
+
     // new format ##########################
     // id 객체에서 flat 하게 만들 대상들
-    var newFormatKeys = ['complete', 'name', 'jumin', 'issued_date', 'nationality', 'visa_type', 'name_kor', 'found_face', 'specular_ratio', 'id_truth', 'fd_confidence', ...parseKeyList];
+    var newFormatKeys = ['complete', 'name', 'jumin', 'issued_date', 'nationality', 'visa_type', 'name_kor', 'alien_type', 'found_face', 'specular_ratio', 'id_truth', 'fd_confidence', ...parseKeyList];
     var newFormat = _.pick(flat, newFormatKeys);
     newFormat.complete = newFormat.complete + '';
     newFormat.jumin = jumin;
+    newFormat.nationality = nationality;
+    newFormat.visa_type = visaType;
     newFormat.id_truth_retry_count = 0;
     newFormat.result_scan_type = idType;
     newFormat.fd_confidence = (_ref3 = ((_flat$fd_confidence3 = flat.fd_confidence) === null || _flat$fd_confidence3 === void 0 ? void 0 : _flat$fd_confidence3.toFixed(3)) + '') !== null && _ref3 !== void 0 ? _ref3 : '';
@@ -302,9 +321,10 @@ class OcrResultParser {
       name: flat.name,
       number: jumin,
       Date: flat.issued_date,
-      nationality: (_flat$nationality = flat.nationality) !== null && _flat$nationality !== void 0 ? _flat$nationality : '',
-      visaType: (_flat$visa_type = flat.visa_type) !== null && _flat$visa_type !== void 0 ? _flat$visa_type : '',
+      nationality: nationality,
+      visaType: visaType,
       name_kor: (_flat$name_kor = flat.name_kor) !== null && _flat$name_kor !== void 0 ? _flat$name_kor : '',
+      alien_type: alienType,
       face_score: newFormat.found_face,
       specular: newFormat.specular_ratio,
       id_type: idType,
