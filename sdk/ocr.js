@@ -8,11 +8,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.39.0';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.39.0';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.39.0';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.39.0';
-import ImageUtil from './helpers/image-util.js?ver=v1.39.0';
+import detector from './helpers/detector.js?ver=v1.40.0';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.40.0';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.40.0';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.40.0';
+import ImageUtil from './helpers/image-util.js?ver=v1.40.0';
 var instance;
 var OCRRESULT_KEY_SET = new Object({
   IDCARD: new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'region', 'overseas_resident', 'driver_number', 'driver_serial', 'driver_type', 'aptitude_test_date_start', 'aptitude_test_date_end',
@@ -3828,6 +3828,7 @@ class UseBOCR {
         };
         return requestOptions;
       } else {
+        var _this30$__options$ser, _this30$__options;
         var formData = new FormData();
         formData.append('ocrType', ocrType);
         formData.append('base64jpg', _this30.__removeMimeType(imgDataUrl));
@@ -3841,7 +3842,13 @@ class UseBOCR {
         // formData.append('config', 'portrait');
         // formData.append('config', 'marked_image');
         // formData.append('config', ssaMode ? 'OCRSSA' : 'OCR');
+        // formData.append('config', 'no_validation');
 
+        // setiings에서 serverOcrConfigs 가져와서 적용
+        var configs = (_this30$__options$ser = (_this30$__options = _this30.__options) === null || _this30$__options === void 0 ? void 0 : _this30$__options.serverOcrConfigs) !== null && _this30$__options$ser !== void 0 ? _this30$__options$ser : [];
+        configs.forEach(cfg => {
+          formData.append('config', cfg);
+        });
         var _requestOptions = {
           method: 'POST',
           body: formData,
@@ -4428,7 +4435,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.39.0';
+    return 'v1.40.0';
   }
 
   // 기존 동작: 모듈 로드 후 카메라 권한 요청

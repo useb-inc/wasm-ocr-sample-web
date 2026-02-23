@@ -25,6 +25,7 @@ class OcrResultParser {
       ALIEN_REGISTRATION_3: '5-3',
       // TODO 현재 SERVER SDK 구분안함
       VETERAN: '13',
+      VETERANS: '13',
       BARCODE: '8',
       // alien_type 매핑 추가
       'ALIEN REGISTRATION CARD': '5-1',
@@ -49,6 +50,20 @@ class OcrResultParser {
   }
   parseOcrResult(ocrType, ssaMode, ocrResult, parseKeyList) {
     if (!this.__ocrTypeList.includes(ocrType)) throw new OCRError('ResultParser :: Unsupported OCR type', 'SE005');
+
+    // 통합형 API인 경우 result_scan_type 기반으로 실제 타입 판단
+    var actualOcrType = ocrType;
+    if (ocrResult.result_scan_type) {
+      var scanType = ocrResult.result_scan_type;
+      var typeMapping = {
+        PASSPORT: ssaMode ? 'passport-ssa' : 'passport',
+        RESIDENT_REGISTRATION: ssaMode ? 'idcard-ssa' : 'idcard',
+        DRIVER_LICENSE: ssaMode ? 'driver-ssa' : 'driver',
+        ALIEN_REGISTRATION: ssaMode ? 'alien-ssa' : 'alien',
+        VETERANS: ssaMode ? 'veteran-ssa' : 'veteran'
+      };
+      actualOcrType = typeMapping[scanType] || ocrType;
+    }
     var legacyFormat = {},
       newFormat = {},
       maskInfo = {},
@@ -56,7 +71,9 @@ class OcrResultParser {
 
     // base64 처리
     this.__parseBase64ImageResult(ocrResult, base64ImageResult);
-    switch (ocrType) {
+
+    // switch (ocrType) {
+    switch (actualOcrType) {
       case 'idcard':
       case 'driver':
       case 'idcard-ssa':
@@ -364,7 +381,7 @@ class OcrResultParser {
     };
   }
   __parseVeteran(ocrResult, parseKeyList) {
-    var _ref4, _flat$fd_confidence4, _flat$masked_veterans;
+    var _ref4, _flat$fd_confidence4, _flat$veterans_number, _flat$masked_veterans;
     // TODO wasm에서 지원해주는 idType 값이 없어 임의 매핑 (해외 여권이랑 외국인등록증 구분안되는 문제 있음)
     var idType = ocrResult.result_scan_type ? this.RESULT_SCAN_TYPE_MAP[ocrResult.result_scan_type] : ocrResult.data.idType;
     var flat = this.flatObj(ocrResult);
@@ -374,7 +391,7 @@ class OcrResultParser {
 
     // new format ##########################
     // id 객체에서 flat 하게 만들 대상들
-    var newFormatKeys = ['complete', 'name', 'jumin', 'issued_date', 'masked_veterans_number', 'found_face', 'specular_ratio', 'id_truth', 'fd_confidence', ...parseKeyList];
+    var newFormatKeys = ['complete', 'name', 'jumin', 'issued_date', 'veterans_number', 'masked_veterans_number', 'found_face', 'specular_ratio', 'id_truth', 'fd_confidence', ...parseKeyList];
     var newFormat = _.pick(flat, newFormatKeys);
     newFormat.complete = newFormat.complete + '';
     newFormat.jumin = jumin;
@@ -388,6 +405,7 @@ class OcrResultParser {
       name: flat.name,
       number: jumin,
       Date: flat.issued_date,
+      veterans_number: (_flat$veterans_number = flat.veterans_number) !== null && _flat$veterans_number !== void 0 ? _flat$veterans_number : '',
       masked_veterans_number: (_flat$masked_veterans = flat.masked_veterans_number) !== null && _flat$masked_veterans !== void 0 ? _flat$masked_veterans : '',
       face_score: newFormat.found_face,
       specular: newFormat.specular_ratio,
