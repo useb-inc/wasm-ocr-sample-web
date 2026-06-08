@@ -8,11 +8,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.40.2';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.40.2';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.40.2';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.40.2';
-import ImageUtil from './helpers/image-util.js?ver=v1.40.2';
+import detector from './helpers/detector.js?ver=v1.40.3';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.40.3';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.40.3';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.40.3';
+import ImageUtil from './helpers/image-util.js?ver=v1.40.3';
 var instance;
 var OCRRESULT_KEY_SET = new Object({
   IDCARD: new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'region', 'overseas_resident', 'driver_number', 'driver_serial', 'driver_type', 'aptitude_test_date_start', 'aptitude_test_date_end',
@@ -3513,7 +3513,6 @@ class UseBOCR {
 
             if (_this28.__ocrStatus < _this28.OCR_STATUS.OCR_SUCCESS) {
               // OCR 완료 이전 상태
-
               // card not detected
               [isDetectedCard, imgData, imgDataUrl] = yield _this28.__isCardboxDetected(_this28.__address, 0);
               if (!isDetectedCard) {
@@ -3902,6 +3901,18 @@ class UseBOCR {
         var __onClickCaptureButton = /*#__PURE__*/function () {
           var _ref20 = _asyncToGenerator(function* () {
             try {
+              var {
+                video
+              } = detector.getOCRElements();
+
+              // 블랙화면 방어: video 스트림 상태 검증
+              var isVideoBlack = yield _this32.__isVideoBlackOrInvalid(video);
+              if (isVideoBlack) {
+                yield _this32.__onFailureProcess('E403', new Error('Camera stream is invalid or black screen detected'), 'Camera stream is unavailable');
+                _this32.__closeCamera();
+                resolve();
+                return;
+              }
               var ocrResult = null;
               // 캔버스에서 이미지를 가져옴
               var [, originImageDataUrl] = yield _this32.__options.useFakeImage ? _this32.__cropFakeImageFromVideo() : _this32.__cropImageFromVideo();
@@ -3945,9 +3956,9 @@ class UseBOCR {
 
                 // success case
                 var {
-                  video
+                  video: _video
                 } = detector.getOCRElements();
-                _this32.__setStyle(video, {
+                _this32.__setStyle(_video, {
                   display: 'none'
                 }); // OCR 완료 시점에 camera preview off
 
@@ -4045,6 +4056,45 @@ class UseBOCR {
       };
     }());
   }
+  __isVideoBlackOrInvalid(video) {
+    var _this33 = this;
+    return _asyncToGenerator(function* () {
+      try {
+        // 스트림 자체가 없거나 종료된 경우
+        if (!_this33.__stream || !_this33.__stream.active) {
+          void 0;
+          return true;
+        }
+        var tracks = _this33.__stream.getVideoTracks();
+        // if (!tracks.length || tracks[0].readyState !== 'live') return true;
+        if (!tracks.length || tracks[0].readyState !== 'live') {
+          void 0;
+          return true;
+        }
+
+        // video 픽셀 샘플링으로 블랙화면 감지
+        var tempCanvas = document.createElement('canvas');
+        tempCanvas.width = 16;
+        tempCanvas.height = 16;
+        var ctx = tempCanvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, 16, 16);
+        var imageData = ctx.getImageData(0, 0, 16, 16);
+        var data = imageData.data;
+        var totalBrightness = 0;
+        for (var i = 0; i < data.length; i += 4) {
+          totalBrightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
+        }
+        var avgBrightness = totalBrightness / (data.length / 4);
+
+        // 평균 밝기가 5 이하면 블랙화면으로 판단
+        void 0;
+        return avgBrightness <= 5;
+      } catch (e) {
+        void 0;
+        return true;
+      }
+    })();
+  }
   __enqueueDetectedCardQueue(imgData) {
     // ssa retry 설정이 되어 있으거나, 수동촬영UI를 사용하는 경우, card detect 성공시 이미지 저장
     if (this.__ssaMode && this.__options.ssaMaxRetryCount > 0 || this.__options.useCaptureUI && this.__manualOCRMaxRetryCount > 0) {
@@ -4058,13 +4108,13 @@ class UseBOCR {
   }
 
   __onSuccessProcess(review_result) {
-    var _this33 = this;
+    var _this34 = this;
     return _asyncToGenerator(function* () {
       // 인식 성공 스캔 루프 종료
       if (review_result.ssa_mode) {
-        yield _this33.__changeStage(_this33.IN_PROGRESS.OCR_SUCCESS_WITH_SSA);
+        yield _this34.__changeStage(_this34.IN_PROGRESS.OCR_SUCCESS_WITH_SSA);
       } else {
-        yield _this33.__changeStage(_this33.IN_PROGRESS.OCR_SUCCESS);
+        yield _this34.__changeStage(_this34.IN_PROGRESS.OCR_SUCCESS);
       }
       var result = {
         api_response: {
@@ -4074,21 +4124,27 @@ class UseBOCR {
         result: 'success',
         review_result: review_result
       };
-      if (_this33.__onSuccess) {
-        _this33.__onSuccess(result);
-        _this33.__onSuccess = null;
+      if (_this34.__onSuccess) {
+        _this34.__onSuccess(result);
+        _this34.__onSuccess = null;
       } else {
         void 0;
       }
     })();
   }
   __onFailureProcess(resultCode, e, errorMessage) {
-    var _this34 = this;
+    var _this35 = this;
     return _asyncToGenerator(function* () {
-      yield _this34.__changeStage(_this34.IN_PROGRESS.OCR_FAILED);
+      var _e$name;
+      yield _this35.__changeStage(_this35.IN_PROGRESS.OCR_FAILED);
       var errorDetail = '';
-      if (e !== null && e !== void 0 && e.toString()) errorDetail += e.toString() + '\n';
-      if (e !== null && e !== void 0 && e.stack) errorDetail += e.stack + '\n';
+      // if (e?.toString()) errorDetail += e.toString() + '\n';
+      // if (e?.stack) errorDetail += e.stack + '\n';
+      if (e !== null && e !== void 0 && e.stack) {
+        errorDetail = e.stack;
+      } else if (e !== null && e !== void 0 && e.toString) {
+        errorDetail = e.toString();
+      }
       var result = {
         api_response: {
           result_code: resultCode,
@@ -4096,40 +4152,42 @@ class UseBOCR {
         },
         result: 'failed',
         review_result: {
-          ocr_type: _this34.__ocrType,
+          ocr_type: _this35.__ocrType,
+          ocr_mode: _this35.__isSwitchToServerMode ? 'server' : 'wasm',
+          error_name: (_e$name = e === null || e === void 0 ? void 0 : e.name) !== null && _e$name !== void 0 ? _e$name : null,
           error_detail: errorDetail
         }
       };
-      if (_this34.__onFailure) {
-        _this34.__onFailure(result);
-        _this34.__onFailure = null;
+      if (_this35.__onFailure) {
+        _this35.__onFailure(result);
+        _this35.__onFailure = null;
       } else {
         void 0;
       }
     })();
   }
   __preloadingWasm() {
-    var _this35 = this;
+    var _this36 = this;
     return _asyncToGenerator(function* () {
-      if (_this35.isPreloaded()) {
+      if (_this36.isPreloaded()) {
         void 0;
       } else {
         try {
           void 0;
-          _this35.showOCRLoadingUI();
-          _this35.__preloadingStatus = _this35.PRELOADING_STATUS.STARTED;
-          yield _this35.__loadResources();
-          _this35.__preloadingStatus = _this35.PRELOADING_STATUS.DONE;
-          _this35.__preloaded = true;
-          _this35.hideOCRLoadingUI();
+          _this36.showOCRLoadingUI();
+          _this36.__preloadingStatus = _this36.PRELOADING_STATUS.STARTED;
+          yield _this36.__loadResources();
+          _this36.__preloadingStatus = _this36.PRELOADING_STATUS.DONE;
+          _this36.__preloaded = true;
+          _this36.hideOCRLoadingUI();
           void 0;
         } catch (e) {
           if (e.errorCode === 'SE001') {
-            _this35.hideOCRLoadingUI();
-            _this35.__restoreResourceInitialize();
+            _this36.hideOCRLoadingUI();
+            _this36.__restoreResourceInitialize();
 
             // 하이브리드 모드라면 타임아웃 에러를 무시하고 종료 (앱 크래시 방지)
-            if (_this35.__options.useHybridMode) {
+            if (_this36.__options.useHybridMode) {
               void 0;
               throw e;
             }
@@ -4304,68 +4362,68 @@ class UseBOCR {
   }
   __getImageBase64(address, maskMode, imgMode) {
     var _arguments5 = arguments,
-      _this36 = this;
+      _this37 = this;
     return _asyncToGenerator(function* () {
       var imgType = _arguments5.length > 3 && _arguments5[3] !== undefined ? _arguments5[3] : 'card';
       try {
         if (imgType === 'card') {
-          _this36.__OCREngine.encodeJpgDetectedFrameImage(address, maskMode, imgMode);
+          _this37.__OCREngine.encodeJpgDetectedFrameImage(address, maskMode, imgMode);
         } else if (imgType === 'face') {
-          _this36.__OCREngine.encodeJpgDetectedPhotoImage(address);
+          _this37.__OCREngine.encodeJpgDetectedPhotoImage(address);
         }
-        var jpgSize = _this36.__OCREngine.getEncodedJpgSize();
-        var jpgPointer = _this36.__OCREngine.getEncodedJpgBuffer();
-        var resultView = new Uint8Array(_this36.__OCREngine.HEAP8.buffer, jpgPointer, jpgSize);
+        var jpgSize = _this37.__OCREngine.getEncodedJpgSize();
+        var jpgPointer = _this37.__OCREngine.getEncodedJpgBuffer();
+        var resultView = new Uint8Array(_this37.__OCREngine.HEAP8.buffer, jpgPointer, jpgSize);
         var result = new Uint8Array(resultView);
         var blob = new Blob([result], {
           type: 'image/jpeg'
         });
-        return yield _this36.__blobToBase64(blob);
+        return yield _this37.__blobToBase64(blob);
       } catch (e) {
         void 0;
         throw new OCRError(e, 'WA010');
       } finally {
-        _this36.__OCREngine.destroyEncodedJpg();
+        _this37.__OCREngine.destroyEncodedJpg();
       }
     })();
   }
   // TODO : credit card 에서 사용중이어서 삭제 불가 (wasm 레벨로 변경될 경우 삭제 가능) -- END
 
   __startScanWasm() {
-    var _this37 = this;
+    var _this38 = this;
     return _asyncToGenerator(function* () {
-      _this37.__debug('wasm_mode');
-      yield _this37.cleanup();
+      _this38.__debug('wasm_mode');
+      yield _this38.cleanup();
 
       // useRequestCameraBeforeModuleLoad 기능 사용 시 preloadingUI 표현
-      if (_this37.__options.useRequestCameraBeforeModuleLoad) {
-        _this37.showOCRLoadingUI();
-        yield _this37.preloading();
-        _this37.hideOCRLoadingUI();
+      if (_this38.__options.useRequestCameraBeforeModuleLoad) {
+        _this38.showOCRLoadingUI();
+        yield _this38.preloading();
+        _this38.hideOCRLoadingUI();
       } else {
-        yield _this37.preloading();
+        yield _this38.preloading();
       }
-      yield _this37.__startScanWasmImpl();
+      yield _this38.__startScanWasmImpl();
       void 0;
     })();
   }
   __startScanServer() {
-    var _this38 = this;
+    var _this39 = this;
     return _asyncToGenerator(function* () {
-      _this38.__debug('server_mode');
-      if (!!_this38.getOCREngine()) yield _this38.cleanup();
-      _this38.__options.useCaptureUI = true;
-      yield _this38.__startScanServerImpl();
+      _this39.__debug('server_mode');
+      if (!!_this39.getOCREngine()) yield _this39.cleanup();
+      _this39.__options.useCaptureUI = true;
+      yield _this39.__startScanServerImpl();
       void 0;
     })();
   }
   __recoveryScan() {
-    var _this39 = this;
+    var _this40 = this;
     return _asyncToGenerator(function* () {
       void 0;
-      _this39.__resourcesLoaded = false;
-      _this39.stopScan();
-      yield _this39.__startScanWasm();
+      _this40.__resourcesLoaded = false;
+      _this40.stopScan();
+      yield _this40.__startScanWasm();
     })();
   }
   stopScan() {
@@ -4393,13 +4451,13 @@ class UseBOCR {
     }
   }
   __wasmResourceTimer() {
-    var _this40 = this;
+    var _this41 = this;
     return _asyncToGenerator(function* () {
       return new Promise((_, reject) => {
-        var useLoadResourceTimeout = _this40.__options.useAutoSwitchToServerMode && _this40.__options.wasmResourceTimeout > -1 || _this40.__options.useHybridMode && _this40.__options.wasmResourceTimeout > -1;
-        var wasmResourceTimeout = useLoadResourceTimeout ? _this40.__options.wasmResourceTimeout : _this40.__maxWasmResourceTimeout;
-        if (!_this40.__wasmResourceTimerId) {
-          _this40.__wasmResourceTimerId = setTimeout(() => {
+        var useLoadResourceTimeout = _this41.__options.useAutoSwitchToServerMode && _this41.__options.wasmResourceTimeout > -1 || _this41.__options.useHybridMode && _this41.__options.wasmResourceTimeout > -1;
+        var wasmResourceTimeout = useLoadResourceTimeout ? _this41.__options.wasmResourceTimeout : _this41.__maxWasmResourceTimeout;
+        if (!_this41.__wasmResourceTimerId) {
+          _this41.__wasmResourceTimerId = setTimeout(() => {
             reject(new OCRError('[Network Error] Load to WASM Resource failed with timeout', 'SE001'));
           }, wasmResourceTimeout);
         }
@@ -4409,14 +4467,14 @@ class UseBOCR {
 
   /** 메모리 allocation free 함수 */
   cleanup() {
-    var _this41 = this;
+    var _this42 = this;
     return _asyncToGenerator(function* () {
-      _this41.__destroyScannerAddress();
-      _this41.__destroyEncryptedScanResult();
-      _this41.__destroyBuffer();
-      _this41.__destroyPrevImage();
-      _this41.__destroyStringOnWasmHeap();
-      _this41.__detectedCardQueue = [];
+      _this42.__destroyScannerAddress();
+      _this42.__destroyEncryptedScanResult();
+      _this42.__destroyBuffer();
+      _this42.__destroyPrevImage();
+      _this42.__destroyStringOnWasmHeap();
+      _this42.__detectedCardQueue = [];
     })();
   }
   restoreInitialize() {
@@ -4435,29 +4493,29 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.40.2';
+    return 'v1.40.3';
   }
 
   // 기존 동작: 모듈 로드 후 카메라 권한 요청
   __startScanWasmWithCamera() {
-    var _this42 = this;
+    var _this43 = this;
     return _asyncToGenerator(function* () {
-      _this42.__debug('wasm_mode');
-      yield _this42.cleanup();
-      yield _this42.preloading();
-      yield _this42.__proceedCameraPermission();
-      yield _this42.__startScanWasmImpl();
+      _this43.__debug('wasm_mode');
+      yield _this43.cleanup();
+      yield _this43.preloading();
+      yield _this43.__proceedCameraPermission();
+      yield _this43.__startScanWasmImpl();
       void 0;
     })();
   }
   __startScanServerWithCamera() {
-    var _this43 = this;
+    var _this44 = this;
     return _asyncToGenerator(function* () {
-      _this43.__debug('server_mode');
-      if (!!_this43.getOCREngine()) yield _this43.cleanup();
-      _this43.__options.useCaptureUI = true;
-      yield _this43.__proceedCameraPermission();
-      yield _this43.__startScanServerImpl();
+      _this44.__debug('server_mode');
+      if (!!_this44.getOCREngine()) yield _this44.cleanup();
+      _this44.__options.useCaptureUI = true;
+      yield _this44.__proceedCameraPermission();
+      yield _this44.__startScanServerImpl();
       void 0;
     })();
   }
