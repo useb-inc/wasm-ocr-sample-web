@@ -8,11 +8,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.40.3';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.40.3';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.40.3';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.40.3';
-import ImageUtil from './helpers/image-util.js?ver=v1.40.3';
+import detector from './helpers/detector.js?ver=v1.40.4';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.40.4';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.40.4';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.40.4';
+import ImageUtil from './helpers/image-util.js?ver=v1.40.4';
 var instance;
 var OCRRESULT_KEY_SET = new Object({
   IDCARD: new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'region', 'overseas_resident', 'driver_number', 'driver_serial', 'driver_type', 'aptitude_test_date_start', 'aptitude_test_date_end',
@@ -4449,7 +4449,18 @@ class UseBOCR {
       }
       this.__stream = null;
     }
+
+    // video 엘리먼트의 GPU 텍스처 해제
+    var {
+      video
+    } = detector.getOCRElements();
+    if (video) {
+      video.srcObject = null;
+      video.removeAttribute('src');
+      video.load(); // 디코더/텍스처 버퍼 강제 해제
+    }
   }
+
   __wasmResourceTimer() {
     var _this41 = this;
     return _asyncToGenerator(function* () {
@@ -4493,7 +4504,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.40.3';
+    return 'v1.40.4';
   }
 
   // 기존 동작: 모듈 로드 후 카메라 권한 요청
