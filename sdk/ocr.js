@@ -8,11 +8,11 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.40.4';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.40.4';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.40.4';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.40.4';
-import ImageUtil from './helpers/image-util.js?ver=v1.40.4';
+import detector from './helpers/detector.js?ver=v1.40.5';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.40.5';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.40.5';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.40.5';
+import ImageUtil from './helpers/image-util.js?ver=v1.40.5';
 var instance;
 var OCRRESULT_KEY_SET = new Object({
   IDCARD: new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'region', 'overseas_resident', 'driver_number', 'driver_serial', 'driver_type', 'aptitude_test_date_start', 'aptitude_test_date_end',
@@ -1922,19 +1922,22 @@ class UseBOCR {
   __startTruth(ocrType, address) {
     return new Promise((resolve, reject) => {
       var [, resultBuffer] = this.__getBuffer();
-      if (ocrType.indexOf('-ssa') > -1) {
+      if (ocrType.indexOf('-ssa') === -1) {
         // TODO: worker를 사용하여 메인(UI 랜더링) 스레드가 멈추지 않도록 처리 필요 (현재 loading UI 띄우면 애니메이션 멈춤)
         // TODO: setTimeout 으로 나누더라도 효과 없음 setTimeout 지우고, worker로 변경 필요
-        setTimeout(() => {
+        reject(new OCRError("SSA Mode is true. but, ocrType is invalid : ".concat(ocrType), 'SE001'));
+        return;
+      }
+      setTimeout(() => {
+        try {
           var ssaResult = this.__OCREngine.scanTruth(address, resultBuffer);
           resolve(ssaResult);
-        }, 500);
-        // const ssaResult = this.__OCREngine.scanTruth(address, resultBuffer);
-        // console.log('__startTruth', { ssaResult });
-        // resolve(ssaResult);
-      } else {
-        reject(new OCRError("SSA Mode is true. but, ocrType is invalid : ".concat(ocrType), 'SE001'));
-      }
+        } catch (e) {
+          // Emscripten C++ 예외는 숫자 포인터로 전달될 수 있음
+          var detail = e instanceof Error ? e.message : "WASM exception: ".concat(String(e));
+          reject(new OCRError("SSA scanTruth error: ".concat(detail), 'WA012'));
+        }
+      }, 500);
     });
   }
   __csvToObject(str) {
@@ -3333,11 +3336,32 @@ class UseBOCR {
   __loadResources() {
     var _this26 = this;
     return _asyncToGenerator(function* () {
-      void 0;
-      if (_this26.__resourcesLoaded) {
+      var _this26$__OCREngine;
+      var hasUsableEngine = !!((_this26$__OCREngine = _this26.__OCREngine) !== null && _this26$__OCREngine !== void 0 && _this26$__OCREngine.asm);
+      if (hasUsableEngine) {
+        if (_this26.__options.force_wasm_reload) {
+          void 0;
+        }
         void 0;
+        _this26.__resourcesLoaded = true;
+        if (_this26.__options.useHybridMode) {
+          _this26.__hybridModeState = 'WASM_LOADED';
+        }
         return;
       }
+
+      // resourcesLoaded만 true이고 실제 엔진이 없는 비정상 상태
+      if (_this26.__resourcesLoaded) {
+        void 0;
+        _this26.__resourcesLoaded = false;
+      }
+
+      // console.log('loadResources() START');
+      // if (this.__resourcesLoaded) {
+      //   console.log('loadResource() SKIP, already loaded!');
+      //   return;
+      // }
+
       _this26.__isSupportSimd = yield simd();
       var envInfo = '';
       envInfo += "os : ".concat(_this26.__deviceInfo.os, "\n");
@@ -4489,6 +4513,15 @@ class UseBOCR {
     })();
   }
   restoreInitialize() {
+    var _this$__OCREngine;
+    // 정상 엔진이 있으면 리소스 상태를 초기화하지 않음
+    if ((_this$__OCREngine = this.__OCREngine) !== null && _this$__OCREngine !== void 0 && _this$__OCREngine.asm) {
+      void 0;
+      this.__resourcesLoaded = true;
+      this.__preloaded = true;
+      this.__preloadingStatus = this.PRELOADING_STATUS.DONE;
+      return;
+    }
     this.__initialized = false;
     this.__restoreResourceInitialize();
   }
@@ -4504,7 +4537,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.40.4';
+    return 'v1.40.5';
   }
 
   // 기존 동작: 모듈 로드 후 카메라 권한 요청
