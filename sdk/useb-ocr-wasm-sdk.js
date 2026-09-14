@@ -1,4 +1,4 @@
-import UseBOCR from './ocr.js?ver=v1.40.5';
+import UseBOCR from './ocr.js?ver=v1.40.6';
 
 const ocr = new UseBOCR();
 let targetOrigin = null;
@@ -8,6 +8,24 @@ const PRELOAD_TYPE = {
 };
 
 let preloadType = PRELOAD_TYPE['PRELOAD_TYPE_BRWOSER']; // default;
+
+function createBridgeErrorResult(error) {
+  const result = {
+    result: 'error',
+    error_message: error && error.message,
+  };
+
+  if (error && error.errorCode) {
+    result.error_code = error.errorCode;
+  }
+
+  return result;
+}
+
+async function preloadOCR(settings) {
+  ocr.init(settings);
+  await ocr.preloading(onPreloaded);
+}
 
 const messageHandler = async (e) => {
   try {
@@ -57,14 +75,8 @@ const messageHandler = async (e) => {
       }
 
       if (data.preloading) {
-        try {
-          ocr.init(data.settings);
-          await ocr.preloading(onPreloaded);
-          return;
-        } catch (err) {
-          console.debug('[WARNING] preloading error');
-          throw new Error(`preloading error`);
-        }
+        await preloadOCR(data.settings);
+        return;
       }
 
       switch (data.ocrType) {
@@ -95,7 +107,7 @@ const messageHandler = async (e) => {
       console.error('[usebwasmocr] error code', e.errorCode);
       console.error('[usebwasmocr] error message', e.message);
     }
-    sendErrorResult('error', e.message);
+    sendErrorResult(e);
   }
 };
 
@@ -110,11 +122,8 @@ window.addEventListener('message', messageHandler);
 document.addEventListener('message', messageHandler);
 window.usebwasmocrreceive = messageHandler;
 
-function sendErrorResult(result, errorMessage) {
-  sendResult({
-    result: 'error',
-    error_message: errorMessage,
-  });
+function sendErrorResult(error) {
+  sendResult(createBridgeErrorResult(error));
 }
 
 function getPlatformInfomation() {

@@ -1,18 +1,140 @@
 function _readOnlyError(name) { throw new TypeError("\"" + name + "\" is read-only"); }
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typeof key === "symbol" ? key : String(key); }
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.40.5';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.40.5';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.40.5';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.40.5';
-import ImageUtil from './helpers/image-util.js?ver=v1.40.5';
+import detector from './helpers/detector.js?ver=v1.40.6';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.40.6';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.40.6';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.40.6';
+import ImageUtil from './helpers/image-util.js?ver=v1.40.6';
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+var QURAM_RESOURCE_ERROR_CODE = Object.freeze({
+  JS: 'WA013',
+  WASM: 'WA014',
+  DATA: 'WA015'
+});
+function createQuramResourceError(resourceFileName, errorCode) {
+  return new OCRError("[Resource Error] Failed to load ".concat(resourceFileName), errorCode);
+}
+function loadQuramResource(_x, _x2, _x3) {
+  return _loadQuramResource.apply(this, arguments);
+}
+function _loadQuramResource() {
+  _loadQuramResource = _asyncToGenerator(function* (loadResource, resourceFileName, errorCode) {
+    try {
+      return yield loadResource();
+    } catch (error) {
+      if (error instanceof OCRError) throw error;
+      throw createQuramResourceError(resourceFileName, errorCode);
+    }
+  });
+  return _loadQuramResource.apply(this, arguments);
+}
+function fetchQuramGlueSource(_x4, _x5) {
+  return _fetchQuramGlueSource.apply(this, arguments);
+}
+function _fetchQuramGlueSource() {
+  _fetchQuramGlueSource = _asyncToGenerator(function* (resourceUrl, resourceFileName) {
+    var fetchResource = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : fetch;
+    return loadQuramResource( /*#__PURE__*/_asyncToGenerator(function* () {
+      var response = yield fetchResource(resourceUrl);
+      if (!response.ok) throw new Error("HTTP ".concat(response.status));
+      return response.text();
+    }), resourceFileName, QURAM_RESOURCE_ERROR_CODE.JS);
+  });
+  return _fetchQuramGlueSource.apply(this, arguments);
+}
+function initializeQuramResources(_x6, _x7, _x8, _x9) {
+  return _initializeQuramResources.apply(this, arguments);
+}
+function _initializeQuramResources() {
+  _initializeQuramResources = _asyncToGenerator(function* (createWasm, createModelData, wasmFileName, dataFileName) {
+    yield Promise.all([loadQuramResource(createWasm, wasmFileName, QURAM_RESOURCE_ERROR_CODE.WASM), loadQuramResource(createModelData, dataFileName, QURAM_RESOURCE_ERROR_CODE.DATA)]);
+  });
+  return _initializeQuramResources.apply(this, arguments);
+}
+function replaceWasmDataSourceOnce(source, target, replacement, dataFileName) {
+  var targetIndex = source.indexOf(target);
+  var duplicateIndex = targetIndex === -1 ? -1 : source.indexOf(target, targetIndex + target.length);
+  if (targetIndex === -1 || duplicateIndex !== -1) {
+    throw createQuramResourceError(dataFileName, QURAM_RESOURCE_ERROR_CODE.DATA);
+  }
+  return source.slice(0, targetIndex) + replacement + source.slice(targetIndex + target.length);
+}
+function rewriteWasmDataErrorHandling(source, dataFileName) {
+  var errorHandlerLog = 'console.error("package error:", error);';
+  source = replaceWasmDataSourceOnce(source, errorHandlerLog, "reject(error);\n   ".concat(errorHandlerLog), dataFileName);
+  source = replaceWasmDataSourceOnce(source, 'throw new Error("NetworkError for: " + packageName);', 'handleError(new Error("NetworkError for: " + packageName));', dataFileName);
+  source = replaceWasmDataSourceOnce(source, 'throw new Error(xhr.statusText + " : " + xhr.responseURL);', 'handleError(new Error(xhr.statusText + " : " + xhr.responseURL));', dataFileName);
+  source = replaceWasmDataSourceOnce(source, 'function processPackageData(arrayBuffer) {', 'function processPackageData(arrayBuffer) {\n    try {', dataFileName);
+  var processDataCompletion = "Module[\"removeRunDependency\"](\"datafile_".concat(dataFileName, "\");");
+  return replaceWasmDataSourceOnce(source, processDataCompletion, "".concat(processDataCompletion, "\n    } catch (error) {\n     handleError(error);\n    }"), dataFileName);
+}
+function findWasmDataAssignmentLiteralRange(source, dataFileName) {
+  var assignmentPattern = new RegExp("[ \\t]*(?:var|let|const)[ \\t]+REMOTE_PACKAGE_BASE[ \\t]*=[ \\t]*([\"'])".concat(escapeRegExp(dataFileName), "\\1"), 'y');
+  var state = 'code';
+  var literalRange = null;
+  for (var index = 0; index < source.length; index++) {
+    var character = source[index];
+    var nextCharacter = source[index + 1];
+    var isLineStart = index === 0 || source[index - 1] === '\n' || source[index - 1] === '\r';
+    if (state === 'code' && isLineStart) {
+      assignmentPattern.lastIndex = index;
+      var match = assignmentPattern.exec(source);
+      if (match) {
+        if (literalRange) {
+          throw new Error("Multiple WASM data resource assignments found for ".concat(dataFileName));
+        }
+        var literalLength = dataFileName.length + 2;
+        literalRange = {
+          start: assignmentPattern.lastIndex - literalLength,
+          end: assignmentPattern.lastIndex
+        };
+      }
+    }
+    if (state === 'code') {
+      if (character === "'") state = 'single-quote';else if (character === '"') state = 'double-quote';else if (character === '`') state = 'template';else if (character === '/' && nextCharacter === '/') {
+        state = 'line-comment';
+        index++;
+      } else if (character === '/' && nextCharacter === '*') {
+        state = 'block-comment';
+        index++;
+      }
+    } else if (state === 'line-comment') {
+      if (character === '\n' || character === '\r') state = 'code';
+    } else if (state === 'block-comment') {
+      if (character === '*' && nextCharacter === '/') {
+        state = 'code';
+        index++;
+      }
+    } else if (character === '\\') {
+      index++;
+    } else if (state === 'single-quote' && character === "'" || state === 'double-quote' && character === '"' || state === 'template' && character === '`') {
+      state = 'code';
+    }
+  }
+  return literalRange;
+}
+function rewriteWasmDataResourceUrl(source, dataFileName, dataFileUrl) {
+  var literalRange;
+  try {
+    literalRange = findWasmDataAssignmentLiteralRange(source, dataFileName);
+  } catch (_) {
+    throw createQuramResourceError(dataFileName, QURAM_RESOURCE_ERROR_CODE.DATA);
+  }
+  if (!literalRange) {
+    throw createQuramResourceError(dataFileName, QURAM_RESOURCE_ERROR_CODE.DATA);
+  }
+  return source.slice(0, literalRange.start) + JSON.stringify(dataFileUrl) + source.slice(literalRange.end);
+}
 var instance;
 var OCRRESULT_KEY_SET = new Object({
   IDCARD: new Set(['result_scan_type', 'name', 'jumin', 'issued_date', 'region', 'overseas_resident', 'driver_number', 'driver_serial', 'driver_type', 'aptitude_test_date_start', 'aptitude_test_date_end',
@@ -321,6 +443,7 @@ class UseBOCR {
     _defineProperty(this, "__initialized", false);
     _defineProperty(this, "__preloaded", false);
     _defineProperty(this, "__preloadingStatus", this.PRELOADING_STATUS.NOT_STARTED);
+    _defineProperty(this, "__preloadingPromise", null);
     _defineProperty(this, "__license", void 0);
     _defineProperty(this, "__ocrType", void 0);
     _defineProperty(this, "__ssaMode", false);
@@ -418,22 +541,21 @@ class UseBOCR {
   preloading(onPreloaded) {
     var _this = this;
     return _asyncToGenerator(function* () {
-      var preloadingStatus = _this.getPreloadingStatus();
-      if (!_this.isPreloaded() && preloadingStatus === _this.PRELOADING_STATUS.NOT_STARTED) {
+      if (_this.isPreloaded()) {
         void 0;
-        yield _this.__preloadingWasm();
         if (onPreloaded) onPreloaded();
-      } else {
-        if (preloadingStatus === _this.PRELOADING_STATUS.STARTED) {
-          void 0;
-          yield _this.__waitPreloaded();
-        } else if (preloadingStatus === _this.PRELOADING_STATUS.DONE) {
-          void 0;
-          if (onPreloaded) onPreloaded();
-        } else {
-          throw new Error("abnormally preloading status, preloaded: ".concat(_this.isPreloaded(), " / preloadingStatus: ").concat(_this.getPreloadingStatus()));
-        }
+        return;
       }
+      if (!_this.__preloadingPromise) {
+        void 0;
+        _this.__preloadingPromise = _this.__preloadingWasm().finally(() => {
+          _this.__preloadingPromise = null;
+        });
+      } else {
+        void 0;
+      }
+      yield _this.__preloadingPromise;
+      if (onPreloaded) onPreloaded();
     })();
   }
   isInitialized() {
@@ -692,7 +814,7 @@ class UseBOCR {
           var _ref2 = _asyncToGenerator(function* (_) {
             void 0;
           });
-          return function (_x2) {
+          return function (_x11) {
             return _ref2.apply(this, arguments);
           };
         }();
@@ -704,7 +826,7 @@ class UseBOCR {
         // 토글 UI동적 생성
         _this4.__showDelayedToggleButton();
       });
-      return function (_x) {
+      return function (_x10) {
         return _ref.apply(this, arguments);
       };
     }()).catch(e => {
@@ -768,7 +890,7 @@ class UseBOCR {
         void 0;
         yield _this_.restartOCR(_this_.__ocrType, _this_.__onSuccess, _this_.__onFailure, _this_.__onInProgressChange, _this_.__serverOCRPreprocessor, true);
       });
-      return function __onClickSwitchUI(_x3) {
+      return function __onClickSwitchUI(_x12) {
         return _ref3.apply(this, arguments);
       };
     }();
@@ -871,6 +993,13 @@ class UseBOCR {
           return;
         } else {
           void 0;
+          if (Object.values(QURAM_RESOURCE_ERROR_CODE).includes(e === null || e === void 0 ? void 0 : e.errorCode)) {
+            try {
+              yield _this5.__onFailureProcess(e.errorCode, e, e.message);
+            } finally {
+              _this5.__closeCamera();
+            }
+          }
         }
       } finally {
         // await this.stopOCR();
@@ -888,7 +1017,7 @@ class UseBOCR {
           _this6.__onFailure = null;
           resolve();
         });
-        return function (_x4) {
+        return function (_x13) {
           return _ref4.apply(this, arguments);
         };
       }());
@@ -1849,7 +1978,7 @@ class UseBOCR {
               }
             }
           });
-          return function recognition(_x5) {
+          return function recognition(_x14) {
             return _ref9.apply(this, arguments);
           };
         }();
@@ -2651,7 +2780,7 @@ class UseBOCR {
                 clearTimeout(_this_2.__requestAnimationFrameId);
                 yield _this_2.restartOCR(_this_2.__ocrType, _this_2.__onSuccess, _this_2.__onFailure, _this_2.__onInProgressChange, _this_2.__serverOCRPreprocessor, true);
               });
-              return function __onClickSwitchUI(_x6) {
+              return function __onClickSwitchUI(_x15) {
                 return _ref13.apply(this, arguments);
               };
             }();
@@ -3391,44 +3520,48 @@ class UseBOCR {
         // 옵션이 활성화 되면 새로운 WASM 리소스를 요청함.
         postfix = '?ver=' + _this26.__options.force_wasm_reload_flag;
       }
-      var url = new URL(sdkSupportEnv + '.js' + postfix, _this26.__options.resourceBaseUrl);
-      var src = yield fetch(url.href).then(res => res.text()).then(text => {
-        var regex = /(.*) = Module.cwrap/gm;
-        var source = text.replace(regex, 'Module.$1 = Module.cwrap');
+      var jsFileName = sdkSupportEnv + '.js';
+      var wasmFileName = sdkSupportEnv + '.wasm';
+      var dataFileName = sdkSupportEnv + '.data';
+      var url = new URL(jsFileName + postfix, _this26.__options.resourceBaseUrl);
+      var text = yield fetchQuramGlueSource(url.href, jsFileName);
+      var regex = /(.*) = Module.cwrap/gm;
+      var src = text.replace(regex, 'Module.$1 = Module.cwrap');
 
-        // data(model)
-        source = source.replace(/^\(function\(\) \{/m, 'var createModelData = async function() {\n' + ' return new Promise(async function (resolve, reject) {\n');
-        source = source.replace('   console.error("package error:", error);', '   reject();\n' + '   console.error("package error:", error);');
-        source = source.replace('  }, handleError)', '  resolve();\n' + '  }, handleError)');
-        source = source.replace(/^\}\)\(\);/m, '\n })\n' + '};');
+      // data(model)
+      src = src.replace(/^\(function\(\) \{/m, 'var createModelData = async function() {\n' + ' return new Promise(function (resolve, reject) {\n');
+      src = rewriteWasmDataErrorHandling(src, dataFileName);
+      src = src.replace('  }, handleError)', '  resolve();\n' + '  }, handleError)');
+      src = src.replace(/^\}\)\(\);/m, '\n })\n' + '};');
 
-        // wasm
-        source = source.replace(sdkSupportEnv + '.wasm', new URL(sdkSupportEnv + '.wasm' + postfix, _this26.__options.resourceBaseUrl).href);
-        source = source.replace(new RegExp("REMOTE_PACKAGE_BASE = ['\"]".concat(sdkSupportEnv, "\\.data[\"']"), 'gm'), "REMOTE_PACKAGE_BASE = \"".concat(new URL(sdkSupportEnv + '.data' + postfix, _this26.__options.resourceBaseUrl).href, "\""));
-        source = source.replace('function createWasm', 'async function createWasm');
-        source = source.replace('instantiateAsync();', 'await instantiateAsync();');
+      // wasm
+      src = src.replace(wasmFileName, new URL(wasmFileName + postfix, _this26.__options.resourceBaseUrl).href);
+      src = rewriteWasmDataResourceUrl(src, dataFileName, new URL(dataFileName + postfix, _this26.__options.resourceBaseUrl).href);
+      src = src.replace('function createWasm', 'async function createWasm');
+      src = src.replace('instantiateAsync();', 'await instantiateAsync();');
 
-        // wasm and data(model) file 병렬로 fetch 하기 위해
-        source = source.replace('var asm = createWasm();', 'console.log("create wasm and data - start")\n' + 'await (async function() {\n' + '  return new Promise(function(resolve) {\n' + '    var isCreatedWasm = false;\n' + '    var isCreatedData = false;\n' + '    createWasm().then(() => {\n' + '      isCreatedWasm = true;\n' + '      if (isCreatedData) { resolve(); }\n' + '    });\n' + '    createModelData().then(() => {\n' + '      isCreatedData = true;\n' + '      if (isCreatedWasm) { resolve(); }\n' + '    })\n' + '  });\n' + '})();\n' + 'console.log("create wasm and data - end")');
-        return source;
-      });
+      // wasm and data(model) file 병렬로 fetch 하기 위해
+      src = src.replace('var asm = createWasm();', 'console.log("create wasm and data - start")\n' + "await initializeQuramResources(createWasm, createModelData, ".concat(JSON.stringify(wasmFileName), ", ").concat(JSON.stringify(dataFileName), ");\n") + 'console.log("create wasm and data - end")');
       src = "\n    return (async function() {\n      ".concat(src, "\n      Module.lengthBytesUTF8 = lengthBytesUTF8\n      Module.stringToUTF8 = stringToUTF8\n      return Module\n    })()\n        ");
-      var initializeOCREngine = new Function(src)();
+      var initializeOCREngine = loadQuramResource(() => new Function('initializeQuramResources', src)(initializeQuramResources), jsFileName, QURAM_RESOURCE_ERROR_CODE.JS);
 
       // const useLoadResourceTimeout = this.__options.useAutoSwitchToServerMode && this.__options.wasmResourceTimeout > -1;
       var useLoadResourceTimeout = _this26.__options.useAutoSwitchToServerMode || _this26.__options.useHybridMode && _this26.__options.wasmResourceTimeout > -1;
-      _this26.__wasmResourceTimeoutFn = _this26.__wasmResourceTimeoutFn ? _this26.__wasmResourceTimeoutFn : _this26.__wasmResourceTimer();
+      if (useLoadResourceTimeout) {
+        _this26.__wasmResourceTimeoutFn = _this26.__wasmResourceTimeoutFn ? _this26.__wasmResourceTimeoutFn : _this26.__wasmResourceTimer();
+      }
       try {
         _this26.__OCREngine = useLoadResourceTimeout ? yield Promise.race([initializeOCREngine, _this26.__wasmResourceTimeoutFn]) : yield Promise.resolve(initializeOCREngine);
         _this26.__OCREngine.onRuntimeInitialized = /*#__PURE__*/function () {
           var _ref14 = _asyncToGenerator(function* (_) {
             void 0;
           });
-          return function (_x7) {
+          return function (_x16) {
             return _ref14.apply(this, arguments);
           };
         }();
         yield _this26.__OCREngine.onRuntimeInitialized();
+        _this26.__clearWasmResourceTimeoutTimer();
         _this26.__resourcesLoaded = true;
 
         // 하이브리드 모드: WASM 로딩 성공
@@ -3898,7 +4031,7 @@ class UseBOCR {
             reject(err);
           }
         });
-        return function (_x8, _x9) {
+        return function (_x17, _x18) {
           return _ref18.apply(this, arguments);
         };
       }());
@@ -4075,7 +4208,7 @@ class UseBOCR {
           once: true
         });
       });
-      return function (_x10, _x11) {
+      return function (_x19, _x20) {
         return _ref19.apply(this, arguments);
       };
     }());
@@ -4206,15 +4339,10 @@ class UseBOCR {
           _this36.hideOCRLoadingUI();
           void 0;
         } catch (e) {
-          if (e.errorCode === 'SE001') {
-            _this36.hideOCRLoadingUI();
-            _this36.__restoreResourceInitialize();
-
-            // 하이브리드 모드라면 타임아웃 에러를 무시하고 종료 (앱 크래시 방지)
-            if (_this36.__options.useHybridMode) {
-              void 0;
-              throw e;
-            }
+          _this36.hideOCRLoadingUI();
+          _this36.__restoreResourceInitialize();
+          if (e.errorCode === 'SE001' && _this36.__options.useHybridMode) {
+            void 0;
           }
           throw e;
         }
@@ -4526,9 +4654,17 @@ class UseBOCR {
     this.__restoreResourceInitialize();
   }
   __restoreResourceInitialize() {
+    this.__clearWasmResourceTimeoutTimer();
     this.__preloaded = false;
     this.__preloadingStatus = this.PRELOADING_STATUS.NOT_STARTED;
     this.__resourcesLoaded = false;
+  }
+  __clearWasmResourceTimeoutTimer() {
+    if (this.__wasmResourceTimerId) {
+      clearTimeout(this.__wasmResourceTimerId);
+    }
+    this.__wasmResourceTimerId = null;
+    this.__wasmResourceTimeoutFn = null;
   }
   __clearCameraPermissionTimeoutTimer() {
     if (this.__cameraPermissionTimeoutTimer) {
@@ -4537,7 +4673,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.40.5';
+    return 'v1.40.6';
   }
 
   // 기존 동작: 모듈 로드 후 카메라 권한 요청

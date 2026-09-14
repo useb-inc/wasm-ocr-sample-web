@@ -225,6 +225,10 @@ class OcrResultParser {
       }
     }
   }
+  __reformatDriverType(ocrResult) {
+    if (typeof ocrResult.driver_type !== 'string') return;
+    ocrResult.driver_type = ocrResult.driver_type.trim().split(/\s+/).join(',');
+  }
   __parseIdDriver(ocrResult, legacyFormat) {
     // 주민번호 형식 리턴값 형식 변경
     this.__reformatJumin(ocrResult);
@@ -249,6 +253,7 @@ class OcrResultParser {
       id_type: 'result_scan_type'
     };
     this.__convertLegacyFormat(ocrResult, legacyFormat, keyMapIdDriver);
+    if (ocrResult.result_scan_type === '2') this.__reformatDriverType(ocrResult);
   }
   __parsePassport(ocrResult, legacyFormat) {
     this.__reformatJumin(ocrResult);
