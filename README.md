@@ -375,6 +375,9 @@ function endOCR() {
 | WA008    | OCR Status is ${\_\_ocrStatus}, but ocrResult is false | ocr 완료되었으나 ocrResult가 없음  |
 | WA009    | SSA Mode is true. but, ocrType is invalid              | 잘못된 SSA 모드 타입              |
 | WA011    | Not initialized!                                       | WASM 모듈이 초기화되지 않음        |
+| WA013    | Failed to load quram*.js                               | Quram JS 리소스 로드 실패         |
+| WA014    | Failed to load quram*.wasm                             | Quram WASM 리소스 로드 실패       |
+| WA015    | Failed to load quram*.data                             | Quram DATA 리소스 로드 실패       |
 | E403     | Camera Access Permission is not allowed                | 카메라 권한 거부                  |
 | E404     | Camera Resource is not found                           | 카메라 리소스 없음                |
 | E400     | Camera Resource Request Retry Limit Exceeded           | 재시도 한도 초과                  |
