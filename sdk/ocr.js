@@ -8,11 +8,11 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 /* eslint-disable */
 /* global-module */
-import detector from './helpers/detector.js?ver=v1.40.6';
-import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.40.6';
-import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.40.6';
-import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.40.6';
-import ImageUtil from './helpers/image-util.js?ver=v1.40.6';
+import detector from './helpers/detector.js?ver=v1.40.7';
+import usebOCRWASMParser from './helpers/useb-ocr-wasm-parser.js?ver=v1.40.7';
+import usebOCRAPIParser from './helpers/useb-ocr-api-parser.js?ver=v1.40.7';
+import { isSupportWasm, measure, simd } from './helpers/wasm-feature-detect.js?ver=v1.40.7';
+import ImageUtil from './helpers/image-util.js?ver=v1.40.7';
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -4673,7 +4673,7 @@ class UseBOCR {
     }
   }
   get version() {
-    return 'v1.40.6';
+    return 'v1.40.7';
   }
 
   // 기존 동작: 모듈 로드 후 카메라 권한 요청
