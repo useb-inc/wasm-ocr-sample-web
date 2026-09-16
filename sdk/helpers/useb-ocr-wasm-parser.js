@@ -227,7 +227,7 @@ class OcrResultParser {
   }
   __reformatDriverType(ocrResult) {
     if (typeof ocrResult.driver_type !== 'string') return;
-    ocrResult.driver_type = ocrResult.driver_type.trim().split(/\s+/).join(',');
+    ocrResult.driver_type = ocrResult.driver_type.trim().split(/\s+/).join(', ');
   }
   __parseIdDriver(ocrResult, legacyFormat) {
     // 주민번호 형식 리턴값 형식 변경
