@@ -227,7 +227,30 @@ class OcrResultParser {
   }
   __reformatDriverType(ocrResult) {
     if (typeof ocrResult.driver_type !== 'string') return;
-    ocrResult.driver_type = ocrResult.driver_type.trim().split(/\s+/).join(', ');
+    var driverTypes = ocrResult.driver_type.split(/[\s,]+/).filter(Boolean);
+    var generalDriverTypes = new Set(['1종대형', '1종보통', '2종보통', '2종소형', '원동기']);
+    var specialDriverTypes = new Set(['대형견인', '소형견인', '구난차']);
+    var formattedDriverTypes = [];
+    var hasSpecialGroup = false;
+
+    // 미지 토큰이나 모호한 배열이면 일부만 그룹화하지 않고 전체를 평탄화한다.
+    ocrResult.driver_type = driverTypes.join(', ');
+    for (var index = 0; index < driverTypes.length; index++) {
+      var driverType = driverTypes[index];
+      if (generalDriverTypes.has(driverType)) {
+        formattedDriverTypes.push(driverType);
+        continue;
+      }
+      if (driverType !== '특수' || hasSpecialGroup) return;
+      var specialTypes = [];
+      while (specialDriverTypes.has(driverTypes[index + 1])) {
+        specialTypes.push(driverTypes[++index]);
+      }
+      if (specialTypes.length === 0) return;
+      hasSpecialGroup = true;
+      formattedDriverTypes.push("\uD2B9\uC218(".concat(specialTypes.join(', '), ")"));
+    }
+    ocrResult.driver_type = formattedDriverTypes.join(', ');
   }
   __parseIdDriver(ocrResult, legacyFormat) {
     // 주민번호 형식 리턴값 형식 변경
